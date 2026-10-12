@@ -59,7 +59,7 @@
   "tasks": [
     {
       "id": "T01",
-      "issue": null,
+      "issue": 1,
       "title": "Khởi tạo repo, kế hoạch, GitHub Project & Pages",
       "owner": "nhu",
       "sprint": "S1",
@@ -89,7 +89,7 @@
     },
     {
       "id": "T02",
-      "issue": null,
+      "issue": 2,
       "title": "Khảo sát nghiệp vụ & đặc tả yêu cầu (Chương 1 + Lab 1)",
       "owner": "nhu",
       "sprint": "S1",
@@ -121,7 +121,7 @@
     },
     {
       "id": "T03",
-      "issue": null,
+      "issue": 3,
       "title": "Môi trường phát triển & khung ứng dụng Streamlit",
       "owner": "nhu",
       "sprint": "S1",
@@ -151,7 +151,7 @@
     },
     {
       "id": "T04",
-      "issue": null,
+      "issue": 4,
       "title": "Thiết kế mức khái niệm: ERD & từ điển dữ liệu",
       "owner": "tram",
       "sprint": "S1",
@@ -180,7 +180,7 @@
     },
     {
       "id": "T05",
-      "issue": null,
+      "issue": 5,
       "title": "Class Diagram (UML) & so sánh ERD – Class Diagram",
       "owner": "tram",
       "sprint": "S1",
@@ -208,7 +208,7 @@
     },
     {
       "id": "T06",
-      "issue": null,
+      "issue": 6,
       "title": "Mô hình quan hệ, chuẩn hoá, RBTV; so sánh mô hình phẳng – quan hệ – XML",
       "owner": "tram",
       "sprint": "S1",
@@ -238,7 +238,7 @@
     },
     {
       "id": "T07",
-      "issue": null,
+      "issue": 7,
       "title": "Cài đặt CSDL: script DDL, ràng buộc & chỉ mục",
       "owner": "tram",
       "sprint": "S1",
@@ -268,7 +268,7 @@
     },
     {
       "id": "T08",
-      "issue": null,
+      "issue": 8,
       "title": "Dữ liệu mẫu (seed)",
       "owner": "duong",
       "sprint": "S1",
@@ -297,7 +297,7 @@
     },
     {
       "id": "T09",
-      "issue": null,
+      "issue": 9,
       "title": "Truy vấn SQL nghiệp vụ (≥ 25 câu)",
       "owner": "duong",
       "sprint": "S2",
@@ -327,7 +327,7 @@
     },
     {
       "id": "T10",
-      "issue": null,
+      "issue": 10,
       "title": "Dữ liệu XML: XML Schema, XPath/XQuery, FOR XML (Lab 2)",
       "owner": "duong",
       "sprint": "S2",
@@ -356,7 +356,7 @@
     },
     {
       "id": "T11",
-      "issue": null,
+      "issue": 11,
       "title": "Stored Procedure & Transaction",
       "owner": "phu",
       "sprint": "S2",
@@ -388,7 +388,7 @@
     },
     {
       "id": "T12",
-      "issue": null,
+      "issue": 12,
       "title": "User-defined Function",
       "owner": "phu",
       "sprint": "S2",
@@ -415,7 +415,7 @@
     },
     {
       "id": "T13",
-      "issue": null,
+      "issue": 13,
       "title": "Trigger & nhật ký kiểm toán",
       "owner": "phu",
       "sprint": "S2",
@@ -445,7 +445,7 @@
     },
     {
       "id": "T14",
-      "issue": null,
+      "issue": 14,
       "title": "Cursor",
       "owner": "phu",
       "sprint": "S2",
@@ -473,7 +473,7 @@
     },
     {
       "id": "T15",
-      "issue": null,
+      "issue": 15,
       "title": "Xác thực & phân quyền (Lab 3)",
       "owner": "nhu",
       "sprint": "S2",
@@ -503,7 +503,7 @@
     },
     {
       "id": "T16",
-      "issue": null,
+      "issue": 16,
       "title": "View bảo mật & phục vụ báo cáo",
       "owner": "giang",
       "sprint": "S2",
@@ -530,7 +530,7 @@
     },
     {
       "id": "T17",
-      "issue": null,
+      "issue": 17,
       "title": "Sao lưu & phục hồi (Backup/Restore)",
       "owner": "giang",
       "sprint": "S2",
@@ -558,7 +558,7 @@
     },
     {
       "id": "T18",
-      "issue": null,
+      "issue": 18,
       "title": "Nhập / xuất dữ liệu (Import/Export)",
       "owner": "duong",
       "sprint": "S2",
@@ -587,7 +587,7 @@
     },
     {
       "id": "T19",
-      "issue": null,
+      "issue": 19,
       "title": "Web: Đăng nhập, Menu phân quyền & Danh mục",
       "owner": "nhu",
       "sprint": "S2",
@@ -615,7 +615,7 @@
     },
     {
       "id": "T20",
-      "issue": null,
+      "issue": 20,
       "title": "Web: Phân hệ Đào tạo (chương trình, khoá học, lớp, lịch học)",
       "owner": "tram",
       "sprint": "S3",
@@ -641,7 +641,7 @@
     },
     {
       "id": "T21",
-      "issue": null,
+      "issue": 21,
       "title": "Web: Học viên, Kiểm tra đầu vào & Ghi danh",
       "owner": "duong",
       "sprint": "S3",
@@ -667,7 +667,7 @@
     },
     {
       "id": "T22",
-      "issue": null,
+      "issue": 22,
       "title": "Web: Buổi học, Điểm danh & Nhập điểm",
       "owner": "phu",
       "sprint": "S3",
@@ -693,7 +693,7 @@
     },
     {
       "id": "T23",
-      "issue": null,
+      "issue": 23,
       "title": "Web: Thu học phí (Master–Detail) & công nợ",
       "owner": "giang",
       "sprint": "S3",
@@ -719,7 +719,7 @@
     },
     {
       "id": "T24",
-      "issue": null,
+      "issue": 24,
       "title": "Báo cáo & Dashboard (Lab 5)",
       "owner": "giang",
       "sprint": "S3",
@@ -748,7 +748,7 @@
     },
     {
       "id": "T25",
-      "issue": null,
+      "issue": 25,
       "title": "Chương 5: CSDL hướng đối tượng",
       "owner": "tram",
       "sprint": "S3",
@@ -775,7 +775,7 @@
     },
     {
       "id": "T26",
-      "issue": null,
+      "issue": 26,
       "title": "Chương 5: CSDL phân tán (phân mảnh theo chi nhánh)",
       "owner": "phu",
       "sprint": "S3",
@@ -803,7 +803,7 @@
     },
     {
       "id": "T27",
-      "issue": null,
+      "issue": 27,
       "title": "Chương 5: CSDL phi quan hệ (NoSQL – MongoDB)",
       "owner": "duong",
       "sprint": "S3",
@@ -831,7 +831,7 @@
     },
     {
       "id": "T28",
-      "issue": null,
+      "issue": 28,
       "title": "Viết Chương 4: Trình bày thông tin",
       "owner": "giang",
       "sprint": "S3",
@@ -856,7 +856,7 @@
     },
     {
       "id": "T29",
-      "issue": null,
+      "issue": 29,
       "title": "Tổng hợp báo cáo, slide & tổng duyệt",
       "owner": "nhu",
       "sprint": "S4",
