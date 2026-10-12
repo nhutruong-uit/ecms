@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# SQL Server / Docker
+*.bak
+*.trn
+mssql-data/
+backups/
+
+# Office tạm
+~$*
+*.tmp
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
