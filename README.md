@@ -3,7 +3,7 @@
 Đồ án môn **IE103 – Quản lý thông tin** · Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM · **Nhóm 1**
 
 - 📋 **Kế hoạch & phân công chi tiết:** https://nhutruong-uit.github.io/ecms/
-- 🗂️ **Bảng công việc:** tab [Projects](https://github.com/nhutruong-uit/ecms/projects) của repo
+- 🗂️ **Bảng công việc (GitHub Project):** https://github.com/users/nhutruong-uit/projects/1
 - 🐞 **Danh sách task:** [Issues](https://github.com/nhutruong-uit/ecms/issues)
 
 ## Thành viên
