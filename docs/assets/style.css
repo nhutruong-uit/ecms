@@ -166,9 +166,9 @@ section.block { padding: 40px 0 8px; }
 .sprints { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .sprint { padding: 16px 18px; position: relative; overflow: hidden; }
 .sprint.current { border-color: var(--accent); }
-.sprint.current::before { content: "Đang diễn ra"; position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+.sprint.current::before { content: "Đang diễn ra"; display: inline-block; margin-bottom: 6px; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
 .sprint .dates { color: var(--muted); font-size: 12.5px; font-weight: 600; }
-.sprint h3 { margin: 4px 0 6px; font-size: 16px; line-height: 1.35; padding-right: 70px; }
+.sprint h3 { margin: 4px 0 6px; font-size: 16px; line-height: 1.35; }
 .sprint p { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
 .sprint .tlist { display: flex; flex-wrap: wrap; gap: 4px; }
 .tchip { font-size: 11.5px; padding: 1px 7px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); cursor: pointer; }
@@ -214,7 +214,8 @@ details.task[open] > summary { border-bottom: 1px solid var(--border); }
 .tbody .syllabus { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
 .tbody .links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .labels { display: flex; flex-wrap: wrap; gap: 6px; }
-.lbl { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: var(--surface-2); }
+.lbl .dot { width: 8px; height: 8px; }
 .empty { text-align: center; color: var(--muted); padding: 30px; }
 
 /* ---------- Tables ---------- */
@@ -232,7 +233,8 @@ td.chap small { display: block; color: var(--muted); font-weight: 400; }
 .rel dt { font-weight: 600; }
 .rel dd { margin: 0; color: var(--muted); }
 .erd { overflow-x: auto; padding: 12px; }
-.erd .mermaid { min-width: 860px; text-align: center; }
+.erd pre.mermaid { background: none; border: 0; padding: 0; margin: 0; min-width: 640px; text-align: center; }
+.erd pre.mermaid svg { max-width: 100%; height: auto; }
 .note { font-size: 13px; color: var(--muted); }
 .tables-list td:first-child { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 600; font-size: 13px; white-space: nowrap; }
 

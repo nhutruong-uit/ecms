@@ -22,7 +22,7 @@
       else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
       else el.setAttribute(k, v === true ? '' : v);
     }
-    for (const c of children.flat()) {
+    for (const c of children.flat(Infinity)) {
       if (c == null || c === false) continue;
       el.append(c instanceof Node ? c : document.createTextNode(String(c)));
     }
@@ -117,7 +117,7 @@
     window.mermaid.initialize({
       startOnLoad: false,
       theme: effectiveTheme() === 'dark' ? 'dark' : 'default',
-      er: { useMaxWidth: false },
+      er: { useMaxWidth: true, layoutDirection: 'TB' },
       fontFamily: 'Be Vietnam Pro, system-ui, sans-serif',
     });
     try { await window.mermaid.run({ nodes: [el] }); } catch (e) { console.warn('Mermaid:', e); }
@@ -250,7 +250,8 @@
 
   // ---------- tasks ----------
   function labelChip(name, color) {
-    return h('span', { class: 'lbl', style: { color: `#${color}`, borderColor: `#${color}55`, background: `#${color}14` } }, name);
+    return h('span', { class: 'lbl', style: { borderColor: `#${color}66` } },
+      h('span', { class: 'dot', style: { background: `#${color}` } }), name);
   }
 
   function taskCard(t) {
