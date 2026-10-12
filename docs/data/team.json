@@ -1,0 +1,67 @@
+{
+  "group": "Nhóm 1",
+  "course": "IE103 – Quản lý thông tin",
+  "school": "Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM",
+  "members": [
+    {
+      "id": "tram",
+      "stt": 1,
+      "name": "Đỗ Phạm Minh Trâm",
+      "short": "Trâm",
+      "mssv": "25540042",
+      "email": "25540042@gm.uit.edu.vn",
+      "github": null,
+      "role": "Thiết kế CSDL",
+      "focus": "ERD, Class Diagram, mô hình quan hệ, chuẩn hoá, DDL · Phân hệ Đào tạo · CSDL hướng đối tượng",
+      "color": "#7c3aed"
+    },
+    {
+      "id": "nhu",
+      "stt": 2,
+      "name": "Trương Quang Như",
+      "short": "Như",
+      "mssv": "25540022",
+      "email": "25540022@gm.uit.edu.vn",
+      "github": "nhutruong-uit",
+      "role": "Nhóm trưởng",
+      "focus": "Khảo sát & yêu cầu, môi trường, xác thực – phân quyền · Đăng nhập, menu, danh mục · Tổng hợp báo cáo",
+      "color": "#2563eb"
+    },
+    {
+      "id": "phu",
+      "stt": 3,
+      "name": "Nguyễn Việt Phú",
+      "short": "Phú",
+      "mssv": "25540025",
+      "email": "25540025@gm.uit.edu.vn",
+      "github": null,
+      "role": "Lập trình CSDL",
+      "focus": "Stored Procedure, Function, Trigger, Cursor · Phân hệ Học tập · CSDL phân tán",
+      "color": "#059669"
+    },
+    {
+      "id": "duong",
+      "stt": 4,
+      "name": "Đỗ Bình Dương",
+      "short": "Dương",
+      "mssv": "25540008",
+      "email": "25540008@gm.uit.edu.vn",
+      "github": null,
+      "role": "Truy vấn & Dữ liệu",
+      "focus": "Dữ liệu mẫu, truy vấn SQL, XML/XPath/XQuery, Import/Export · Phân hệ Học viên · NoSQL",
+      "color": "#d97706"
+    },
+    {
+      "id": "giang",
+      "stt": 5,
+      "name": "Nguyễn Bảo Giang",
+      "short": "Giang",
+      "mssv": "25540009",
+      "email": "25540009@gm.uit.edu.vn",
+      "github": null,
+      "role": "Trình bày thông tin",
+      "focus": "View, Backup/Restore · Thu học phí (master–detail) · Báo cáo & Dashboard · Chương 4",
+      "color": "#db2777"
+    }
+  ]
+}

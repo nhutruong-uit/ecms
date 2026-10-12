@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ECMS · Kế hoạch đồ án</title>
+  <meta name="description" content="Kế hoạch, phân công và tiến độ đồ án IE103 – Hệ thống Quản lý Trung tâm Tiếng Anh (Nhóm 1, UIT).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='21' font-size='13' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>EC</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#tong-quan"><span class="logo">EC</span><span class="txt">ECMS · IE103</span></a>
+      <nav class="nav" aria-label="Mục lục">
+        <a href="#tong-quan">Tổng quan</a>
+        <a href="#thanh-vien">Thành viên</a>
+        <a href="#lo-trinh">Lộ trình</a>
+        <a href="#cong-viec">Công việc</a>
+        <a href="#de-cuong">Bám đề cương</a>
+        <a href="#thiet-ke">Thiết kế CSDL</a>
+        <a href="#cong-nghe">Công nghệ</a>
+        <a href="#quy-uoc">Quy ước</a>
+      </nav>
+      <button class="theme-btn" id="themeBtn" type="button" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">◐</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ================= Tổng quan ================= -->
+    <section class="hero" id="tong-quan">
+      <div class="eyebrow">Đồ án IE103 – Quản lý thông tin · Nhóm 1 · UIT</div>
+      <h1>ECMS – Hệ thống Quản lý Trung tâm Tiếng Anh</h1>
+      <p class="lead">
+        Xây dựng CSDL SQL Server và ứng dụng web Python (Streamlit) quản lý một chuỗi trung tâm tiếng Anh:
+        chi nhánh, khoá học, lớp, lịch học, học viên, kiểm tra đầu vào, ghi danh, điểm danh, điểm số, học phí và báo cáo.
+        Mọi phần đều bám đúng đề cương môn học, từ tổ chức thông tin đến các mô hình CSDL tiên tiến.
+      </p>
+      <div class="chips" id="heroChips">
+        <span class="chip">Nhóm <b>1</b></span>
+        <span class="chip">Thành viên <b>5</b></span>
+        <span class="chip">Bắt đầu <b>12/10/2026</b></span>
+        <span class="chip">Hạn nộp dự kiến <b id="deadlineChip">04/11/2026</b></span>
+      </div>
+      <div class="actions">
+        <a class="btn primary" id="btnProject" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">▦ Bảng công việc (Project)</a>
+        <a class="btn" href="https://github.com/nhutruong-uit/ecms/issues" target="_blank" rel="noopener">◎ Issues</a>
+        <a class="btn" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">⌥ Mã nguồn</a>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Tiến độ chung</div>
+          <div class="value" id="statProgress">–</div>
+          <div class="bar"><span id="barProgress" style="width:0"></span></div>
+        </div>
+        <div class="stat">
+          <div class="label">Task hoàn thành</div>
+          <div class="value" id="statDone">–</div>
+          <div class="sub" id="statDoneSub">trên tổng số task</div>
+        </div>
+        <div class="stat">
+          <div class="label">Sprint hiện tại</div>
+          <div class="value" id="statSprint">–</div>
+          <div class="sub" id="statSprintSub"></div>
+        </div>
+        <div class="stat">
+          <div class="label">Còn lại tới hạn nộp</div>
+          <div class="value" id="statDays">–</div>
+          <div class="sub" id="statDaysSub"></div>
+        </div>
+      </div>
+      <div class="sync-note" id="syncNote">Đang đồng bộ trạng thái từ GitHub Issues…</div>
+    </section>
+
+    <!-- ================= Thành viên ================= -->
+    <section class="block" id="thanh-vien">
+      <div class="section-head">
+        <div>
+          <h2>Thành viên & vai trò</h2>
+          <p>Mỗi bạn phụ trách một mảng kiến thức của môn và một phân hệ của ứng dụng, để ai cũng có phần CSDL, phần web và phần báo cáo. Bấm vào thẻ để lọc task của bạn đó.</p>
+        </div>
+      </div>
+      <div class="members" id="members"></div>
+    </section>
+
+    <!-- ================= Lộ trình ================= -->
+    <section class="block" id="lo-trinh">
+      <div class="section-head">
+        <div>
+          <h2>Lộ trình 4 sprint</h2>
+          <p>Thứ tự đi theo quy trình quản lý thông tin trong Chương 1: tổ chức → xử lý → trình bày, rồi tới mô hình tiên tiến và tổng hợp.</p>
+        </div>
+      </div>
+      <div class="sprints" id="sprints"></div>
+    </section>
+
+    <!-- ================= Công việc ================= -->
+    <section class="block" id="cong-viec">
+      <div class="section-head">
+        <div>
+          <h2>Công việc chi tiết</h2>
+          <p>Mỗi task là một issue trên GitHub. Mở từng task để xem mục tiêu, các bước, sản phẩm bàn giao và tiêu chí hoàn thành.</p>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="seg" id="ownerFilter" role="group" aria-label="Lọc theo thành viên"></div>
+        <select id="sprintFilter" aria-label="Lọc theo sprint"><option value="">Mọi sprint</option></select>
+        <select id="chapterFilter" aria-label="Lọc theo chương"><option value="">Mọi chương</option></select>
+        <select id="statusFilter" aria-label="Lọc theo trạng thái">
+          <option value="">Mọi trạng thái</option>
+          <option value="open">Chưa xong</option>
+          <option value="done">Hoàn thành</option>
+          <option value="late">Quá hạn</option>
+        </select>
+        <input id="searchBox" type="search" placeholder="Tìm task…" aria-label="Tìm task">
+        <span class="count" id="taskCount"></span>
+      </div>
+      <div class="tasks" id="tasks"></div>
+    </section>
+
+    <!-- ================= Bám đề cương ================= -->
+    <section class="block" id="de-cuong">
+      <div class="section-head">
+        <div>
+          <h2>Bám sát đề cương IE103</h2>
+          <p>Đối chiếu từng nội dung trong đề cương (lý thuyết, thực hành, chuẩn đầu ra) với task và sản phẩm của đồ án, để không sót phần nào khi chấm A4.</p>
+        </div>
+      </div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th style="width:24%">Chương / buổi</th><th>Nội dung đề cương</th><th style="width:16%">Task</th><th style="width:30%">Sản phẩm trong đồ án</th></tr></thead>
+          <tbody id="coverage"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= Thiết kế CSDL ================= -->
+    <section class="block" id="thiet-ke">
+      <div class="section-head">
+        <div>
+          <h2>Thiết kế CSDL dự kiến</h2>
+          <p>Bản nháp để cả nhóm thống nhất phạm vi: 19 bảng, gọn như một đồ án, nhưng có đủ mọi loại thuộc tính và mối quan hệ học ở Chương 2. Trâm hoàn thiện ERD chính thức (ký hiệu Chen) ở T04.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card pad">
+          <h3 style="margin-top:0">Các loại mối quan hệ được thể hiện</h3>
+          <dl class="rel">
+            <dt>1 – 1</dt><dd>CHINHANH – NHANVIEN (quản lý chi nhánh); NHANVIEN – GIAOVIEN (chuyên biệt hoá); TAIKHOAN – NHANVIEN / HOCVIEN</dd>
+            <dt>1 – N</dt><dd>CHINHANH – PHONGHOC / NHANVIEN / LOPHOC; CHUONGTRINH – KHOAHOC; KHOAHOC – LOPHOC; GIAOVIEN – LOPHOC; HOCVIEN – PHIEUTHU</dd>
+            <dt>N – M</dt><dd>HOCVIEN – LOPHOC qua DANGKY; DANGKY – BUOIHOC qua DIEMDANH; PHIEUTHU – DANGKY qua CT_PHIEUTHU</dd>
+            <dt>Đệ quy</dt><dd>NHANVIEN quản lý NHANVIEN; KHOAHOC tiên quyết của KHOAHOC</dd>
+            <dt>3 ngôi</dt><dd>LICHHOC: LOPHOC – PHONGHOC – CAHOC</dd>
+            <dt>Thực thể yếu</dt><dd>PHONGHOC (theo CHINHANH), BUOIHOC (theo LOPHOC)</dd>
+          </dl>
+        </div>
+        <div class="card pad">
+          <h3 style="margin-top:0">Thuộc tính & dữ liệu đặc biệt</h3>
+          <dl class="rel">
+            <dt>Phức hợp</dt><dd>Họ tên (Họ + Tên), Địa chỉ</dd>
+            <dt>Đa trị</dt><dd>Chứng chỉ của giáo viên → bảng CHUNGCHI_GV</dd>
+            <dt>Suy diễn</dt><dd>Tuổi, Thành tiền, Điểm TB (computed column); Sĩ số hiện tại, Tổng tiền phiếu thu (trigger)</dd>
+            <dt>XML</dt><dd>KIEMTRA_DAUVAO.KetQuaChiTiet – điểm 4 kỹ năng, có XML Schema</dd>
+            <dt>Kế thừa</dt><dd>Class Diagram: Nguoi → HocVien, NhanVien → GiaoVien</dd>
+            <dt>Kiểm toán</dt><dd>NHATKY ghi vết thay đổi bằng trigger</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card erd" style="margin-top:12px">
+        <pre class="mermaid">
+erDiagram
+  CHINHANH ||--o{ NHANVIEN : "làm việc tại"
+  CHINHANH |o--o| NHANVIEN : "quản lý"
+  NHANVIEN |o--o{ NHANVIEN : "quản lý trực tiếp"
+  NHANVIEN ||--o| GIAOVIEN : "là"
+  GIAOVIEN ||--o{ CHUNGCHI_GV : "có"
+  CHINHANH ||--|{ PHONGHOC : "gồm"
+  CHUONGTRINH ||--|{ KHOAHOC : "gồm"
+  KHOAHOC |o--o{ KHOAHOC : "tiên quyết"
+  KHOAHOC ||--o{ LOPHOC : "mở"
+  CHINHANH ||--o{ LOPHOC : "tổ chức"
+  GIAOVIEN ||--o{ LOPHOC : "phụ trách"
+  LOPHOC ||--|{ LICHHOC : "xếp lịch"
+  PHONGHOC ||--o{ LICHHOC : "dùng"
+  CAHOC ||--o{ LICHHOC : "vào ca"
+  LOPHOC ||--o{ BUOIHOC : "gồm"
+  CHINHANH ||--o{ HOCVIEN : "tiếp nhận"
+  HOCVIEN ||--o{ KIEMTRA_DAUVAO : "dự"
+  KHOAHOC |o--o{ KIEMTRA_DAUVAO : "đề xuất"
+  HOCVIEN ||--o{ DANGKY : "đăng ký"
+  LOPHOC ||--o{ DANGKY : "có"
+  DANGKY ||--o{ DIEMDANH : "được"
+  BUOIHOC ||--o{ DIEMDANH : "ghi nhận"
+  HOCVIEN ||--o{ PHIEUTHU : "đóng"
+  NHANVIEN ||--o{ PHIEUTHU : "lập"
+  PHIEUTHU ||--|{ CT_PHIEUTHU : "gồm"
+  DANGKY ||--o{ CT_PHIEUTHU : "được thu"
+  NHANVIEN |o--o| TAIKHOAN : "dùng"
+  HOCVIEN |o--o| TAIKHOAN : "dùng"
+        </pre>
+      </div>
+
+      <div class="card table-wrap tables-list" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Bảng</th><th>Ý nghĩa</th><th>Cột chính (dự kiến)</th></tr></thead>
+          <tbody>
+            <tr><td>CHINHANH</td><td>Chi nhánh trung tâm</td><td>MaCN, TenCN, DiaChi, SoDienThoai, MaNVQuanLy</td></tr>
+            <tr><td>NHANVIEN</td><td>Nhân viên (quản lý, giáo vụ, kế toán, giáo viên)</td><td>MaNV, HoNV, TenNV, NgaySinh, ChucVu, LuongCoBan, MaCN, MaNVQuanLy</td></tr>
+            <tr><td>GIAOVIEN</td><td>Thông tin riêng của giáo viên (chuyên biệt hoá NHANVIEN)</td><td>MaGV, LoaiGV, QuocTich, TrinhDo, DonGiaBuoi</td></tr>
+            <tr><td>CHUNGCHI_GV</td><td>Chứng chỉ giáo viên (thuộc tính đa trị)</td><td>MaGV, TenChungChi, Diem, NgayCap</td></tr>
+            <tr><td>HOCVIEN</td><td>Học viên</td><td>MaHV, HoHV, TenHV, NgaySinh, Tuoi (tính toán), SoDienThoai, Email, MaCN</td></tr>
+            <tr><td>KIEMTRA_DAUVAO</td><td>Kết quả kiểm tra xếp lớp</td><td>MaKT, MaHV, NgayKT, DiemTong, KetQuaChiTiet (XML), MaKHDeXuat</td></tr>
+            <tr><td>CHUONGTRINH</td><td>Chương trình đào tạo (IELTS, TOEIC…)</td><td>MaCT, TenCT, MoTa</td></tr>
+            <tr><td>KHOAHOC</td><td>Khoá học thuộc chương trình</td><td>MaKH, TenKH, MaCT, TrinhDoDauVao, TrinhDoDauRa, SoBuoi, HocPhi, MaKHTienQuyet</td></tr>
+            <tr><td>PHONGHOC</td><td>Phòng học (thực thể yếu theo chi nhánh)</td><td>MaCN, MaPhong, SucChua, LoaiPhong</td></tr>
+            <tr><td>CAHOC</td><td>Ca học trong ngày</td><td>MaCa, GioBatDau, GioKetThuc</td></tr>
+            <tr><td>LOPHOC</td><td>Lớp mở của một khoá học</td><td>MaLop, MaKH, MaCN, MaGV, NgayKhaiGiang, NgayKetThuc, SiSoToiDa, SiSoHienTai, TrangThai</td></tr>
+            <tr><td>LICHHOC</td><td>Lịch học cố định (liên kết 3 ngôi)</td><td>MaLop, Thu, MaCa, MaCN, MaPhong</td></tr>
+            <tr><td>BUOIHOC</td><td>Buổi học cụ thể (thực thể yếu theo lớp)</td><td>MaLop, STT, NgayHoc, MaCa, NoiDung</td></tr>
+            <tr><td>DANGKY</td><td>Ghi danh học viên vào lớp (N–M có thuộc tính)</td><td>MaDK, MaHV, MaLop, NgayDK, HocPhi, GiamGia, ThanhTien, TrangThaiHP, DiemGK, DiemCK, DiemTB, KetQua</td></tr>
+            <tr><td>DIEMDANH</td><td>Điểm danh từng buổi</td><td>MaDK, MaLop, STT, TrangThai, GhiChu</td></tr>
+            <tr><td>PHIEUTHU</td><td>Phiếu thu học phí (master)</td><td>MaPT, MaHV, MaNV, NgayThu, HinhThuc, TongTien</td></tr>
+            <tr><td>CT_PHIEUTHU</td><td>Chi tiết phiếu thu (detail)</td><td>MaPT, MaDK, SoTien</td></tr>
+            <tr><td>TAIKHOAN</td><td>Tài khoản đăng nhập ứng dụng</td><td>TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV, TrangThai</td></tr>
+            <tr><td>NHATKY</td><td>Nhật ký kiểm toán</td><td>MaNK, TenBang, ThaoTac, DuLieuCu, DuLieuMoi, NguoiThucHien, ThoiGian</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= Công nghệ ================= -->
+    <section class="block" id="cong-nghe">
+      <div class="section-head">
+        <div>
+          <h2>Công nghệ & cấu trúc repo</h2>
+          <p>Theo đúng công cụ trong đề cương (SQL Server Management Studio) và bài thực hành 5 (Python + pyodbc + Streamlit).</p>
+        </div>
+      </div>
+      <div class="tech">
+        <div class="card pad"><h3>SQL Server 2022</h3><p>HQT CSDL chính, dùng T-SQL cho procedure, function, trigger, cursor, XML, login/role, backup. Windows dùng SSMS; macOS chạy Docker.</p></div>
+        <div class="card pad"><h3>Python · Streamlit</h3><p>Ứng dụng web: menu bằng st.navigation, form bằng st.form / st.data_editor, biểu đồ bằng Plotly. Kết nối DB qua pyodbc + ODBC Driver 18.</p></div>
+        <div class="card pad"><h3>pandas · reportlab · openpyxl</h3><p>Xử lý dữ liệu báo cáo, xuất PDF (thay Crystal Report) và Excel.</p></div>
+        <div class="card pad"><h3>draw.io · Mermaid</h3><p>ERD (Chen), Class Diagram, sơ đồ quy trình nghiệp vụ, cây menu.</p></div>
+        <div class="card pad"><h3>MongoDB</h3><p>Demo chuyển đổi sang CSDL phi quan hệ ở Chương 5 (chạy bằng Docker).</p></div>
+        <div class="card pad"><h3>GitHub</h3><p>Issues + Project để giao việc, Pages để công bố kế hoạch, lịch sử commit ghi đúng người phụ trách.</p></div>
+      </div>
+<pre style="margin-top:12px"><code>ecms/
+├── app/                 # Ứng dụng web Streamlit (main.py, pages/, core/, reports/)
+├── database/            # Script SQL đánh số theo thứ tự chạy
+│   ├── 01_schema.sql        02_seed.sql        03_functions.sql
+│   ├── 04_views.sql         05_procedures.sql  06_triggers.sql
+│   ├── 07_cursors.sql       08_security.sql    09_xml.sql
+│   ├── 10_queries.sql       11_backup_restore.sql
+│   └── 12_import_export.sql 13_distributed.sql
+├── data/                # CSV / XML mẫu cho import
+├── nosql/               # Demo MongoDB (Chương 5)
+├── docs/                # GitHub Pages (trang này) + docs/design (ERD, CD…)
+├── report/              # Báo cáo theo chương
+├── slides/              # Slide thuyết trình
+└── scripts/             # commit-as.sh, gen_seed.py, sync_issues.py…</code></pre>
+    </section>
+
+    <!-- ================= Quy ước ================= -->
+    <section class="block" id="quy-uoc">
+      <div class="section-head">
+        <div>
+          <h2>Quy ước làm việc</h2>
+          <p>Nhóm uỷ quyền cho Như thực hiện phần code. Mỗi commit vẫn ghi tên thành viên phụ trách phần đó, để lịch sử git thể hiện đúng phân công.</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card pad">
+          <h3 style="margin-top:0">Quy trình một task</h3>
+          <ol class="steps-list">
+            <li><div>Tạo nhánh theo task: <code>t11-stored-procedure</code></div></li>
+            <li><div>Commit bằng tên người phụ trách: <code>scripts/commit-as.sh phu -m "feat(db): sp_DangKyHoc (#11)"</code></div></li>
+            <li><div>Mở Pull Request, mô tả có <code>Closes #11</code>, đính kèm ảnh kết quả</div></li>
+            <li><div>Người phụ trách xem lại → merge vào <code>main</code> → issue tự đóng, Project tự chuyển sang Done</div></li>
+          </ol>
+        </div>
+        <div class="card pad">
+          <h3 style="margin-top:0">Definition of Done</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>Script SQL chạy lại được từ đầu (<code>DROP … IF EXISTS</code>), chú thích tiếng Việt</li>
+            <li>Có ảnh chụp kết quả và mục báo cáo tương ứng trong <code>report/</code></li>
+            <li>Có phần so sánh / đánh giá kèm số liệu khi phù hợp (theo rubric A4)</li>
+            <li>Tick đủ checklist trong issue; PR đã merge</li>
+          </ul>
+          <h3>Mẫu commit</h3>
+          <p class="note" style="margin:0"><code>feat</code> tính năng · <code>db</code> script CSDL · <code>docs</code> tài liệu/báo cáo · <code>fix</code> sửa lỗi · <code>chore</code> việc lặt vặt. Ví dụ: <code>db(views): thêm vw_CongNoHocVien (#16)</code></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      Nhóm 1 · IE103 – Quản lý thông tin · Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM.
+      Nội dung trang lấy từ <a href="https://github.com/nhutruong-uit/ecms/blob/main/docs/data/tasks.json" target="_blank" rel="noopener">docs/data/tasks.json</a>; trạng thái task lấy trực tiếp từ GitHub Issues.
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

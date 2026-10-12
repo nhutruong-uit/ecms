@@ -1,0 +1,972 @@
+{
+  "project": {
+    "name": "ECMS – Đồ án IE103 (Nhóm 1)",
+    "title": "Hệ thống Quản lý Trung tâm Tiếng Anh",
+    "repo": "nhutruong-uit/ecms",
+    "pages": "https://nhutruong-uit.github.io/ecms/",
+    "projectNumber": null,
+    "projectUrl": null,
+    "start": "2026-10-12",
+    "deadline": "2026-11-04",
+    "deadlineNote": "Hạn nộp dự kiến đầu tháng 11/2026 – cập nhật khi thầy chốt lịch."
+  },
+  "sprints": [
+    {
+      "id": "S1",
+      "name": "Sprint 1 · Phân tích & Thiết kế",
+      "start": "2026-10-12",
+      "end": "2026-10-18",
+      "goal": "Khảo sát nghiệp vụ, ERD, Class Diagram, lược đồ quan hệ, cài đặt CSDL và dữ liệu mẫu; môi trường chạy được trên máy mọi người."
+    },
+    {
+      "id": "S2",
+      "name": "Sprint 2 · Xử lý thông tin",
+      "start": "2026-10-19",
+      "end": "2026-10-25",
+      "goal": "Truy vấn SQL/XML, lập trình CSDL (procedure, function, trigger, cursor), an ninh dữ liệu; khung web có đăng nhập và menu phân quyền."
+    },
+    {
+      "id": "S3",
+      "name": "Sprint 3 · Trình bày & CSDL tiên tiến",
+      "start": "2026-10-26",
+      "end": "2026-11-01",
+      "goal": "Hoàn thiện các phân hệ web, báo cáo và dashboard; Chương 5 (hướng đối tượng, phân tán, NoSQL)."
+    },
+    {
+      "id": "S4",
+      "name": "Sprint 4 · Hoàn thiện & Nộp",
+      "start": "2026-11-02",
+      "end": "2026-11-04",
+      "goal": "Ghép báo cáo, làm slide, kiểm thử tích hợp từ CSDL trống, tổng duyệt thuyết trình và nộp."
+    }
+  ],
+  "chapters": [
+    { "id": "pm", "label": "quan-ly-du-an", "name": "Quản lý dự án", "color": "6b7280" },
+    { "id": "ch1", "label": "ch1-tong-quan", "name": "Chương 1 · Tổng quan", "color": "0ea5e9" },
+    { "id": "ch2", "label": "ch2-to-chuc-thong-tin", "name": "Chương 2 · Tổ chức thông tin", "color": "8b5cf6" },
+    { "id": "ch3a", "label": "ch3-truy-van", "name": "Chương 3 · Truy vấn dữ liệu", "color": "f59e0b" },
+    { "id": "ch3b", "label": "ch3-an-ninh", "name": "Chương 3 · An ninh dữ liệu", "color": "ef4444" },
+    { "id": "ch3c", "label": "ch3-lap-trinh", "name": "Chương 3 · Lập trình CSDL", "color": "10b981" },
+    { "id": "ch4", "label": "ch4-trinh-bay", "name": "Chương 4 · Trình bày thông tin", "color": "ec4899" },
+    { "id": "ch5", "label": "ch5-csdl-tien-tien", "name": "Chương 5 · Mô hình CSDL tiên tiến", "color": "14b8a6" }
+  ],
+  "types": [
+    { "id": "setup", "label": "setup", "name": "Thiết lập", "color": "374151" },
+    { "id": "database", "label": "database", "name": "CSDL / SQL", "color": "1d4ed8" },
+    { "id": "web", "label": "web", "name": "Ứng dụng web", "color": "be185d" },
+    { "id": "docs", "label": "docs", "name": "Tài liệu / báo cáo", "color": "4b5563" }
+  ],
+  "tasks": [
+    {
+      "id": "T01",
+      "issue": null,
+      "title": "Khởi tạo repo, kế hoạch, GitHub Project & Pages",
+      "owner": "nhu",
+      "sprint": "S1",
+      "due": "2026-10-12",
+      "chapter": "pm",
+      "types": ["setup", "docs"],
+      "syllabus": "Quản lý dự án – hỗ trợ tiêu chí \"Bố cục báo cáo\" và \"Kỹ năng trình bày\" của rubric A4",
+      "summary": "Thiết lập nền tảng làm việc nhóm: repo, cấu trúc thư mục, quy ước, kế hoạch và phân công, GitHub Project, GitHub Pages.",
+      "steps": [
+        "Tạo cấu trúc thư mục repo (database/, app/, docs/, report/, scripts/)",
+        "Viết README và CONTRIBUTING (quy ước nhánh, commit, PR, Definition of Done)",
+        "Lập kế hoạch 4 sprint, chia 29 task cho 5 thành viên, lập bảng bám sát đề cương",
+        "Tạo labels, milestones, issues; tạo GitHub Project; bật GitHub Pages",
+        "Viết script commit-as.sh để commit ghi đúng tên thành viên phụ trách"
+      ],
+      "deliverables": [
+        "README.md, CONTRIBUTING.md",
+        "docs/ (GitHub Pages), docs/data/tasks.json, docs/data/team.json",
+        "scripts/commit-as.sh, scripts/sync_issues.py, scripts/sync_project.py"
+      ],
+      "acceptance": [
+        "Trang Pages truy cập được, hiển thị đủ kế hoạch",
+        "Mỗi task có issue, người phụ trách, sprint và hạn chót",
+        "Các thành viên đã nhận link Pages và Project"
+      ],
+      "depends": []
+    },
+    {
+      "id": "T02",
+      "issue": null,
+      "title": "Khảo sát nghiệp vụ & đặc tả yêu cầu (Chương 1 + Lab 1)",
+      "owner": "nhu",
+      "sprint": "S1",
+      "due": "2026-10-14",
+      "chapter": "ch1",
+      "types": ["docs"],
+      "syllabus": "Chương 1 (Buổi 1): tại sao phải QLTT, quy trình QLTT, dữ liệu – thông tin – tri thức · Bài thực hành 1 · CĐR G1.1",
+      "summary": "Mô tả bài toán quản lý trung tâm tiếng Anh, khảo sát quy trình nghiệp vụ, xác định yêu cầu; áp dụng quy trình quản lý thông tin và mô hình DIKW vào bài toán.",
+      "steps": [
+        "Mô tả trung tâm giả định: 3 chi nhánh; chương trình IELTS, TOEIC, Giao tiếp, Thiếu nhi; cơ cấu tổ chức (quản lý, giáo vụ, kế toán, giáo viên)",
+        "Vẽ quy trình nghiệp vụ: tư vấn → kiểm tra đầu vào → xếp lớp/ghi danh → thu học phí → học & điểm danh → thi & đánh giá → cấp chứng nhận",
+        "Phân tích hiện trạng quản lý bằng Excel (file phẳng): trùng lặp, sai lệch, khó tổng hợp, không phân quyền",
+        "Xác định tác nhân, yêu cầu chức năng / phi chức năng và danh sách báo cáo cần có",
+        "Ánh xạ 5 giai đoạn QLTT (Thu thập – Tổ chức – Chuyển đổi – Trình bày – An toàn) vào hệ thống ECMS",
+        "Minh hoạ DIKW: dữ liệu điểm danh → tỷ lệ chuyên cần → nhận định học viên có nguy cơ bỏ học → quyết định chăm sóc học viên",
+        "Lab 1: tìm hiểu và so sánh ≥ 3 công cụ QLTT thực tế (Excel/Google Sheets, phần mềm quản lý trung tâm/CRM, LMS như Moodle/Google Classroom); rút ra yêu cầu cho ECMS"
+      ],
+      "deliverables": [
+        "report/01-tong-quan.md",
+        "docs/design/quy-trinh-nghiep-vu.drawio + .png"
+      ],
+      "acceptance": [
+        "Có sơ đồ quy trình nghiệp vụ",
+        "Có ≥ 15 yêu cầu chức năng, phân theo tác nhân",
+        "Bảng so sánh công cụ có tiêu chí rõ ràng",
+        "Trâm xác nhận đủ thông tin để vẽ ERD"
+      ],
+      "depends": []
+    },
+    {
+      "id": "T03",
+      "issue": null,
+      "title": "Môi trường phát triển & khung ứng dụng Streamlit",
+      "owner": "nhu",
+      "sprint": "S1",
+      "due": "2026-10-15",
+      "chapter": "pm",
+      "types": ["setup", "web"],
+      "syllabus": "Công cụ thực hành (đề cương mục 8: SQL Server Management Studio) · Lab 5 (Python + pyodbc + Streamlit)",
+      "summary": "Chuẩn hoá môi trường để cả nhóm chạy cùng một CSDL và ứng dụng web trên Windows lẫn macOS.",
+      "steps": [
+        "docker-compose.yml chạy SQL Server 2022 (mcr.microsoft.com/mssql/server), volume dữ liệu, thư mục backup gắn ra ngoài",
+        "Hướng dẫn cài đặt: Windows (SQL Server Developer/Express + SSMS); macOS (Docker + ODBC Driver 18 + VS Code mssql)",
+        "Script database/run_all.sh và run_all.ps1 chạy toàn bộ script SQL theo thứ tự",
+        "Khung ứng dụng: app/main.py (st.navigation), app/core/db.py (pyodbc, hàm query/execute/call_proc có tham số hoá), app/core/config.py (.env), app/core/auth.py (khung)",
+        "requirements.txt (streamlit, pyodbc, pandas, python-dotenv, reportlab, openpyxl, plotly) và .env.example",
+        "Trang \"Kiểm tra kết nối\" hiển thị phiên bản SQL Server và số bảng"
+      ],
+      "deliverables": [
+        "docker-compose.yml, .env.example, requirements.txt",
+        "database/run_all.sh, database/run_all.ps1",
+        "app/ (khung), docs/SETUP.md"
+      ],
+      "acceptance": [
+        "Thành viên khác làm theo SETUP.md chạy được streamlit run app/main.py",
+        "Trang Kiểm tra kết nối báo kết nối DB thành công"
+      ],
+      "depends": []
+    },
+    {
+      "id": "T04",
+      "issue": null,
+      "title": "Thiết kế mức khái niệm: ERD & từ điển dữ liệu",
+      "owner": "tram",
+      "sprint": "S1",
+      "due": "2026-10-14",
+      "chapter": "ch2",
+      "types": ["database", "docs"],
+      "syllabus": "Chương 2 (Buổi 2): biểu diễn mức khái niệm, mô hình hoá thế giới thực, mô hình ERD · CĐR G1.2, G2.1",
+      "summary": "Mô hình hoá trung tâm thành ERD (ký hiệu Chen), có đủ các loại thuộc tính và mối quan hệ học trong Chương 2.",
+      "steps": [
+        "Xác định tập thực thể từ kết quả khảo sát T02 (khoảng 17 thực thể – xem bản nháp ERD trên Pages)",
+        "Phân loại thuộc tính: đơn, phức hợp (Họ tên, Địa chỉ), đa trị (chứng chỉ giáo viên), suy diễn (Tuổi, Sĩ số hiện tại, Thành tiền, Điểm TB); thuộc tính khoá",
+        "Mối quan hệ kèm bản số (min,max): 1–1, 1–N, N–M, đệ quy (NV quản lý NV, khoá học tiên quyết), 3 ngôi (Lịch học: Lớp – Phòng – Ca)",
+        "Thực thể yếu (Phòng học theo Chi nhánh, Buổi học theo Lớp) và chuyên biệt hoá (Nhân viên ⊃ Giáo viên)",
+        "Vẽ ERD trên draw.io; lập từ điển dữ liệu (tên, ý nghĩa, kiểu, miền giá trị, ràng buộc)"
+      ],
+      "deliverables": [
+        "docs/design/erd.drawio + erd.png",
+        "report/02-to-chuc-thong-tin.md (mục 2.1–2.2)"
+      ],
+      "acceptance": [
+        "ERD thể hiện đủ 1–1, 1–N, N–M, đệ quy, 3 ngôi, thực thể yếu, chuyên biệt hoá",
+        "Có bảng giải thích từng mối quan hệ",
+        "Nhóm review và thông qua"
+      ],
+      "depends": ["T02"]
+    },
+    {
+      "id": "T05",
+      "issue": null,
+      "title": "Class Diagram (UML) & so sánh ERD – Class Diagram",
+      "owner": "tram",
+      "sprint": "S1",
+      "due": "2026-10-16",
+      "chapter": "ch2",
+      "types": ["docs"],
+      "syllabus": "Chương 2 (Buổi 2): mô hình ERD và mô hình CD · CĐR G1.2",
+      "summary": "Biểu diễn cùng bài toán bằng sơ đồ lớp UML để thấy khác biệt giữa mô hình dữ liệu và mô hình hướng đối tượng (làm nền cho T25).",
+      "steps": [
+        "Lớp gồm tên, thuộc tính, phương thức (VD: HocVien.dangKy(), LopHoc.siSoConLai(), PhieuThu.tinhTong())",
+        "Phạm vi truy cập (+, -, #) và bản số (0..1, 1..*, *)",
+        "Kế thừa: Nguoi → HocVien, Nguoi → NhanVien → GiaoVien",
+        "Thành phần (composition): LopHoc ◆ BuoiHoc, PhieuThu ◆ CTPhieuThu; kết tập (aggregation): ChuongTrinh ◇ KhoaHoc; kết hợp có lớp liên kết: HocVien – LopHoc (DangKy)",
+        "Bảng so sánh ERD và Class Diagram áp dụng trên chính bài toán"
+      ],
+      "deliverables": [
+        "docs/design/class-diagram.drawio + .png",
+        "report mục 2.3"
+      ],
+      "acceptance": [
+        "Class Diagram nhất quán với ERD",
+        "Có ít nhất 1 ví dụ cho mỗi loại quan hệ: kế thừa, kết hợp, thành phần, kết tập"
+      ],
+      "depends": ["T04"]
+    },
+    {
+      "id": "T06",
+      "issue": null,
+      "title": "Mô hình quan hệ, chuẩn hoá, RBTV; so sánh mô hình phẳng – quan hệ – XML",
+      "owner": "tram",
+      "sprint": "S1",
+      "due": "2026-10-16",
+      "chapter": "ch2",
+      "types": ["database", "docs"],
+      "syllabus": "Chương 2 (Buổi 3): biểu diễn mức logic, mô hình phẳng, có cấu trúc, quan hệ, XML; khoá, chỉ mục, RBTV · CĐR G1.2, G2.1",
+      "summary": "Chuyển ERD sang lược đồ quan hệ, chuẩn hoá và đặc tả ràng buộc toàn vẹn; so sánh các mô hình mức logic trên chính dữ liệu của trung tâm.",
+      "steps": [
+        "Áp dụng quy tắc chuyển đổi cho thực thể mạnh/yếu, 1–1, 1–N, N–M, đệ quy, 3 ngôi, đa trị, chuyên biệt hoá → lược đồ quan hệ (gạch chân khoá chính, in nghiêng khoá ngoại)",
+        "Xác định phụ thuộc hàm, kiểm tra đạt 3NF/BCNF; giải thích các chỗ cố ý lưu giá trị suy diễn (duy trì bằng trigger)",
+        "Đặc tả RBTV: miền giá trị, liên thuộc tính, liên bộ, khoá ngoại, liên quan hệ; lập bảng tầm ảnh hưởng Thêm/Xoá/Sửa (VD: Sĩ số hiện tại ≤ Sĩ số tối đa; Ngày kết thúc > Ngày khai giảng; Tổng tiền phiếu thu = tổng chi tiết)",
+        "Ví dụ mô hình phẳng: file Excel ghi danh hiện trạng → chỉ ra dị thường thêm/xoá/sửa",
+        "Ví dụ mô hình XML cho cùng dữ liệu (cây Chi nhánh → Lớp → Học viên); bảng so sánh Phẳng / Quan hệ / XML"
+      ],
+      "deliverables": [
+        "docs/design/relational-schema.md",
+        "docs/design/flat-example.xlsx",
+        "report mục 2.4–2.6"
+      ],
+      "acceptance": [
+        "Mọi bảng đạt ≥ 3NF hoặc có giải thích",
+        "Có ≥ 10 RBTV kèm bảng tầm ảnh hưởng",
+        "Có bảng so sánh 3 mô hình logic"
+      ],
+      "depends": ["T04"]
+    },
+    {
+      "id": "T07",
+      "issue": null,
+      "title": "Cài đặt CSDL: script DDL, ràng buộc & chỉ mục",
+      "owner": "tram",
+      "sprint": "S1",
+      "due": "2026-10-17",
+      "chapter": "ch2",
+      "types": ["database"],
+      "syllabus": "Chương 2 (Buổi 3): mô hình quan hệ, khoá chính – khoá ngoại, chỉ mục · Bài thực hành 6 (cài đặt CSDL)",
+      "summary": "Hiện thực lược đồ quan hệ trên SQL Server.",
+      "steps": [
+        "database/01_schema.sql: CREATE DATABASE ECMS (COLLATE Vietnamese_CI_AS) và các bảng với PK, FK (ON DELETE/UPDATE phù hợp), UNIQUE, CHECK, DEFAULT",
+        "Cột tính toán (computed column) cho thuộc tính suy diễn: Tuổi, ThanhTien, DiemTB",
+        "Cột kiểu XML cho KIEMTRA_DAUVAO.KetQuaChiTiet (gắn XML Schema ở T10)",
+        "Chỉ mục nonclustered cho cột tìm kiếm và khoá ngoại thường dùng; giải thích lựa chọn",
+        "Script chạy lại được (DROP ... IF EXISTS), chú thích tiếng Việt",
+        "Tạo Database Diagram trong SSMS để đối chiếu với ERD"
+      ],
+      "deliverables": [
+        "database/01_schema.sql",
+        "docs/design/db-diagram.png",
+        "report mục 2.7"
+      ],
+      "acceptance": [
+        "Chạy sạch trên SQL Server 2022 từ CSDL trống",
+        "Database Diagram khớp lược đồ quan hệ ở T06"
+      ],
+      "depends": ["T06", "T03"]
+    },
+    {
+      "id": "T08",
+      "issue": null,
+      "title": "Dữ liệu mẫu (seed)",
+      "owner": "duong",
+      "sprint": "S1",
+      "due": "2026-10-18",
+      "chapter": "ch2",
+      "types": ["database"],
+      "syllabus": "Bài thực hành 6: cài đặt CSDL và dữ liệu phục vụ truy vấn / xử lý thông tin",
+      "summary": "Tạo bộ dữ liệu mẫu đủ lớn và hợp lý để truy vấn, báo cáo, thống kê có ý nghĩa.",
+      "steps": [
+        "Script Python scripts/gen_seed.py (Faker vi_VN, seed cố định để tái lập) sinh ra database/02_seed.sql",
+        "Quy mô: 3 chi nhánh, 12 phòng, 6 ca, 20 nhân viên (10 giáo viên), 4 chương trình, 12 khoá học, 24 lớp, 300 học viên, ~600 đăng ký, buổi học và điểm danh, ~400 phiếu thu, kết quả test đầu vào dạng XML",
+        "Dữ liệu trải từ 2025 đến 2026 để báo cáo theo tháng/quý; có trường hợp biên (lớp đầy, học viên nợ học phí, vắng nhiều)",
+        "Giá trị suy diễn (sĩ số hiện tại, tổng tiền phiếu thu) phải nhất quán với dữ liệu chi tiết",
+        "Xuất thêm data/import/*.csv phục vụ T18"
+      ],
+      "deliverables": [
+        "scripts/gen_seed.py",
+        "database/02_seed.sql",
+        "data/import/*.csv"
+      ],
+      "acceptance": [
+        "Seed chạy không vi phạm ràng buộc nào",
+        "Bảng thống kê số dòng mỗi bảng được ghi vào báo cáo"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T09",
+      "issue": null,
+      "title": "Truy vấn SQL nghiệp vụ (≥ 25 câu)",
+      "owner": "duong",
+      "sprint": "S2",
+      "due": "2026-10-23",
+      "chapter": "ch3a",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 4): truy vấn SQL – lọc, sắp xếp, GROUP BY/HAVING, JOIN, truy vấn con, phép tập hợp · CĐR G2.1, G2.2",
+      "summary": "Bộ truy vấn trả lời các câu hỏi quản lý thực tế, phủ toàn bộ kỹ thuật truy vấn của Chương 3.",
+      "steps": [
+        "Nhóm 1 – Cơ bản: SELECT/WHERE (LIKE, IN, BETWEEN, IS NULL), ORDER BY, TOP",
+        "Nhóm 2 – Kết nối: INNER/LEFT/RIGHT/FULL JOIN, self-join (nhân viên – quản lý), join ≥ 4 bảng",
+        "Nhóm 3 – Gom nhóm: GROUP BY, HAVING, COUNT/SUM/AVG/MIN/MAX (doanh thu theo chi nhánh/tháng, sĩ số theo khoá)",
+        "Nhóm 4 – Truy vấn lồng: IN/NOT IN, EXISTS/NOT EXISTS, truy vấn con tương quan, truy vấn con trong FROM/SELECT",
+        "Nhóm 5 – Tập hợp: UNION, INTERSECT, EXCEPT; phép chia (học viên đã học tất cả khoá của một chương trình)",
+        "Nhóm 6 – Nâng cao: CTE, CTE đệ quy (chuỗi khoá học tiên quyết), hàm cửa sổ (RANK điểm trong lớp), PIVOT",
+        "Mỗi câu: đề bài nghiệp vụ → câu SQL → ảnh kết quả; đo thời gian 2–3 câu trước/sau khi có chỉ mục"
+      ],
+      "deliverables": [
+        "database/10_queries.sql",
+        "report mục 3.1"
+      ],
+      "acceptance": [
+        "≥ 25 câu, mỗi nhóm ≥ 3 câu",
+        "Có ít nhất 1 so sánh hiệu năng kèm số liệu"
+      ],
+      "depends": ["T08"]
+    },
+    {
+      "id": "T10",
+      "issue": null,
+      "title": "Dữ liệu XML: XML Schema, XPath/XQuery, FOR XML (Lab 2)",
+      "owner": "duong",
+      "sprint": "S2",
+      "due": "2026-10-23",
+      "chapter": "ch3a",
+      "types": ["database"],
+      "syllabus": "Chương 2 (Buổi 3): mô hình XML · Chương 3 (Buổi 4): XPath / XQuery · Lab 2 (XQuery và XPath) · CĐR G1.2, G2.2",
+      "summary": "Khai thác dữ liệu bán cấu trúc trong SQL Server qua kết quả kiểm tra đầu vào và trao đổi dữ liệu dạng XML.",
+      "steps": [
+        "Thiết kế cấu trúc XML kết quả test (Listening/Reading/Writing/Speaking, nhận xét, khoá học đề xuất); tạo XML SCHEMA COLLECTION và gắn vào cột (typed XML)",
+        "XPath/XQuery với .value(), .query(), .exist(), .nodes() + CROSS APPLY; biểu thức FLWOR (for/let/where/order by/return)",
+        ".modify() (insert / replace value of / delete) để cập nhật XML",
+        "FOR XML PATH/RAW/AUTO xuất danh sách lớp – học viên dạng XML phân cấp; OPENXML hoặc .nodes() để nhập XML từ hệ thống khác",
+        "So sánh lưu XML với tách thành bảng quan hệ (ưu / nhược)"
+      ],
+      "deliverables": [
+        "database/09_xml.sql",
+        "data/xml/*.xml",
+        "report mục 3.1 (phần XML)"
+      ],
+      "acceptance": [
+        "≥ 10 truy vấn XML, dùng đủ 5 phương thức .value/.query/.exist/.nodes/.modify",
+        "XML sai cấu trúc bị XML Schema từ chối (có ảnh minh hoạ)"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T11",
+      "issue": null,
+      "title": "Stored Procedure & Transaction",
+      "owner": "phu",
+      "sprint": "S2",
+      "due": "2026-10-22",
+      "chapter": "ch3c",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 6): Stored Procedure · Lab 4 (lập trình CSDL) · CĐR G2.1, G2.2",
+      "summary": "Đóng gói nghiệp vụ cốt lõi thành thủ tục lưu trữ, bảo đảm toàn vẹn bằng transaction; ứng dụng web chỉ gọi procedure.",
+      "steps": [
+        "sp_DangKyHoc (@MaHV, @MaLop, @GiamGia, @MaDK OUTPUT): kiểm tra lớp còn chỗ, chưa đăng ký trùng, đã học khoá tiên quyết; BEGIN TRAN/COMMIT/ROLLBACK + TRY…CATCH, THROW thông báo tiếng Việt",
+        "sp_ThuHocPhi: tạo phiếu thu kèm nhiều chi tiết (nhận danh sách MaDK dạng JSON hoặc table-valued parameter), cập nhật trạng thái học phí",
+        "sp_XepLichLop: kiểm tra trùng phòng / trùng giáo viên cùng ca",
+        "sp_DiemDanhBuoi, sp_NhapDiem, sp_ChuyenLop (transaction nhiều bước)",
+        "sp_ThongKeDoanhThu (@TuNgay, @DenNgay, @MaCN, @TongDoanhThu OUTPUT)",
+        "sp_TimKiemHocVien (nhiều tiêu chí tuỳ chọn, phân trang OFFSET/FETCH)",
+        "Kịch bản kiểm thử cho trường hợp thành công và các trường hợp lỗi"
+      ],
+      "deliverables": [
+        "database/05_procedures.sql",
+        "database/tests/test_procedures.sql",
+        "report mục 3.3.1"
+      ],
+      "acceptance": [
+        "≥ 8 procedure, có tham số vào và tham số OUTPUT",
+        "≥ 3 procedure dùng transaction",
+        "Mỗi procedure có test case thành công và thất bại"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T12",
+      "issue": null,
+      "title": "User-defined Function",
+      "owner": "phu",
+      "sprint": "S2",
+      "due": "2026-10-22",
+      "chapter": "ch3c",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 6): Function · Lab 4 · CĐR G2.1, G2.2",
+      "summary": "Xây dựng các hàm tính toán và hàm trả về bảng dùng lại trong truy vấn, view, procedure và báo cáo.",
+      "steps": [
+        "Hàm vô hướng: fn_TinhTuoi, fn_TyLeChuyenCan(@MaDK), fn_XepLoai(@DiemTB), fn_SoTienConNo(@MaHV)",
+        "Hàm inline trả về bảng: fn_LichHocHocVien(@MaHV, @Tuan), fn_LopCuaGiaoVien(@MaGV)",
+        "Hàm multi-statement trả về bảng: fn_BangDiemLop(@MaLop) kèm xếp loại và chuyên cần",
+        "Dùng function trong SELECT, WHERE, CHECK constraint; so sánh function với procedure"
+      ],
+      "deliverables": [
+        "database/03_functions.sql",
+        "report mục 3.3.2"
+      ],
+      "acceptance": [
+        "≥ 6 function, đủ 3 loại",
+        "Mỗi hàm có ví dụ gọi và ảnh kết quả"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T13",
+      "issue": null,
+      "title": "Trigger & nhật ký kiểm toán",
+      "owner": "phu",
+      "sprint": "S2",
+      "due": "2026-10-24",
+      "chapter": "ch3c",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 6): Trigger (AFTER/FOR, INSTEAD OF) · Chương 3 (Buổi 5): kiểm toán hệ thống · Lab 4 · CĐR G2.1, G2.2",
+      "summary": "Tự động hoá ràng buộc nghiệp vụ và ghi vết thay đổi dữ liệu ngay tại tầng CSDL.",
+      "steps": [
+        "trg_DangKy_SiSo (AFTER INSERT/DELETE/UPDATE): cập nhật LOPHOC.SiSoHienTai",
+        "trg_DangKy_KiemTraSiSo: chặn khi lớp đã đầy (ROLLBACK + thông báo)",
+        "trg_CTPhieuThu_TongTien: cập nhật PHIEUTHU.TongTien và DANGKY.TrangThaiHP",
+        "trg_LichHoc_KiemTraTrung: chặn trùng phòng / trùng giáo viên",
+        "Trigger kiểm toán ghi NHATKY (bảng, thao tác, dữ liệu cũ/mới, SUSER_SNAME(), thời gian) cho DANGKY, PHIEUTHU, lương NHANVIEN",
+        "INSTEAD OF trigger trên view vw_DangKyChiTiet cho phép thêm đăng ký qua view",
+        "Giải thích bảng inserted/deleted, thứ tự kích hoạt; so sánh trigger với CHECK constraint"
+      ],
+      "deliverables": [
+        "database/06_triggers.sql",
+        "report mục 3.3.3"
+      ],
+      "acceptance": [
+        "≥ 6 trigger gồm cả AFTER và INSTEAD OF",
+        "Có test minh hoạ trigger chặn dữ liệu sai và ghi nhật ký"
+      ],
+      "depends": ["T07", "T16"]
+    },
+    {
+      "id": "T14",
+      "issue": null,
+      "title": "Cursor",
+      "owner": "phu",
+      "sprint": "S2",
+      "due": "2026-10-25",
+      "chapter": "ch3c",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 6): Cursor – DECLARE, OPEN, FETCH, CLOSE, DEALLOCATE · Lab 4 · CĐR G2.1, G2.2",
+      "summary": "Xử lý tuần tự từng dòng cho các nghiệp vụ cần logic riêng; so sánh với xử lý theo tập hợp.",
+      "steps": [
+        "sp_SinhBuoiHoc (cursor): duyệt lịch học của lớp, sinh BUOIHOC từ ngày khai giảng đến đủ số buổi, bỏ qua ngày nghỉ lễ",
+        "sp_TinhLuongGiaoVien (cursor): duyệt giáo viên, tính số buổi dạy trong tháng × đơn giá → bảng lương",
+        "sp_CanhBaoChuyenCan (cursor): duyệt đăng ký có tỷ lệ vắng > 20% → ghi danh sách cảnh báo",
+        "Trình bày vòng đời cursor, @@FETCH_STATUS và các loại cursor (STATIC, KEYSET, DYNAMIC, FAST_FORWARD)",
+        "So sánh thời gian chạy cursor với cách set-based cho cùng bài toán"
+      ],
+      "deliverables": [
+        "database/07_cursors.sql",
+        "report mục 3.3.4"
+      ],
+      "acceptance": [
+        "≥ 3 cursor đặt trong procedure",
+        "Có bảng so sánh thời gian chạy cursor và set-based"
+      ],
+      "depends": ["T11"]
+    },
+    {
+      "id": "T15",
+      "issue": null,
+      "title": "Xác thực & phân quyền (Lab 3)",
+      "owner": "nhu",
+      "sprint": "S2",
+      "due": "2026-10-23",
+      "chapter": "ch3b",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 5): xác thực CSDL, phân quyền CSDL · Lab 3 (an ninh thông tin) · CĐR G2.1, G2.2",
+      "summary": "Thiết lập cơ chế xác thực và phân quyền nhiều vai trò theo nguyên tắc quyền tối thiểu.",
+      "steps": [
+        "Trình bày Windows / SQL Server / Mixed authentication; cấu hình Mixed mode",
+        "Tạo LOGIN và USER cho từng vai trò; chính sách mật khẩu (CHECK_POLICY, CHECK_EXPIRATION)",
+        "ROLE: r_QuanLy, r_GiaoVu, r_KeToan, r_GiaoVien, r_HocVien, r_App (ứng dụng web chỉ EXECUTE procedure và SELECT view)",
+        "GRANT / REVOKE / DENY ở mức bảng, cột (ẩn lương), view, procedure; WITH GRANT OPTION; ma trận phân quyền vai trò × đối tượng",
+        "Băm mật khẩu tài khoản ứng dụng trong TAIKHOAN (HASHBYTES SHA2_256 + salt)",
+        "Kiểm thử bằng EXECUTE AS USER để chứng minh quyền được / không được"
+      ],
+      "deliverables": [
+        "database/08_security.sql",
+        "report mục 3.2.1–3.2.2"
+      ],
+      "acceptance": [
+        "Ma trận phân quyền ≥ 5 vai trò",
+        "Có ảnh chứng minh DENY chặn truy cập",
+        "Tài khoản ứng dụng chỉ có quyền tối thiểu"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T16",
+      "issue": null,
+      "title": "View bảo mật & phục vụ báo cáo",
+      "owner": "giang",
+      "sprint": "S2",
+      "due": "2026-10-22",
+      "chapter": "ch3b",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 5): View như giải pháp bảo mật · Lab 3 · CĐR G2.1, G2.2",
+      "summary": "Dùng view để giới hạn phạm vi truy cập thông tin nhạy cảm và làm nguồn dữ liệu cho form/báo cáo.",
+      "steps": [
+        "View bảo mật: vw_NhanVien_CongKhai (ẩn lương), vw_HocVien_ChiNhanh (lọc theo chi nhánh của người dùng – row-level), vw_LichDayGiaoVien",
+        "View nghiệp vụ/báo cáo: vw_DangKyChiTiet, vw_CongNoHocVien, vw_BangDiem, vw_DoanhThuThang, vw_SiSoLop",
+        "WITH CHECK OPTION, WITH SCHEMABINDING; indexed view cho doanh thu và so sánh tốc độ",
+        "Cấp quyền trên view thay cho bảng gốc (phối hợp T15)"
+      ],
+      "deliverables": [
+        "database/04_views.sql",
+        "report mục 3.2.3"
+      ],
+      "acceptance": [
+        "≥ 8 view",
+        "≥ 2 view bảo mật được cấp quyền thay cho bảng gốc"
+      ],
+      "depends": ["T07"]
+    },
+    {
+      "id": "T17",
+      "issue": null,
+      "title": "Sao lưu & phục hồi (Backup/Restore)",
+      "owner": "giang",
+      "sprint": "S2",
+      "due": "2026-10-25",
+      "chapter": "ch3b",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 5): Backup / Restore · Lab 3 · CĐR G2.1, G2.2",
+      "summary": "Xây dựng chiến lược sao lưu và chứng minh khả năng phục hồi khi có sự cố.",
+      "steps": [
+        "Recovery model FULL; Full / Differential / Transaction Log backup",
+        "Kịch bản sự cố: xoá nhầm dữ liệu → phục hồi point-in-time (STOPAT) từ chuỗi Full + Diff + Log",
+        "Kiểm tra bản sao lưu: RESTORE VERIFYONLY, HEADERONLY, FILELISTONLY",
+        "Đề xuất chiến lược sao lưu cho trung tâm (Full hằng tuần, Diff hằng ngày, Log mỗi 15 phút; RPO/RTO) và script tự động",
+        "Backup có nén (tuỳ chọn: mã hoá)"
+      ],
+      "deliverables": [
+        "database/11_backup_restore.sql",
+        "report mục 3.2.4 (kèm ảnh)"
+      ],
+      "acceptance": [
+        "Demo phục hồi về đúng thời điểm trước sự cố, có ảnh trước/sau",
+        "Có bảng chiến lược sao lưu"
+      ],
+      "depends": ["T08"]
+    },
+    {
+      "id": "T18",
+      "issue": null,
+      "title": "Nhập / xuất dữ liệu (Import/Export)",
+      "owner": "duong",
+      "sprint": "S2",
+      "due": "2026-10-25",
+      "chapter": "ch3b",
+      "types": ["database"],
+      "syllabus": "Chương 3 (Buổi 5): Import / Export · Lab 3 · Chương 1: giai đoạn chuyển đổi dữ liệu (ETL)",
+      "summary": "Trao đổi dữ liệu giữa SQL Server và các định dạng ngoài, kèm kiểm tra chất lượng dữ liệu.",
+      "steps": [
+        "Import: BULK INSERT từ CSV (học viên đăng ký online), OPENROWSET, Import Flat File Wizard; bảng staging → kiểm tra → đưa vào bảng chính (ETL nhỏ)",
+        "Export: bcp ra CSV, FOR JSON / FOR XML ra file, Export Wizard ra Excel",
+        "Import/Export bằng Python (pandas ↔ SQL Server) phục vụ ứng dụng web",
+        "So sánh các công cụ (tốc độ với 10.000 dòng, độ tiện dụng)"
+      ],
+      "deliverables": [
+        "database/12_import_export.sql",
+        "scripts/import_export.py",
+        "report mục 3.2.5"
+      ],
+      "acceptance": [
+        "Nhập được file CSV ≥ 1.000 dòng, có xử lý dòng lỗi",
+        "Xuất được ≥ 3 định dạng",
+        "Có bảng so sánh kèm số liệu"
+      ],
+      "depends": ["T08"]
+    },
+    {
+      "id": "T19",
+      "issue": null,
+      "title": "Web: Đăng nhập, Menu phân quyền & Danh mục",
+      "owner": "nhu",
+      "sprint": "S2",
+      "due": "2026-10-25",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Menu – rộng và nông, nhóm chức năng, phân quyền; Form – CRUD, kiểm tra dữ liệu · CĐR G1.1, G1.2",
+      "summary": "Bộ khung giao diện: đăng nhập, menu theo vai trò và các form danh mục nền.",
+      "steps": [
+        "Trang đăng nhập (TAIKHOAN, mật khẩu băm), lưu phiên trong st.session_state, đăng xuất",
+        "Menu theo vai trò bằng st.navigation, nhóm Danh mục · Đào tạo · Học viên · Học tập · Tài chính · Báo cáo · Hệ thống; tối đa 2 cấp; ẩn mục không có quyền",
+        "Form danh mục: Chi nhánh, Phòng học, Ca học, Nhân viên, Giáo viên (kèm chứng chỉ) – thêm/sửa/xoá, tìm kiếm, kiểm tra dữ liệu",
+        "Trang Hệ thống: quản lý tài khoản, xem nhật ký (NHATKY)",
+        "Ứng dụng kết nối DB bằng tài khoản ít quyền (r_App ở T15)"
+      ],
+      "deliverables": [
+        "app/main.py, app/core/auth.py",
+        "app/pages/danh_muc_*.py, app/pages/he_thong_*.py"
+      ],
+      "acceptance": [
+        "Đăng nhập bằng 3 vai trò khác nhau thấy menu khác nhau",
+        "CRUD danh mục hoạt động, lỗi được báo rõ cạnh ô nhập"
+      ],
+      "depends": ["T03", "T15"]
+    },
+    {
+      "id": "T20",
+      "issue": null,
+      "title": "Web: Phân hệ Đào tạo (chương trình, khoá học, lớp, lịch học)",
+      "owner": "tram",
+      "sprint": "S3",
+      "due": "2026-10-30",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Form – bố cục, control phù hợp, ánh xạ form với CSDL · CĐR G1.2",
+      "summary": "Giao diện quản lý đào tạo: từ chương trình, khoá học đến mở lớp, xếp lịch và sinh buổi học.",
+      "steps": [
+        "Form Chương trình và Khoá học (khoá tiên quyết chọn bằng selectbox)",
+        "Form Lớp học: chọn khoá, chi nhánh, giáo viên; ngày khai giảng – kết thúc; kiểm tra hợp lệ",
+        "Xếp lịch học: chọn thứ/ca/phòng, gọi sp_XepLichLop, báo trùng lịch",
+        "Sinh buổi học tự động (gọi procedure có cursor ở T14); xem lịch dạng bảng tuần",
+        "Kiểm tra dữ liệu trong st.form và hiển thị thông báo lỗi trả về từ procedure"
+      ],
+      "deliverables": [
+        "app/pages/dao_tao_*.py"
+      ],
+      "acceptance": [
+        "Tạo lớp mới → xếp lịch → sinh buổi học hoàn chỉnh qua giao diện"
+      ],
+      "depends": ["T19", "T11", "T14"]
+    },
+    {
+      "id": "T21",
+      "issue": null,
+      "title": "Web: Học viên, Kiểm tra đầu vào & Ghi danh",
+      "owner": "duong",
+      "sprint": "S3",
+      "due": "2026-10-30",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Form – tra cứu & lọc thông tin, kiểm tra dữ liệu · Chương 3: XML trong ứng dụng · CĐR G1.2, G2.2",
+      "summary": "Luồng tuyển sinh: hồ sơ học viên → kiểm tra đầu vào (lưu XML) → ghi danh vào lớp phù hợp.",
+      "steps": [
+        "Form học viên: thêm/sửa, tìm kiếm nhiều tiêu chí (sp_TimKiemHocVien, phân trang)",
+        "Kiểm tra đầu vào: nhập điểm 4 kỹ năng → lưu XML; hiển thị chi tiết đọc từ XML (.value/.nodes); gợi ý khoá học",
+        "Ghi danh: chọn học viên → chọn lớp còn chỗ (lọc theo khoá đề xuất) → gọi sp_DangKyHoc; hiển thị lỗi lớp đầy / thiếu khoá tiên quyết",
+        "Hồ sơ học viên: các lớp đã học, điểm, công nợ"
+      ],
+      "deliverables": [
+        "app/pages/hoc_vien_*.py"
+      ],
+      "acceptance": [
+        "Luồng kiểm tra đầu vào → ghi danh chạy trọn vẹn",
+        "Xem được XML kết quả kiểm tra đầu vào"
+      ],
+      "depends": ["T19", "T10", "T11"]
+    },
+    {
+      "id": "T22",
+      "issue": null,
+      "title": "Web: Buổi học, Điểm danh & Nhập điểm",
+      "owner": "phu",
+      "sprint": "S3",
+      "due": "2026-10-30",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Form nhập liệu dạng lưới, ràng buộc miền giá trị · CĐR G1.2",
+      "summary": "Giao diện cho giáo viên: điểm danh và nhập điểm cả lớp, cảnh báo chuyên cần.",
+      "steps": [
+        "Giáo viên chọn lớp → buổi học → điểm danh cả lớp bằng st.data_editor → sp_DiemDanhBuoi",
+        "Nhập điểm giữa kỳ / cuối kỳ theo lớp (kiểm tra 0–10) → sp_NhapDiem; trigger tự tính kết quả",
+        "Cảnh báo học viên vắng nhiều (fn_TyLeChuyenCan / sp_CanhBaoChuyenCan)",
+        "Giáo viên chỉ thấy lớp của mình (fn_LopCuaGiaoVien)"
+      ],
+      "deliverables": [
+        "app/pages/hoc_tap_*.py"
+      ],
+      "acceptance": [
+        "Điểm danh và nhập điểm cả lớp chỉ với 1 lần lưu",
+        "Giáo viên không xem được lớp của giáo viên khác"
+      ],
+      "depends": ["T19", "T11", "T12"]
+    },
+    {
+      "id": "T23",
+      "issue": null,
+      "title": "Web: Thu học phí (Master–Detail) & công nợ",
+      "owner": "giang",
+      "sprint": "S3",
+      "due": "2026-10-30",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Form Master–Detail, định dạng có điều kiện · CĐR G1.2",
+      "summary": "Lập phiếu thu theo mẫu Master–Detail, in phiếu thu và theo dõi công nợ.",
+      "steps": [
+        "Form phiếu thu Master–Detail: phần trên là thông tin phiếu (học viên, ngày, hình thức), phần dưới là lưới các đăng ký cần thu (chọn nhiều) → sp_ThuHocPhi",
+        "Tra cứu phiếu thu, xem chi tiết, in phiếu thu PDF (reportlab, font tiếng Việt)",
+        "Danh sách công nợ (vw_CongNoHocVien) có định dạng có điều kiện (nợ quá hạn tô đỏ)"
+      ],
+      "deliverables": [
+        "app/pages/tai_chinh_*.py",
+        "app/reports/phieu_thu_pdf.py"
+      ],
+      "acceptance": [
+        "Lập phiếu thu nhiều dòng thành công, tổng tiền tự cập nhật (trigger)",
+        "In được phiếu thu PDF hiển thị đúng tiếng Việt"
+      ],
+      "depends": ["T19", "T11", "T16"]
+    },
+    {
+      "id": "T24",
+      "issue": null,
+      "title": "Báo cáo & Dashboard (Lab 5)",
+      "owner": "giang",
+      "sprint": "S3",
+      "due": "2026-11-01",
+      "chapter": "ch4",
+      "types": ["web"],
+      "syllabus": "Chương 4 (Buổi 7): Report – cấu trúc, phân loại, kỹ thuật xử lý, biểu đồ · Lab 5 (report bằng Python) · CĐR G1.1, G1.2",
+      "summary": "Hệ thống báo cáo phục vụ ra quyết định, xuất PDF/Excel thay cho Crystal Report.",
+      "steps": [
+        "Báo cáo phẳng: danh sách học viên theo lớp (Report Header/Footer, Page X of Y)",
+        "Báo cáo phân nhóm: doanh thu theo chi nhánh → tháng (Group Header/Footer, tổng phụ, tổng cộng)",
+        "Báo cáo tham số: bảng điểm lớp / lịch sử học tập học viên theo bộ lọc",
+        "Dashboard tổng hợp: KPI (học viên mới, doanh thu, tỷ lệ lấp đầy lớp, tỷ lệ chuyên cần) và biểu đồ cột, đường, tròn",
+        "Trường tính toán (thành tiền sau giảm giá) và định dạng có điều kiện",
+        "Xuất PDF (reportlab, font tiếng Việt) và Excel (openpyxl)"
+      ],
+      "deliverables": [
+        "app/pages/bao_cao_*.py",
+        "app/reports/*.py"
+      ],
+      "acceptance": [
+        "≥ 5 báo cáo thuộc đủ 3 loại: định kỳ, theo yêu cầu, tổng hợp",
+        "PDF hiển thị đúng tiếng Việt"
+      ],
+      "depends": ["T16", "T19"]
+    },
+    {
+      "id": "T25",
+      "issue": null,
+      "title": "Chương 5: CSDL hướng đối tượng",
+      "owner": "tram",
+      "sprint": "S3",
+      "due": "2026-11-01",
+      "chapter": "ch5",
+      "types": ["docs"],
+      "syllabus": "Chương 5 (Buổi 8): tính chất, đặc điểm CSDL hướng đối tượng; chuyển CSDL quan hệ thành CSDL hướng đối tượng · CĐR G3.1, G3.2",
+      "summary": "Chuyển lược đồ ECMS sang mô hình hướng đối tượng và đánh giá mức độ phù hợp với bài toán.",
+      "steps": [
+        "Trình bày tính chất và đặc điểm CSDL hướng đối tượng (đối tượng, OID, đóng gói, kế thừa, đa hình, kiểu phức)",
+        "Chuyển lược đồ quan hệ ECMS → lược đồ hướng đối tượng (ODL): lớp, thuộc tính, quan hệ và quan hệ ngược, phương thức; chuyên biệt hoá → kế thừa",
+        "Minh hoạ bằng lớp Python ánh xạ từ bảng (hoặc ORM SQLAlchemy), so sánh với SQL thuần",
+        "Bảng đánh giá điểm mạnh / yếu cho bài toán trung tâm"
+      ],
+      "deliverables": [
+        "docs/design/odl-schema.md",
+        "report mục 5.1"
+      ],
+      "acceptance": [
+        "Lược đồ ODL đầy đủ cho ≥ 8 lớp",
+        "Có bảng so sánh mô hình quan hệ và hướng đối tượng"
+      ],
+      "depends": ["T05"]
+    },
+    {
+      "id": "T26",
+      "issue": null,
+      "title": "Chương 5: CSDL phân tán (phân mảnh theo chi nhánh)",
+      "owner": "phu",
+      "sprint": "S3",
+      "due": "2026-11-01",
+      "chapter": "ch5",
+      "types": ["database", "docs"],
+      "syllabus": "Chương 5 (Buổi 9): tính chất CSDL phân tán, các phương pháp phân tán, yêu cầu khi thiết kế · CĐR G3.1, G3.2",
+      "summary": "Thiết kế và demo CSDL phân tán cho chuỗi trung tâm nhiều chi nhánh.",
+      "steps": [
+        "Đặc điểm CSDL phân tán; so sánh tập trung và phân tán cho trung tâm nhiều chi nhánh",
+        "Thiết kế phân mảnh: ngang (HOCVIEN, LOPHOC theo MaCN; DANGKY phân mảnh ngang dẫn xuất), dọc (NHANVIEN: thông tin chung / lương), hỗn hợp; kiểm tra tính đầy đủ – tái thiết – rời nhau",
+        "Cấp phát và nhân bản các bảng danh mục (KHOAHOC, CAHOC)",
+        "Demo: 3 CSDL ECMS_CN1/CN2/CN3 + partitioned view UNION ALL (trong suốt vị trí) + truy vấn toàn cục; tuỳ chọn linked server",
+        "Bàn về giao tác phân tán và điều khiển đồng thời"
+      ],
+      "deliverables": [
+        "database/13_distributed.sql",
+        "report mục 5.2"
+      ],
+      "acceptance": [
+        "Có lược đồ phân mảnh và cấp phát",
+        "Truy vấn toàn cục trả về kết quả giống CSDL tập trung"
+      ],
+      "depends": ["T08"]
+    },
+    {
+      "id": "T27",
+      "issue": null,
+      "title": "Chương 5: CSDL phi quan hệ (NoSQL – MongoDB)",
+      "owner": "duong",
+      "sprint": "S3",
+      "due": "2026-11-01",
+      "chapter": "ch5",
+      "types": ["database", "docs"],
+      "syllabus": "Chương 5 (Buổi 10): hạn chế mô hình quan hệ, các mô hình document/key-value/column/graph, chuyển đổi quan hệ → phi quan hệ, một số HQT NoSQL · CĐR G3.1, G3.2",
+      "summary": "Chuyển một phần dữ liệu ECMS sang MongoDB và đối chiếu với mô hình quan hệ.",
+      "steps": [
+        "Hạn chế của mô hình quan hệ với bài toán (lịch sử học tập, nhật ký, kết quả test có cấu trúc linh hoạt)",
+        "4 mô hình document, key-value, column-family, graph – ví dụ trên ECMS (graph: khoá học tiên quyết; key-value: phiên đăng nhập/cache)",
+        "Thiết kế document MongoDB (nhúng hay tham chiếu); script Python chuyển dữ liệu SQL Server → MongoDB",
+        "≥ 5 cặp truy vấn tương đương SQL ↔ MongoDB (find, aggregate), đo thời gian",
+        "Giới thiệu MongoDB, Redis, Cassandra, Neo4j và bảng đánh giá cho bài toán"
+      ],
+      "deliverables": [
+        "nosql/docker-compose.yml, nosql/migrate.py, nosql/queries.js",
+        "report mục 5.3"
+      ],
+      "acceptance": [
+        "Dữ liệu chuyển sang MongoDB đầy đủ",
+        "≥ 5 cặp truy vấn đối chiếu có kết quả và số liệu"
+      ],
+      "depends": ["T08"]
+    },
+    {
+      "id": "T28",
+      "issue": null,
+      "title": "Viết Chương 4: Trình bày thông tin",
+      "owner": "giang",
+      "sprint": "S3",
+      "due": "2026-11-01",
+      "chapter": "ch4",
+      "types": ["docs"],
+      "syllabus": "Chương 4 (Buổi 7): Menu, Form, Report · CĐR G1.1, G1.2",
+      "summary": "Trình bày cách ECMS áp dụng các nguyên tắc thiết kế Menu, Form, Report của Chương 4.",
+      "steps": [
+        "Nguyên tắc Menu (rộng và nông, nhóm chức năng, phân quyền, trạng thái active), Form (bố cục, control phù hợp, kiểm tra dữ liệu, master–detail), Report (cấu trúc, phân loại) – đối chiếu với ECMS",
+        "Sơ đồ chức năng (cây menu) và bảng ánh xạ Form ↔ bảng/view/procedure",
+        "Ảnh chụp giao diện từng phân hệ (từ T19–T24)"
+      ],
+      "deliverables": [
+        "report/04-trinh-bay-thong-tin.md",
+        "docs/design/menu-tree.png"
+      ],
+      "acceptance": [
+        "Mỗi nguyên tắc trong slide Chương 4 có minh hoạ từ ứng dụng"
+      ],
+      "depends": ["T19", "T20", "T21", "T22", "T23", "T24"]
+    },
+    {
+      "id": "T29",
+      "issue": null,
+      "title": "Tổng hợp báo cáo, slide & tổng duyệt",
+      "owner": "nhu",
+      "sprint": "S4",
+      "due": "2026-11-04",
+      "chapter": "pm",
+      "types": ["docs"],
+      "syllabus": "Rubric A4: nội dung đồ án, bố cục báo cáo, slide trình bày, kỹ năng trình bày và trả lời câu hỏi",
+      "summary": "Ghép sản phẩm của cả nhóm thành báo cáo và slide hoàn chỉnh; kiểm thử tích hợp; tổng duyệt.",
+      "steps": [
+        "Ghép báo cáo theo mẫu UIT: bìa, mục lục, danh mục hình/bảng, 5 chương, kết luận, tài liệu tham khảo",
+        "Bảng phân công và đánh giá mức độ đóng góp từng thành viên (kèm thống kê commit)",
+        "Slide: mỗi thành viên làm phần mình phụ trách; kịch bản demo",
+        "Kiểm thử tích hợp: chạy lại toàn bộ từ CSDL trống (run_all) → seed → web",
+        "Tổng duyệt thuyết trình, chuẩn bị câu hỏi phản biện"
+      ],
+      "deliverables": [
+        "report/BaoCao_IE103_Nhom1.docx + .pdf",
+        "slides/",
+        "Video demo (tuỳ chọn)"
+      ],
+      "acceptance": [
+        "Báo cáo đủ chương, đúng định dạng",
+        "Tổng duyệt trong ≤ 20 phút",
+        "Nộp đúng hạn"
+      ],
+      "depends": ["T02", "T06", "T09", "T15", "T24", "T25", "T26", "T27", "T28"]
+    }
+  ],
+  "coverage": [
+    {
+      "chapter": "Chương 1 · Tổng quan",
+      "session": "Buổi 1 · Lab 1",
+      "outcomes": "G1.1",
+      "items": [
+        { "topic": "Tại sao phải quản lý thông tin; quy trình QLTT 5 giai đoạn", "tasks": ["T02"], "output": "Khảo sát trung tâm, ánh xạ quy trình vào ECMS" },
+        { "topic": "Dữ liệu – Thông tin – Tri thức (DIKW)", "tasks": ["T02"], "output": "Ví dụ điểm danh → chuyên cần → cảnh báo bỏ học" },
+        { "topic": "Bài thực hành 1: công cụ QLTT trong thực tế", "tasks": ["T02"], "output": "Bảng so sánh ≥ 3 công cụ" }
+      ]
+    },
+    {
+      "chapter": "Chương 2 · Tổ chức thông tin",
+      "session": "Buổi 2–3",
+      "outcomes": "G1.2, G2.1",
+      "items": [
+        { "topic": "Mô hình hoá thế giới thực, mô hình ERD", "tasks": ["T04"], "output": "ERD Chen + từ điển dữ liệu" },
+        { "topic": "Mô hình Class Diagram, so sánh ERD – CD", "tasks": ["T05"], "output": "Class Diagram UML" },
+        { "topic": "Mô hình phẳng, có cấu trúc, quan hệ, XML; khoá, chỉ mục, RBTV", "tasks": ["T06", "T07"], "output": "Lược đồ quan hệ 3NF, RBTV, so sánh mô hình, script DDL" },
+        { "topic": "Cài đặt CSDL và dữ liệu (Bài thực hành 6)", "tasks": ["T07", "T08"], "output": "01_schema.sql, 02_seed.sql" }
+      ]
+    },
+    {
+      "chapter": "Chương 3 · Xử lý thông tin – Truy vấn",
+      "session": "Buổi 4 · Lab 2",
+      "outcomes": "G2.1, G2.2",
+      "items": [
+        { "topic": "Truy vấn SQL (lọc, JOIN, GROUP BY/HAVING, truy vấn con, tập hợp)", "tasks": ["T09"], "output": "≥ 25 truy vấn nghiệp vụ + so sánh hiệu năng" },
+        { "topic": "XPath / XQuery", "tasks": ["T10"], "output": "Typed XML, .value/.query/.exist/.nodes/.modify, FOR XML" }
+      ]
+    },
+    {
+      "chapter": "Chương 3 · Xử lý thông tin – An ninh dữ liệu",
+      "session": "Buổi 5 · Lab 3",
+      "outcomes": "G2.1, G2.2",
+      "items": [
+        { "topic": "Xác thực CSDL, phân quyền CSDL", "tasks": ["T15"], "output": "Login/User/Role, GRANT/REVOKE/DENY, ma trận quyền" },
+        { "topic": "View", "tasks": ["T16"], "output": "View bảo mật + view báo cáo" },
+        { "topic": "Backup / Restore", "tasks": ["T17"], "output": "Full/Diff/Log, point-in-time restore" },
+        { "topic": "Import / Export", "tasks": ["T18"], "output": "BULK INSERT, bcp, FOR JSON/XML, pandas" }
+      ]
+    },
+    {
+      "chapter": "Chương 3 · Xử lý thông tin – Lập trình CSDL",
+      "session": "Buổi 6 · Lab 4",
+      "outcomes": "G2.1, G2.2",
+      "items": [
+        { "topic": "Stored Procedure (+ Transaction)", "tasks": ["T11"], "output": "≥ 8 procedure nghiệp vụ" },
+        { "topic": "Function", "tasks": ["T12"], "output": "Scalar, inline TVF, multi-statement TVF" },
+        { "topic": "Trigger", "tasks": ["T13"], "output": "AFTER, INSTEAD OF, audit log" },
+        { "topic": "Cursor", "tasks": ["T14"], "output": "Sinh buổi học, tính lương, cảnh báo + so sánh set-based" }
+      ]
+    },
+    {
+      "chapter": "Chương 4 · Trình bày thông tin",
+      "session": "Buổi 7 · Lab 5",
+      "outcomes": "G1.1, G1.2",
+      "items": [
+        { "topic": "Menu", "tasks": ["T19"], "output": "Menu Streamlit theo vai trò" },
+        { "topic": "Form (CRUD, kiểm tra dữ liệu, master–detail)", "tasks": ["T19", "T20", "T21", "T22", "T23"], "output": "5 phân hệ web" },
+        { "topic": "Report (phẳng, phân nhóm, tham số, biểu đồ, PDF/Excel)", "tasks": ["T24"], "output": "≥ 5 báo cáo + dashboard" },
+        { "topic": "Viết chương Trình bày thông tin", "tasks": ["T28"], "output": "Đối chiếu nguyên tắc ↔ ECMS" }
+      ]
+    },
+    {
+      "chapter": "Chương 5 · Mô hình CSDL tiên tiến",
+      "session": "Buổi 8–10",
+      "outcomes": "G3.1, G3.2",
+      "items": [
+        { "topic": "CSDL hướng đối tượng – chuyển đổi từ quan hệ", "tasks": ["T25"], "output": "Lược đồ ODL + đánh giá" },
+        { "topic": "CSDL phân tán – phân mảnh, cấp phát, yêu cầu thiết kế", "tasks": ["T26"], "output": "Phân mảnh theo chi nhánh + partitioned view" },
+        { "topic": "CSDL phi quan hệ – document, key-value, column, graph", "tasks": ["T27"], "output": "Chuyển sang MongoDB + đối chiếu truy vấn" }
+      ]
+    },
+    {
+      "chapter": "Đánh giá đồ án (A4 – 50%)",
+      "session": "Cuối kỳ",
+      "outcomes": "G1.1 → G3.2",
+      "items": [
+        { "topic": "Nội dung đầy đủ, chính xác, có so sánh đối chiếu, số liệu rõ ràng", "tasks": ["T06", "T09", "T14", "T18", "T27"], "output": "Mỗi phần đều có bảng so sánh / số đo" },
+        { "topic": "Bố cục báo cáo, slide, kỹ năng trình bày", "tasks": ["T29"], "output": "Báo cáo + slide + tổng duyệt" }
+      ]
+    }
+  ]
+}
