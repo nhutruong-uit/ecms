@@ -142,5 +142,49 @@ WHERE TrangThai IN (N'Sắp mở', N'Đang học')
 WITH CHECK OPTION;
 GO
 
-PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION).';
+/* ---------------------------------------------------------------------
+   3. VIEW DANH MỤC cho form của ứng dụng web (T19)
+   --------------------------------------------------------------------- */
+CREATE OR ALTER VIEW dbo.vw_DM_ChiNhanh
+AS
+SELECT cn.MaCN, cn.TenCN, cn.DiaChi, cn.SoDienThoai, cn.NgayThanhLap, cn.MaNVQuanLy, nv.HoTen AS QuanLy,
+       (SELECT COUNT(*) FROM dbo.PHONGHOC p WHERE p.MaCN = cn.MaCN) AS SoPhong,
+       (SELECT COUNT(*) FROM dbo.NHANVIEN n WHERE n.MaCN = cn.MaCN AND n.TrangThai = 1) AS SoNhanVien,
+       (SELECT COUNT(*) FROM dbo.LOPHOC l WHERE l.MaCN = cn.MaCN AND l.TrangThai IN (N'Sắp mở', N'Đang học')) AS SoLopDangMo
+FROM dbo.CHINHANH cn LEFT JOIN dbo.NHANVIEN nv ON nv.MaNV = cn.MaNVQuanLy;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_DM_PhongHoc
+AS
+SELECT p.MaCN, cn.TenCN, p.MaPhong, p.SucChua, p.LoaiPhong,
+       (SELECT COUNT(*) FROM dbo.LICHHOC lh JOIN dbo.LOPHOC l ON l.MaLop = lh.MaLop
+        WHERE lh.MaCN = p.MaCN AND lh.MaPhong = p.MaPhong AND l.TrangThai IN (N'Sắp mở', N'Đang học')) AS SoLichDangDung
+FROM dbo.PHONGHOC p JOIN dbo.CHINHANH cn ON cn.MaCN = p.MaCN;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_DM_CaHoc
+AS
+SELECT MaCa, TenCa, GioBatDau, GioKetThuc, DATEDIFF(MINUTE, GioBatDau, GioKetThuc) AS SoPhut FROM dbo.CAHOC;
+GO
+
+-- Đầy đủ thông tin nhân viên (gồm lương) – ứng dụng chỉ hiển thị cột lương cho Quản lý / Kế toán
+CREATE OR ALTER VIEW dbo.vw_NhanVien
+AS
+SELECT nv.MaNV, nv.HoNV, nv.TenNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.SoDienThoai, nv.Email, nv.ChucVu, nv.LuongCoBan,
+       nv.NgayVaoLam, nv.MaCN, cn.TenCN, nv.MaNVQuanLy, ql.HoTen AS NguoiQuanLy, nv.TrangThai,
+       gv.LoaiGV, gv.QuocTich, gv.TrinhDo, gv.DonGiaBuoi,
+       (SELECT STRING_AGG(cc.TenChungChi + ISNULL(N' ' + FORMAT(cc.Diem, '0.#'), N''), N', ') FROM dbo.CHUNGCHI_GV cc WHERE cc.MaGV = nv.MaNV) AS ChungChi
+FROM dbo.NHANVIEN nv
+JOIN dbo.CHINHANH cn ON cn.MaCN = nv.MaCN
+LEFT JOIN dbo.NHANVIEN ql ON ql.MaNV = nv.MaNVQuanLy
+LEFT JOIN dbo.GIAOVIEN gv ON gv.MaGV = nv.MaNV;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_ChungChiGV
+AS
+SELECT cc.MaGV, nv.HoTen, cc.TenChungChi, cc.Diem, cc.NgayCap, cc.NoiCap
+FROM dbo.CHUNGCHI_GV cc JOIN dbo.NHANVIEN nv ON nv.MaNV = cc.MaGV;
+GO
+
+PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục.';
 GO

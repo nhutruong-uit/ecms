@@ -412,5 +412,182 @@ BEGIN
 END
 GO
 
-PRINT N'✓ 05_procedures.sql: 9 procedure nghiệp vụ.';
+/* =====================================================================
+   DANH MỤC – thêm / sửa / xoá cho form của ứng dụng web (T19)
+   Mỗi "sp_Luu…" là upsert: có khoá thì sửa, chưa có thì thêm. Lỗi nghiệp vụ THROW 5012x.
+   ===================================================================== */
+CREATE OR ALTER PROCEDURE dbo.sp_LuuChiNhanh
+    @MaCN CHAR(4), @TenCN NVARCHAR(100), @DiaChi NVARCHAR(200), @SoDienThoai VARCHAR(15),
+    @NgayThanhLap DATE, @MaNVQuanLy CHAR(6) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @MaNVQuanLy IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.NHANVIEN WHERE MaNV = @MaNVQuanLy AND ChucVu = N'Quản lý')
+        THROW 50120, N'Người quản lý chi nhánh phải là nhân viên có chức vụ Quản lý.', 1;
+    IF EXISTS (SELECT 1 FROM dbo.CHINHANH WHERE MaCN = @MaCN)
+        UPDATE dbo.CHINHANH SET TenCN = @TenCN, DiaChi = @DiaChi, SoDienThoai = @SoDienThoai,
+               NgayThanhLap = @NgayThanhLap, MaNVQuanLy = @MaNVQuanLy WHERE MaCN = @MaCN;
+    ELSE
+        INSERT dbo.CHINHANH (MaCN, TenCN, DiaChi, SoDienThoai, NgayThanhLap, MaNVQuanLy)
+        VALUES (@MaCN, @TenCN, @DiaChi, @SoDienThoai, @NgayThanhLap, @MaNVQuanLy);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaChiNhanh @MaCN CHAR(4)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.NHANVIEN WHERE MaCN = @MaCN) OR EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaCN = @MaCN)
+       OR EXISTS (SELECT 1 FROM dbo.HOCVIEN WHERE MaCN = @MaCN)
+        THROW 50121, N'Chi nhánh đã có nhân viên, lớp học hoặc học viên – không thể xoá.', 1;
+    DELETE dbo.CHINHANH WHERE MaCN = @MaCN;     -- phòng học xoá theo (ON DELETE CASCADE)
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_LuuPhongHoc
+    @MaCN CHAR(4), @MaPhong VARCHAR(5), @SucChua TINYINT, @LoaiPhong NVARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.LICHHOC lh JOIN dbo.LOPHOC l ON l.MaLop = lh.MaLop
+               WHERE lh.MaCN = @MaCN AND lh.MaPhong = @MaPhong AND l.TrangThai IN (N'Sắp mở', N'Đang học') AND l.SiSoToiDa > @SucChua)
+        THROW 50122, N'Sức chứa mới nhỏ hơn sĩ số tối đa của lớp đang dùng phòng.', 1;
+    IF EXISTS (SELECT 1 FROM dbo.PHONGHOC WHERE MaCN = @MaCN AND MaPhong = @MaPhong)
+        UPDATE dbo.PHONGHOC SET SucChua = @SucChua, LoaiPhong = @LoaiPhong WHERE MaCN = @MaCN AND MaPhong = @MaPhong;
+    ELSE
+        INSERT dbo.PHONGHOC (MaCN, MaPhong, SucChua, LoaiPhong) VALUES (@MaCN, @MaPhong, @SucChua, @LoaiPhong);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaPhongHoc @MaCN CHAR(4), @MaPhong VARCHAR(5)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.LICHHOC WHERE MaCN = @MaCN AND MaPhong = @MaPhong)
+        THROW 50123, N'Phòng đã được xếp lịch – không thể xoá.', 1;
+    DELETE dbo.PHONGHOC WHERE MaCN = @MaCN AND MaPhong = @MaPhong;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_LuuCaHoc @MaCa TINYINT, @TenCa NVARCHAR(30), @GioBatDau TIME(0), @GioKetThuc TIME(0)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.CAHOC WHERE MaCa <> @MaCa AND @GioBatDau < GioKetThuc AND GioBatDau < @GioKetThuc)
+        THROW 50124, N'Khung giờ trùng với một ca học khác.', 1;
+    IF EXISTS (SELECT 1 FROM dbo.CAHOC WHERE MaCa = @MaCa)
+        UPDATE dbo.CAHOC SET TenCa = @TenCa, GioBatDau = @GioBatDau, GioKetThuc = @GioKetThuc WHERE MaCa = @MaCa;
+    ELSE
+        INSERT dbo.CAHOC (MaCa, TenCa, GioBatDau, GioKetThuc) VALUES (@MaCa, @TenCa, @GioBatDau, @GioKetThuc);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaCaHoc @MaCa TINYINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.LICHHOC WHERE MaCa = @MaCa) OR EXISTS (SELECT 1 FROM dbo.BUOIHOC WHERE MaCa = @MaCa)
+        THROW 50125, N'Ca học đang được dùng trong lịch học – không thể xoá.', 1;
+    DELETE dbo.CAHOC WHERE MaCa = @MaCa;
+END
+GO
+
+-- Nhân viên + phần chuyên biệt Giáo viên trong một transaction. @MaNV NULL = thêm mới (tự sinh mã)
+CREATE OR ALTER PROCEDURE dbo.sp_LuuNhanVien
+    @MaNV CHAR(6) = NULL, @HoNV NVARCHAR(50), @TenNV NVARCHAR(20), @NgaySinh DATE, @GioiTinh NVARCHAR(3),
+    @SoDienThoai VARCHAR(15), @Email VARCHAR(100), @ChucVu NVARCHAR(20), @LuongCoBan DECIMAL(12,0),
+    @NgayVaoLam DATE, @MaCN CHAR(4), @MaNVQuanLy CHAR(6) = NULL, @TrangThai BIT = 1,
+    @LoaiGV NVARCHAR(20) = NULL, @QuocTich NVARCHAR(50) = NULL, @TrinhDo NVARCHAR(30) = NULL, @DonGiaBuoi DECIMAL(10,0) = NULL,
+    @MaNVMoi CHAR(6) = NULL OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @tc INT = @@TRANCOUNT;
+    IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_LuuNhanVien;
+    BEGIN TRY
+        IF @ChucVu = N'Giáo viên' AND (@LoaiGV IS NULL OR @TrinhDo IS NULL OR @DonGiaBuoi IS NULL)
+            THROW 50126, N'Giáo viên phải có loại giáo viên, trình độ và đơn giá mỗi buổi.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.NHANVIEN WHERE SoDienThoai = @SoDienThoai AND MaNV <> ISNULL(@MaNV, ''))
+            THROW 50127, N'Số điện thoại đã được dùng cho nhân viên khác.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.NHANVIEN WHERE Email = @Email AND MaNV <> ISNULL(@MaNV, ''))
+            THROW 50127, N'Email đã được dùng cho nhân viên khác.', 1;
+
+        IF @MaNV IS NULL
+        BEGIN
+            SELECT @MaNV = 'NV' + RIGHT('0000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaNV, 3, 4) AS INT)), 0) + 1 AS VARCHAR(4)), 4)
+            FROM dbo.NHANVIEN WITH (UPDLOCK, HOLDLOCK);
+            INSERT dbo.NHANVIEN (MaNV, HoNV, TenNV, NgaySinh, GioiTinh, SoDienThoai, Email, ChucVu, LuongCoBan, NgayVaoLam, MaCN, MaNVQuanLy, TrangThai)
+            VALUES (@MaNV, @HoNV, @TenNV, @NgaySinh, @GioiTinh, @SoDienThoai, @Email, @ChucVu, @LuongCoBan, @NgayVaoLam, @MaCN, @MaNVQuanLy, @TrangThai);
+        END
+        ELSE
+        BEGIN
+            IF @ChucVu <> N'Giáo viên' AND EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaGV = @MaNV)
+                THROW 50128, N'Nhân viên đang phụ trách lớp, không thể đổi khỏi chức vụ Giáo viên.', 1;
+            UPDATE dbo.NHANVIEN SET HoNV = @HoNV, TenNV = @TenNV, NgaySinh = @NgaySinh, GioiTinh = @GioiTinh,
+                   SoDienThoai = @SoDienThoai, Email = @Email, ChucVu = @ChucVu, LuongCoBan = @LuongCoBan,
+                   NgayVaoLam = @NgayVaoLam, MaCN = @MaCN, MaNVQuanLy = @MaNVQuanLy, TrangThai = @TrangThai
+            WHERE MaNV = @MaNV;
+            IF @@ROWCOUNT = 0 THROW 50129, N'Nhân viên không tồn tại.', 1;
+        END
+
+        IF @ChucVu = N'Giáo viên'
+            MERGE dbo.GIAOVIEN AS t USING (SELECT @MaNV AS MaGV) AS s ON t.MaGV = s.MaGV
+            WHEN MATCHED THEN UPDATE SET LoaiGV = @LoaiGV, QuocTich = ISNULL(@QuocTich, N'Việt Nam'), TrinhDo = @TrinhDo, DonGiaBuoi = @DonGiaBuoi
+            WHEN NOT MATCHED THEN INSERT (MaGV, LoaiGV, QuocTich, TrinhDo, DonGiaBuoi)
+                                  VALUES (@MaNV, @LoaiGV, ISNULL(@QuocTich, N'Việt Nam'), @TrinhDo, @DonGiaBuoi);
+        ELSE
+            DELETE dbo.GIAOVIEN WHERE MaGV = @MaNV;
+        SET @MaNVMoi = @MaNV;
+        IF @tc = 0 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() = -1 OR (XACT_STATE() = 1 AND @tc = 0) ROLLBACK TRANSACTION;
+        ELSE IF XACT_STATE() = 1 ROLLBACK TRANSACTION sp_LuuNhanVien;
+        THROW;
+    END CATCH
+END
+GO
+
+-- Nhân viên đã phát sinh dữ liệu (lớp, phiếu thu, tài khoản) thì chỉ cho nghỉ việc (TrangThai = 0), không xoá
+CREATE OR ALTER PROCEDURE dbo.sp_XoaNhanVien @MaNV CHAR(6)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaGV = @MaNV) OR EXISTS (SELECT 1 FROM dbo.PHIEUTHU WHERE MaNV = @MaNV)
+       OR EXISTS (SELECT 1 FROM dbo.NHANVIEN WHERE MaNVQuanLy = @MaNV) OR EXISTS (SELECT 1 FROM dbo.CHINHANH WHERE MaNVQuanLy = @MaNV)
+       OR EXISTS (SELECT 1 FROM dbo.KIEMTRA_DAUVAO WHERE MaNVCham = @MaNV)
+    BEGIN
+        UPDATE dbo.NHANVIEN SET TrangThai = 0 WHERE MaNV = @MaNV;
+        UPDATE dbo.TAIKHOAN SET TrangThai = 0 WHERE MaNV = @MaNV;
+        SELECT N'Nhân viên đã có dữ liệu liên quan nên được chuyển sang "Đã nghỉ" và khoá tài khoản.' AS ThongBao;
+        RETURN;
+    END
+    DELETE dbo.NHANVIEN WHERE MaNV = @MaNV;           -- GIAOVIEN, CHUNGCHI_GV, TAIKHOAN xoá theo cascade
+    SELECT N'Đã xoá nhân viên.' AS ThongBao;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_LuuChungChi
+    @MaGV CHAR(6), @TenChungChi NVARCHAR(50), @Diem DECIMAL(5,1) = NULL, @NgayCap DATE, @NoiCap NVARCHAR(100) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.GIAOVIEN WHERE MaGV = @MaGV) THROW 50130, N'Chỉ giáo viên mới có chứng chỉ.', 1;
+    IF @NgayCap > CAST(GETDATE() AS DATE) THROW 50131, N'Ngày cấp không được ở tương lai.', 1;
+    MERGE dbo.CHUNGCHI_GV AS t USING (SELECT @MaGV AS MaGV, @TenChungChi AS Ten) AS s
+       ON t.MaGV = s.MaGV AND t.TenChungChi = s.Ten
+    WHEN MATCHED THEN UPDATE SET Diem = @Diem, NgayCap = @NgayCap, NoiCap = @NoiCap
+    WHEN NOT MATCHED THEN INSERT (MaGV, TenChungChi, Diem, NgayCap, NoiCap) VALUES (@MaGV, @TenChungChi, @Diem, @NgayCap, @NoiCap);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaChungChi @MaGV CHAR(6), @TenChungChi NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE dbo.CHUNGCHI_GV WHERE MaGV = @MaGV AND TenChungChi = @TenChungChi;
+END
+GO
+
+PRINT N'✓ 05_procedures.sql: 9 procedure nghiệp vụ + procedure danh mục cho web.';
 GO
