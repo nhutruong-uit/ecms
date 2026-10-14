@@ -346,6 +346,61 @@ UPDATE vw_LopHoc_DangMo SET TrangThai = N'Đã kết thúc' WHERE MaLop = 'GT3-2
 
 Chênh lệch tăng theo kích thước dữ liệu vì indexed view chỉ lưu ~3 chi nhánh × 24 tháng = 72 dòng dù có hàng trăm nghìn dòng thu. Đổi lại, mỗi lần thêm/sửa CT_PHIEUTHU, SQL Server phải cập nhật thêm chỉ mục của view – phù hợp với dữ liệu *đọc nhiều, ghi ít* như doanh thu. Ràng buộc của indexed view: `SCHEMABINDING`, tên hai phần `dbo.X`, không `OUTER JOIN`, phải có `COUNT_BIG(*)` khi `GROUP BY`, và các phiên ghi vào bảng gốc phải bật `QUOTED_IDENTIFIER`, `ANSI_NULLS` (nên `run_all` gọi `sqlcmd -I`).
 
+### 3.2.4 Sao lưu và phục hồi
+
+**Các loại sao lưu** (recovery model **FULL** – bắt buộc để có log backup và phục hồi theo thời điểm):
+
+| Loại | Nội dung | Kích thước (ECMS) | Phục hồi cần |
+|---|---|--:|---|
+| Full | Toàn bộ CSDL + phần log đủ để nhất quán | 14,09 MB → **1,38 MB** khi nén (−90,2%) | Chỉ bản full |
+| Differential | Các extent thay đổi kể từ full gần nhất | 2,09 MB → 0,12 MB (−94,2%) | Full + diff mới nhất |
+| Transaction log | Mọi giao dịch kể từ log backup trước | 0,21 MB → 0,06 MB (−72,8%) | Full + diff + **mọi** log sau diff theo thứ tự; cho phép `STOPAT` |
+
+Script [`database/11_backup_restore.sql`](../database/11_backup_restore.sql) tạo procedure dùng chung `master.dbo.sp_SaoLuuECMS @Loai = 'FULL' | 'DIFF' | 'LOG'` (tên file theo thời điểm, `COMPRESSION` – tự tắt trên bản Express, `CHECKSUM`) rồi chạy kịch bản sự cố.
+
+**Kịch bản: xoá nhầm dữ liệu → phục hồi về đúng thời điểm trước sự cố**
+
+| Bước | Thời điểm | Điểm danh lớp GT2-2601 | Số phiếu thu |
+|---|---|--:|--:|
+| 1. Full backup | 18:56:27.446 | 364 | 501 |
+| 2. Thêm 1 phiếu thu → Differential backup | 18:56:27.528 | 364 | 502 |
+| 3. Thêm 1 phiếu thu – **mốc T0** | 18:56:28.543 | 364 | 503 |
+| 4. **SỰ CỐ**: giáo vụ `DELETE` toàn bộ điểm danh của lớp | 18:56:29.584 | **0** | 503 |
+| 5. Log backup → `RESTORE` Full + Diff + Log `WITH STOPAT = T0` ra **ECMS_KhoiPhuc** | (T0) | **364** | 503 |
+| 6. Chép các dòng bị xoá từ ECMS_KhoiPhuc về ECMS | 18:56:30.439 | **364** | 503 |
+
+```sql
+RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_full.bak' WITH MOVE ..., NORECOVERY, REPLACE;
+RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_diff.bak' WITH NORECOVERY;
+RESTORE LOG      ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_log.trn'  WITH STOPAT = @T0, RECOVERY;
+```
+
+Bản phục hồi có **503 phiếu thu** – tức là giữ được cả 2 phiếu lập sau full backup (một phiếu nằm trong diff, một phiếu chỉ có trong log) – và đủ **364 dòng điểm danh** đã bị xoá sau T0. Nhóm phục hồi *song song* ra CSDL mới thay vì ghi đè ECMS: ứng dụng không phải dừng, các giao dịch hợp lệ xảy ra sau sự cố không bị mất, chỉ những dòng bị xoá được chép lại. Phục hồi đè (`RESTORE DATABASE ECMS … WITH REPLACE` sau khi sao lưu *tail-log* `WITH NORECOVERY`) chỉ dùng khi toàn bộ CSDL hỏng.
+
+**Kiểm tra bản sao lưu**
+
+| Lệnh | Mục đích | Kết quả trên bản full |
+|---|---|---|
+| `RESTORE VERIFYONLY … WITH CHECKSUM` | Bản sao lưu đọc được, checksum từng trang đúng | Thành công cho cả 3 file |
+| `RESTORE HEADERONLY` | Loại sao lưu, LSN đầu / cuối, thời điểm, có nén, collation | BackupType 1 (Full), Compressed 1, `Vietnamese_CI_AS`, MS_XPRESS |
+| `RESTORE FILELISTONLY` | Tên logic / vật lý các file bên trong (cần cho `WITH MOVE`) | `ECMS` → ECMS.mdf, `ECMS_log` → ECMS_log.ldf |
+| `msdb.dbo.backupset` | Lịch sử sao lưu, kích thước trước / sau nén | Bảng kích thước ở trên |
+
+**Chiến lược sao lưu đề xuất cho trung tâm**
+
+| Thành phần | Lịch | Giữ lại | Lý do |
+|---|---|---|---|
+| Full | Chủ nhật 01:00 | 4 tuần | Ngoài giờ học; nền cho chuỗi phục hồi |
+| Differential | Thứ Hai – thứ Bảy 01:00 | 1 tuần | Rút ngắn chuỗi phục hồi: tối đa 1 diff thay vì 6 ngày log |
+| Transaction log | Mỗi 15 phút, 07:00 – 22:00 | 2 tuần | Giới hạn mất dữ liệu ≤ 15 phút |
+| Bản sao ngoài máy chủ | Hằng ngày đồng bộ thư mục `backups/` lên lưu trữ đám mây | 3 tháng | Phòng hỏng ổ đĩa / ransomware (quy tắc 3-2-1) |
+| Kiểm tra phục hồi | Hằng tháng chạy lại kịch bản trên ra CSDL thử | – | Bản sao lưu chưa từng phục hồi thử thì chưa chắc dùng được |
+
+- **RPO** (lượng dữ liệu tối đa có thể mất) = **15 phút** (chu kỳ log backup).
+- **RTO** (thời gian khôi phục) ≈ **< 30 phút**: CSDL ~15 MB, phục hồi full + 1 diff + ≤ 96 log trong vài phút; phần lớn thời gian là xác định thời điểm sự cố.
+
+**Tự động hoá:** SQL Server Agent (bản Developer/Standard; `docker-compose.yml` bật `MSSQL_AGENT_ENABLED`) – mục 4 của script có mẫu `sp_add_job`/`sp_add_schedule`. Bản Express không có Agent: dùng [`scripts/backup.sh`](../scripts/backup.sh) với cron (hoặc Task Scheduler gọi `sqlcmd`). Mục 5 của script có mẫu sao lưu **mã hoá AES-256** bằng certificate (phải sao lưu riêng certificate, mất certificate là không phục hồi được).
+
 ## 3.3 Lập trình trên CSDL
 
 ### 3.3.1 Stored procedure và transaction
