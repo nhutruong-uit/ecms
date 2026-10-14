@@ -83,7 +83,8 @@ def pdf(tieu_de: str, tham_so: str, df: pd.DataFrame, cot: list[tuple[str, str, 
 
     if nhom:
         for g, d in df.groupby(nhom, sort=False):
-            rows.append([f"{dict((c[0], c[1]) for c in cot).get(nhom, nhom)}: {g}"] + [""] * (len(cot) - 1)); kieu_dong.append("gh")
+            nhan = dict((c[0], c[1]) for c in cot).get(nhom)
+            rows.append([f"{nhan}: {g}" if nhan else str(g)] + [""] * (len(cot) - 1)); kieu_dong.append("gh")
             for r in d.itertuples(index=False):
                 rows.append([_fmt(getattr(r, c), k) for c, _, _, k in cot]); kieu_dong.append("d")
             if tong:

@@ -81,7 +81,7 @@ elif ma == "doanh_thu":
         ui.table(g, {"KyThang": "Tháng", "SoPhieu": "Số phiếu", "SoHocVien": "Học viên", "DoanhThu": "Doanh thu"}, key=f"r2_{ten}",
                  select=False, money_cols=("DoanhThu",))
     st.markdown(f"### Tổng cộng: {ui.money(df.DoanhThu.sum() if len(df) else 0)}")
-    cot = [("KyThang", "Tháng", 45, None), ("SoPhieu", "Số phiếu", 40, None), ("SoHocVien", "Số học viên", 40, None),
+    cot = [("KyThang", "Tháng", 45, None), ("SoPhieu", "Số phiếu", 40, "num"), ("SoHocVien", "Số học viên", 40, "num"),
            ("DoanhThu", "Doanh thu", 60, "money")]
     tai("DoanhThu", bao_cao.pdf("Báo cáo doanh thu theo chi nhánh", tham, df, cot, nhom="TenCN", tong=["DoanhThu"], ngang=False),
         bao_cao.excel({"DoanhThu": ("Doanh thu theo chi nhánh – tháng", df, {"TenCN": "Chi nhánh"} | {c[0]: c[1] for c in cot})},
