@@ -52,7 +52,14 @@ def table(df: pd.DataFrame, labels: dict[str, str], key: str, money_cols: Iterab
     for c in view.columns:                     # cột có ô NULL: đổi sang chuỗi để hiển thị trống (Arrow không trộn được date và "")
         if view[c].isna().any():
             view[c] = view[c].map(lambda v: "" if v is None or (isinstance(v, float) and pd.isna(v)) or v is pd.NaT else str(v))
-    view = view.rename(columns=labels)
+    nhan, dung = {}, set()
+    for c in view.columns:                     # hai cột trùng nhãn sẽ làm st.dataframe lỗi → thêm hậu tố
+        n = labels[c]
+        while n in dung:
+            n += " "
+        dung.add(n)
+        nhan[c] = n
+    view = view.rename(columns=nhan)
     kw = {"height": height} if height else {}
     if not select:
         st.dataframe(view, hide_index=True, **kw)
