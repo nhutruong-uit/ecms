@@ -1,0 +1,664 @@
+<?xml version="1.0" ?>
+<ECMS>
+  <ChiNhanh Ma="CN01" Ten="ECMS Thủ Đức">
+    <Lop Ma="IE55-2602">
+      <KhoaHoc>IELTS 5.5</KhoaHoc>
+      <KhaiGiang>2026-08-19</KhaiGiang>
+      <GiaoVien>Lê Thanh Yến</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV0174">
+          <HoTen>Lê Gia Bảo</HoTen>
+          <NgaySinh>1998-10-14</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0275">
+          <HoTen>Phạm Anh Bảo</HoTen>
+          <NgaySinh>2005-01-06</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0276">
+          <HoTen>Vũ Phương Duyên</HoTen>
+          <NgaySinh>2007-03-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0277">
+          <HoTen>Dương Mai Dương</HoTen>
+          <NgaySinh>2001-12-14</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0160">
+          <HoTen>Vũ Phương Dương</HoTen>
+          <NgaySinh>2003-02-02</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0153">
+          <HoTen>Hoàng Minh Hồng</HoTen>
+          <NgaySinh>2004-01-23</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0016">
+          <HoTen>Dương Thị Hồng</HoTen>
+          <NgaySinh>2003-05-07</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0162">
+          <HoTen>Đặng Quang Hưng</HoTen>
+          <NgaySinh>2001-07-01</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0152">
+          <HoTen>Bùi Khánh Linh</HoTen>
+          <NgaySinh>2007-12-05</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0007">
+          <HoTen>Mai Ngọc Mai</HoTen>
+          <NgaySinh>2006-09-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0013">
+          <HoTen>Hoàng Thành Tú</HoTen>
+          <NgaySinh>2002-07-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0279">
+          <HoTen>Mai Gia Tú</HoTen>
+          <NgaySinh>2004-12-06</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0280">
+          <HoTen>Lê Thành Tú</HoTen>
+          <NgaySinh>2001-01-23</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0010">
+          <HoTen>Trần Thu Thảo</HoTen>
+          <NgaySinh>1993-04-03</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0274">
+          <HoTen>Trần Quang Trọng</HoTen>
+          <NgaySinh>2001-01-25</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0278">
+          <HoTen>Mai Thu Vân</HoTen>
+          <NgaySinh>2001-09-19</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0273">
+          <HoTen>Dương Bảo Vi</HoTen>
+          <NgaySinh>1988-02-03</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0166">
+          <HoTen>Mai Thu Vi</HoTen>
+          <NgaySinh>2004-12-08</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0011">
+          <HoTen>Đặng Bảo Xuân</HoTen>
+          <NgaySinh>2003-06-28</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0017">
+          <HoTen>Trần Minh Yến</HoTen>
+          <NgaySinh>2006-12-06</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+      </DanhSach>
+    </Lop>
+    <Lop Ma="TC650-2601">
+      <KhoaHoc>TOEIC 650</KhoaHoc>
+      <KhaiGiang>2026-08-17</KhaiGiang>
+      <GiaoVien>Mai Ngọc Duyên</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV0182">
+          <HoTen>Dương Thành Anh</HoTen>
+          <NgaySinh>2001-02-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0283">
+          <HoTen>Hoàng Gia Anh</HoTen>
+          <NgaySinh>1998-06-27</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0200">
+          <HoTen>Lê Quang Bảo</HoTen>
+          <NgaySinh>2003-03-10</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0288">
+          <HoTen>Vũ Tuấn Châu</HoTen>
+          <NgaySinh>1988-02-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0199">
+          <HoTen>Dương Thị Chi</HoTen>
+          <NgaySinh>2005-02-09</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0037">
+          <HoTen>Bùi Hữu Dũng</HoTen>
+          <NgaySinh>1997-03-05</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0290">
+          <HoTen>Mai Thu Duyên</HoTen>
+          <NgaySinh>2001-04-23</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0021">
+          <HoTen>Phạm Khánh Duyên</HoTen>
+          <NgaySinh>2007-02-09</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0033">
+          <HoTen>Trần Phương Dương</HoTen>
+          <NgaySinh>2008-08-05</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0284">
+          <HoTen>Trần Hữu Hoàng</HoTen>
+          <NgaySinh>2010-06-10</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0285">
+          <HoTen>Đặng Ngọc Hồng</HoTen>
+          <NgaySinh>2003-11-25</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0029">
+          <HoTen>Lê Thu Hồng</HoTen>
+          <NgaySinh>2006-06-14</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0195">
+          <HoTen>Hoàng Phương Hồng</HoTen>
+          <NgaySinh>1988-08-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0289">
+          <HoTen>Lê Ngọc Hương</HoTen>
+          <NgaySinh>1988-02-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0292">
+          <HoTen>Đặng Minh Hương</HoTen>
+          <NgaySinh>2007-06-26</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0281">
+          <HoTen>Đặng Anh Khoa</HoTen>
+          <NgaySinh>1998-09-16</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0287">
+          <HoTen>Nguyễn Khánh Linh</HoTen>
+          <NgaySinh>2004-04-19</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0024">
+          <HoTen>Dương Khánh Ngọc</HoTen>
+          <NgaySinh>2006-06-26</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0286">
+          <HoTen>Nguyễn Hoàng Quang</HoTen>
+          <NgaySinh>1994-04-24</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0044">
+          <HoTen>Dương Gia Tú</HoTen>
+          <NgaySinh>2009-01-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0039">
+          <HoTen>Hoàng Văn Thành</HoTen>
+          <NgaySinh>1987-12-02</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0282">
+          <HoTen>Phạm Thanh Thảo</HoTen>
+          <NgaySinh>1994-06-28</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0183">
+          <HoTen>Nguyễn Anh Trọng</HoTen>
+          <NgaySinh>2001-10-16</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0031">
+          <HoTen>Nguyễn Hoàng Trọng</HoTen>
+          <NgaySinh>2005-04-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0197">
+          <HoTen>Nguyễn Hoàng Vũ</HoTen>
+          <NgaySinh>2010-07-07</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0291">
+          <HoTen>Hoàng Hoàng Vũ</HoTen>
+          <NgaySinh>1988-12-09</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0022">
+          <HoTen>Bùi Kim Xuân</HoTen>
+          <NgaySinh>2005-06-15</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+      </DanhSach>
+    </Lop>
+  </ChiNhanh>
+  <ChiNhanh Ma="CN02" Ten="ECMS Quận 1">
+    <Lop Ma="GT2-2601">
+      <KhoaHoc>Giao tiếp Trung cấp</KhoaHoc>
+      <KhaiGiang>2026-08-26</KhaiGiang>
+      <GiaoVien>Bùi Bảo Yến</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV0217">
+          <HoTen>Trần Kim Ánh</HoTen>
+          <NgaySinh>2007-01-17</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0057">
+          <HoTen>Hoàng Đức Bảo</HoTen>
+          <NgaySinh>1987-07-28</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0299">
+          <HoTen>Bùi Gia Châu</HoTen>
+          <NgaySinh>2006-04-04</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0295">
+          <HoTen>Đặng Ngọc Chi</HoTen>
+          <NgaySinh>2007-07-01</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0296">
+          <HoTen>Mai Ngọc Chi</HoTen>
+          <NgaySinh>2004-11-01</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0048">
+          <HoTen>Nguyễn Thu Dương</HoTen>
+          <NgaySinh>1997-07-23</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0209">
+          <HoTen>Trần Mai Dương</HoTen>
+          <NgaySinh>1988-10-27</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0294">
+          <HoTen>Dương Thị Hồng</HoTen>
+          <NgaySinh>2009-07-02</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0300">
+          <HoTen>Hoàng Tuấn Huy</HoTen>
+          <NgaySinh>2003-06-19</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0297">
+          <HoTen>Hoàng Hoàng Huy</HoTen>
+          <NgaySinh>2001-03-11</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0220">
+          <HoTen>Dương Ngọc Hương</HoTen>
+          <NgaySinh>2001-12-10</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0301">
+          <HoTen>Vũ Tuấn Khoa</HoTen>
+          <NgaySinh>2005-10-12</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0046">
+          <HoTen>Hoàng Kim Mai</HoTen>
+          <NgaySinh>1997-04-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0225">
+          <HoTen>Phạm Hoàng Nam</HoTen>
+          <NgaySinh>2006-07-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0229">
+          <HoTen>Nguyễn Tuấn Nam</HoTen>
+          <NgaySinh>2008-05-05</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0227">
+          <HoTen>Bùi Hữu Nam</HoTen>
+          <NgaySinh>2008-07-13</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0298">
+          <HoTen>Hoàng Thành Quang</HoTen>
+          <NgaySinh>2010-01-25</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0052">
+          <HoTen>Vũ Hoàng Quang</HoTen>
+          <NgaySinh>1997-09-19</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0303">
+          <HoTen>Phạm Tuấn Quang</HoTen>
+          <NgaySinh>2007-06-20</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0059">
+          <HoTen>Hoàng Bảo Thảo</HoTen>
+          <NgaySinh>2003-11-03</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0215">
+          <HoTen>Hoàng Anh Trọng</HoTen>
+          <NgaySinh>2005-10-02</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0293">
+          <HoTen>Đặng Hoàng Trung</HoTen>
+          <NgaySinh>2007-12-28</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0049">
+          <HoTen>Trần Mai Vân</HoTen>
+          <NgaySinh>2004-10-21</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0212">
+          <HoTen>Mai Thị Vi</HoTen>
+          <NgaySinh>2005-02-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0204">
+          <HoTen>Mai Thanh Yến</HoTen>
+          <NgaySinh>1998-08-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0302">
+          <HoTen>Vũ Khánh Yến</HoTen>
+          <NgaySinh>2003-12-13</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+      </DanhSach>
+    </Lop>
+  </ChiNhanh>
+  <ChiNhanh Ma="CN03" Ten="ECMS Bình Thạnh">
+    <Lop Ma="IE55-2601">
+      <KhoaHoc>IELTS 5.5</KhoaHoc>
+      <KhaiGiang>2026-08-15</KhaiGiang>
+      <GiaoVien>Wilson David</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV0004">
+          <HoTen>Vũ Khánh Ánh</HoTen>
+          <NgaySinh>2005-11-24</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0268">
+          <HoTen>Trần Kim Ánh</HoTen>
+          <NgaySinh>2006-09-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0272">
+          <HoTen>Đặng Bảo Ánh</HoTen>
+          <NgaySinh>2009-01-06</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0264">
+          <HoTen>Lê Văn Bảo</HoTen>
+          <NgaySinh>2008-11-13</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0262">
+          <HoTen>Mai Đức Bảo</HoTen>
+          <NgaySinh>2003-06-11</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0018">
+          <HoTen>Nguyễn Mai Chi</HoTen>
+          <NgaySinh>2008-11-27</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0267">
+          <HoTen>Dương Anh Dũng</HoTen>
+          <NgaySinh>2009-04-13</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0271">
+          <HoTen>Phạm Hoàng Hoàng</HoTen>
+          <NgaySinh>2009-01-11</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0016">
+          <HoTen>Dương Thị Hồng</HoTen>
+          <NgaySinh>2003-05-07</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0177">
+          <HoTen>Hoàng Quang Hưng</HoTen>
+          <NgaySinh>1988-04-17</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0162">
+          <HoTen>Đặng Quang Hưng</HoTen>
+          <NgaySinh>2001-07-01</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0019">
+          <HoTen>Nguyễn Thành Khoa</HoTen>
+          <NgaySinh>2003-06-01</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0270">
+          <HoTen>Lê Kim Linh</HoTen>
+          <NgaySinh>2003-02-22</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0155">
+          <HoTen>Hoàng Thanh Linh</HoTen>
+          <NgaySinh>2005-05-20</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0007">
+          <HoTen>Mai Ngọc Mai</HoTen>
+          <NgaySinh>2006-09-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0169">
+          <HoTen>Bùi Đức Tùng</HoTen>
+          <NgaySinh>2007-12-16</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0172">
+          <HoTen>Trần Bảo Thảo</HoTen>
+          <NgaySinh>1988-11-19</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0161">
+          <HoTen>Mai Thu Thảo</HoTen>
+          <NgaySinh>2007-10-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0263">
+          <HoTen>Bùi Minh Trọng</HoTen>
+          <NgaySinh>2005-05-01</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0001">
+          <HoTen>Phạm Gia Trọng</HoTen>
+          <NgaySinh>2009-10-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0015">
+          <HoTen>Dương Minh Vân</HoTen>
+          <NgaySinh>2006-11-03</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0154">
+          <HoTen>Lê Minh Vân</HoTen>
+          <NgaySinh>2001-08-19</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0265">
+          <HoTen>Nguyễn Mai Vân</HoTen>
+          <NgaySinh>2005-11-18</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0261">
+          <HoTen>Trần Thị Vi</HoTen>
+          <NgaySinh>1988-10-22</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0166">
+          <HoTen>Mai Thu Vi</HoTen>
+          <NgaySinh>2004-12-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0269">
+          <HoTen>Đặng Hữu Vũ</HoTen>
+          <NgaySinh>2005-10-25</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0266">
+          <HoTen>Vũ Thanh Yến</HoTen>
+          <NgaySinh>2001-09-12</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0017">
+          <HoTen>Trần Minh Yến</HoTen>
+          <NgaySinh>2006-12-06</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+      </DanhSach>
+    </Lop>
+    <Lop Ma="KD2-2601">
+      <KhoaHoc>Kids Movers</KhoaHoc>
+      <KhaiGiang>2026-08-31</KhaiGiang>
+      <GiaoVien>Smith John</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV0254">
+          <HoTen>Dương Phương Ánh</HoTen>
+          <NgaySinh>2018-03-08</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0308">
+          <HoTen>Vũ Minh Châu</HoTen>
+          <NgaySinh>2015-02-18</NgaySinh>
+          <HocPhi>Chưa đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0313">
+          <HoTen>Trần Phương Dương</HoTen>
+          <NgaySinh>2017-04-16</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0070">
+          <HoTen>Mai Phương Dương</HoTen>
+          <NgaySinh>2019-02-22</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0237">
+          <HoTen>Dương Mai Hương</HoTen>
+          <NgaySinh>2016-02-14</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0312">
+          <HoTen>Mai Thị Hương</HoTen>
+          <NgaySinh>2013-10-23</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0309">
+          <HoTen>Đặng Minh Hương</HoTen>
+          <NgaySinh>2018-08-17</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0076">
+          <HoTen>Nguyễn Quang Khoa</HoTen>
+          <NgaySinh>2018-12-14</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0232">
+          <HoTen>Dương Minh Lan</HoTen>
+          <NgaySinh>2013-03-23</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0253">
+          <HoTen>Hoàng Minh Lan</HoTen>
+          <NgaySinh>2016-02-20</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0252">
+          <HoTen>Lê Thị Linh</HoTen>
+          <NgaySinh>2018-05-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0310">
+          <HoTen>Lê Phương Mai</HoTen>
+          <NgaySinh>2013-12-11</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0258">
+          <HoTen>Lê Minh Ngọc</HoTen>
+          <NgaySinh>2019-03-28</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0251">
+          <HoTen>Hoàng Văn Phúc</HoTen>
+          <NgaySinh>2019-12-12</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0307">
+          <HoTen>Phạm Đức Quang</HoTen>
+          <NgaySinh>2013-09-21</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0065">
+          <HoTen>Đặng Hữu Thành</HoTen>
+          <NgaySinh>2017-04-15</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0236">
+          <HoTen>Vũ Khánh Thảo</HoTen>
+          <NgaySinh>2018-04-11</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0311">
+          <HoTen>Dương Minh Thảo</HoTen>
+          <NgaySinh>2020-05-06</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0306">
+          <HoTen>Mai Minh Trọng</HoTen>
+          <NgaySinh>2018-09-20</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0304">
+          <HoTen>Bùi Thu Vân</HoTen>
+          <NgaySinh>2019-06-02</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0305">
+          <HoTen>Hoàng Phương Vân</HoTen>
+          <NgaySinh>2014-11-12</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0240">
+          <HoTen>Phạm Bảo Xuân</HoTen>
+          <NgaySinh>2013-02-10</NgaySinh>
+          <HocPhi>Đóng một phần</HocPhi>
+        </HocVien>
+        <HocVien Ma="HV0248">
+          <HoTen>Vũ Khánh Yến</HoTen>
+          <NgaySinh>2017-09-04</NgaySinh>
+          <HocPhi>Đã đóng</HocPhi>
+        </HocVien>
+      </DanhSach>
+    </Lop>
+  </ChiNhanh>
+</ECMS>

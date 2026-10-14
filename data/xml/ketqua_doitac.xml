@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DanhSachThi DonVi="TrungTamKhaoThi" Ngay="2026-10-10">
+  <ThiSinh SDT="0901234999" HoTen="Nguyễn Văn Khách"><Diem KyNang="L">6.0</Diem><Diem KyNang="R">6.5</Diem><Diem KyNang="W">5.5</Diem><Diem KyNang="S">6.0</Diem></ThiSinh>
+  <ThiSinh SDT="0901234888" HoTen="Trần Thị Mới"><Diem KyNang="L">4.0</Diem><Diem KyNang="R">4.5</Diem><Diem KyNang="W">3.5</Diem><Diem KyNang="S">4.0</Diem></ThiSinh>
+</DanhSachThi>
