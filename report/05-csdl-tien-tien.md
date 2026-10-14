@@ -82,3 +82,89 @@ lop.giao_vien is s.get(NhanVien, 'NV0015') → True ; isinstance(gv, GiaoVien) �
 - *Điểm mạnh nếu dùng OODB:* mô hình hoá tự nhiên kế thừa Nhân viên – Giáo viên, chứng chỉ đa trị, kết quả kiểm tra có cấu trúc lồng; mã ứng dụng ngắn hơn vì không cần ánh xạ.
 - *Điểm yếu:* phần lớn giá trị của ECMS nằm ở **báo cáo và thống kê** (doanh thu theo chi nhánh – tháng, công nợ, chuyên cần) và **ràng buộc giao dịch** (không vượt sĩ số, không thu vượt) – đúng thế mạnh của mô hình quan hệ; đội ngũ và công cụ của trung tâm cũng quen SQL Server.
 - *Kết luận:* giữ **CSDL quan hệ** làm lõi, áp dụng tư tưởng hướng đối tượng ở **tầng ứng dụng** (lớp nghiệp vụ, ORM có eager loading) và dùng các tính năng *đối tượng – quan hệ* sẵn có của SQL Server (kiểu XML có schema, cột tính toán, hàm trả về bảng) cho phần dữ liệu phức.
+
+## 5.2 Cơ sở dữ liệu phân tán
+
+### 5.2.1 Đặc điểm và lựa chọn cho chuỗi trung tâm
+
+CSDL phân tán là tập hợp nhiều CSDL logic liên quan, đặt tại nhiều trạm nối mạng, được quản lý sao cho người dùng thấy như **một CSDL duy nhất** (trong suốt phân tán). Các đặc trưng: dữ liệu được *phân mảnh* và *cấp phát* về nơi dùng nhiều nhất, có thể *nhân bản*, truy vấn và giao tác có thể trải trên nhiều trạm.
+
+| Tiêu chí | Tập trung (ECMS hiện tại) | Phân tán theo chi nhánh |
+|---|---|---|
+| Vị trí dữ liệu | Một máy chủ | Mỗi chi nhánh giữ dữ liệu của mình |
+| Tốc độ truy cập tại chi nhánh | Phụ thuộc đường truyền tới trung tâm | Nhanh – đa số nghiệp vụ (điểm danh, ghi danh, thu phí) chỉ chạm dữ liệu tại chỗ |
+| Khi mất kết nối / trung tâm sự cố | Toàn bộ chi nhánh ngừng | Chi nhánh vẫn hoạt động với dữ liệu cục bộ |
+| Báo cáo toàn hệ thống | Đơn giản | Phải gom từ nhiều trạm (truy vấn toàn cục) |
+| Toàn vẹn liên trạm (học viên học ở 2 chi nhánh, chuyển lớp liên chi nhánh) | Một transaction cục bộ | Giao tác phân tán, cam kết 2 pha |
+| Bảo mật | Một điểm quản lý | Dữ liệu nhạy cảm (lương) có thể chỉ để ở trung tâm |
+| Chi phí vận hành | Thấp | Cao hơn: nhiều máy chủ, đồng bộ, sao lưu từng trạm |
+
+Với 3 chi nhánh và ~100 học viên mỗi nơi, mô hình tập trung vẫn đủ; phân tán phù hợp khi chuỗi mở rộng (nhiều tỉnh, kết nối không ổn định). Demo dưới đây cho thấy cách thiết kế nếu cần mở rộng.
+
+### 5.2.2 Thiết kế phân mảnh
+
+| Quan hệ | Kiểu phân mảnh | Định nghĩa | Lý do |
+|---|---|---|---|
+| HOCVIEN | **Ngang chính** | HOCVIEN_i = σ<sub>MaCN = 'CN0i'</sub>(HOCVIEN) | Học viên do chi nhánh lập hồ sơ quản lý |
+| LOPHOC | Ngang chính | LOPHOC_i = σ<sub>MaCN = 'CN0i'</sub>(LOPHOC) | Lớp mở tại một chi nhánh |
+| DANGKY | **Ngang dẫn xuất** | DANGKY_i = DANGKY ⋉ LOPHOC_i | Đăng ký đi cùng lớp: điểm danh, nhập điểm, thu phí của lớp đều ở cùng trạm |
+| DIEMDANH | Ngang dẫn xuất | DIEMDANH_i = DIEMDANH ⋉ DANGKY_i | |
+| NHANVIEN | **Dọc** | NV_CHUNG = π<sub>MaNV, HoNV, TenNV, ChucVu, SĐT, Email, MaCN</sub>(NHANVIEN); NV_LUONG = π<sub>MaNV, LuongCoBan</sub>(NHANVIEN) | Lương là dữ liệu nhạy cảm, chỉ trung tâm cần |
+| NV_CHUNG | **Hỗn hợp** (dọc rồi ngang) | NV_CHUNG_i = σ<sub>MaCN = 'CN0i'</sub>(NV_CHUNG) | Danh bạ nhân viên ở chi nhánh |
+| CHUONGTRINH, KHOAHOC, CAHOC | **Nhân bản** toàn phần | bản sao ở mọi trạm | Ít thay đổi, mọi nghiệp vụ đều đọc |
+
+**Lược đồ cấp phát**
+
+| Trạm | CSDL demo | Mảnh được cấp phát |
+|---|---|---|
+| Chi nhánh Thủ Đức | `ECMS_CN01` | HOCVIEN_1, LOPHOC_1, DANGKY_1, DIEMDANH_1, NV_CHUNG_1, bản sao danh mục |
+| Chi nhánh Quận 1 | `ECMS_CN02` | HOCVIEN_2, LOPHOC_2, DANGKY_2, DIEMDANH_2, NV_CHUNG_2, bản sao danh mục |
+| Chi nhánh Bình Thạnh | `ECMS_CN03` | HOCVIEN_3, LOPHOC_3, DANGKY_3, DIEMDANH_3, NV_CHUNG_3, bản sao danh mục |
+| Trung tâm | `ECMS_TOANCUC` | NV_LUONG + **lược đồ toàn cục** (partitioned view) |
+
+### 5.2.3 Cài đặt demo
+
+[`database/13_distributed.sql`](../database/13_distributed.sql) mô phỏng 3 trạm bằng 3 CSDL trên cùng instance (trên thực tế là 3 máy chủ nối bằng **linked server**, mẫu ở mục 6 của script). Mỗi mảnh có `CHECK (MaCN = 'CN0i')` trên cột phân mảnh và khoá chính chứa `MaCN`. Trạm trung tâm định nghĩa view cùng tên với bảng gốc:
+
+```sql
+CREATE VIEW dbo.HOCVIEN AS                        -- ECMS_TOANCUC: trong suốt vị trí
+    SELECT * FROM ECMS_CN01.dbo.HOCVIEN UNION ALL
+    SELECT * FROM ECMS_CN02.dbo.HOCVIEN UNION ALL
+    SELECT * FROM ECMS_CN03.dbo.HOCVIEN;
+
+CREATE VIEW dbo.NHANVIEN AS                       -- tái thiết mảnh dọc bằng phép kết
+    SELECT c.*, l.LuongCoBan FROM (… ∪ NHANVIEN_CHUNG_i …) c JOIN dbo.NHANVIEN_LUONG l ON l.MaNV = c.MaNV;
+```
+
+**Số dòng mỗi trạm**
+
+| Trạm | Học viên | Lớp | Đăng ký | Điểm danh |
+|---|--:|--:|--:|--:|
+| CN01 | 133 | 9 | 195 | 3 280 |
+| CN02 | 119 | 8 | 181 | 3 597 |
+| CN03 | 97 | 8 | 163 | 3 186 |
+
+**Kiểm tra tính đúng đắn của phân mảnh**
+
+| Điều kiện | Cách kiểm tra | Kết quả |
+|---|---|---|
+| **Đầy đủ** – mọi dòng của quan hệ gốc nằm trong ít nhất một mảnh | So số dòng + `EXCEPT` giữa bảng gốc và hợp các mảnh | HOCVIEN 349 = 349, LOPHOC 25 = 25, DANGKY 539 = 539, DIEMDANH 10 063 = 10 063, NHANVIEN 20 = 20 ✓ |
+| **Rời nhau** – không dòng nào thuộc hai mảnh ngang | `INTERSECT` từng cặp trạm (HOCVIEN, DANGKY) | 0 dòng trùng ✓ |
+| **Tái thiết** – ghép lại được quan hệ gốc | Ngang: `UNION ALL`; dọc: `JOIN` theo MaNV, `EXCEPT` với bảng gốc | 0 dòng khác ✓ |
+
+**Truy vấn toàn cục** viết như trên CSDL tập trung:
+
+| Truy vấn | Phân tán (ECMS_TOANCUC) | Tập trung (ECMS) |
+|---|---|---|
+| G1 – số đăng ký, số đạt, tổng phải thu theo 12 khoá học | 12 dòng | **0 dòng khác** (`EXCEPT` hai chiều) |
+| G2 – học viên học ở chi nhánh khác nơi lập hồ sơ (kết mảnh HOCVIEN trạm A với DANGKY trạm B) | 136 | 136 |
+| G3 – quỹ lương theo chi nhánh | CN01 89 tr · CN02 69,5 tr · CN03 72 tr | chỉ trả lời được ở trạm trung tâm |
+
+**Loại bỏ mảnh** (*partition elimination*): `SELECT COUNT(*) FROM dbo.HOCVIEN WHERE MaCN = 'CN02'` trên view toàn cục chỉ đọc bảng của trạm CN02 (`STATISTICS IO`: 1 bảng, 4 logical reads) – nhờ các ràng buộc CHECK, optimizer biết CN01 và CN03 không thể chứa dòng thoả điều kiện nên không gửi truy vấn tới đó.
+
+### 5.2.4 Giao tác phân tán và điều khiển đồng thời
+
+- **Chuyển lớp liên chi nhánh** (đăng ký cũ ở CN02, đăng ký mới ở CN01) phải cập nhật hai trạm như một đơn vị: SQL Server dùng `BEGIN DISTRIBUTED TRANSACTION` + **MSDTC** theo **giao thức cam kết hai pha (2PC)**: *pha chuẩn bị* – điều phối viên hỏi mọi trạm "sẵn sàng ghi chưa?", các trạm ghi log và khoá dữ liệu; *pha cam kết* – nếu tất cả đồng ý thì gửi COMMIT, chỉ một trạm từ chối là ROLLBACK toàn bộ.
+- **Điểm yếu của 2PC:** trạm giữ khoá suốt thời gian chờ; điều phối viên sự cố giữa hai pha làm trạm bị "treo" (blocking). Vì vậy thiết kế phân mảnh dẫn xuất để **phần lớn giao tác chỉ chạm một trạm** (ghi danh, điểm danh, thu phí của lớp đều cục bộ).
+- **Đồng thời:** mỗi trạm dùng khoá cục bộ (như `UPDLOCK` trong `sp_DangKyHoc`); giao tác toàn cục cần khoá ở mọi trạm tham gia theo thứ tự cố định để tránh deadlock phân tán, hoặc dùng mức cô lập *snapshot* cho truy vấn báo cáo toàn cục để không khoá chi nhánh.
+- **Nhân bản danh mục:** thay đổi khoá học / học phí được thực hiện ở trung tâm và lan truyền tới chi nhánh (SQL Server Replication kiểu *transactional* hoặc *merge*); chấp nhận trễ vài giây vì danh mục ít thay đổi.
