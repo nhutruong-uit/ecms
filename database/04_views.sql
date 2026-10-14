@@ -271,5 +271,29 @@ JOIN dbo.LOPHOC l  ON l.MaLop = d.MaLop
 JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH;
 GO
 
-PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo, 2 view học tập, 2 view tài chính.';
+/* ---------------------------------------------------------------------
+   7. VIEW BÁO CÁO & DASHBOARD (T24)
+   --------------------------------------------------------------------- */
+-- Từng khoản thu kèm chi nhánh của lớp, chương trình, khoá – nguồn cho báo cáo doanh thu nhiều chiều
+CREATE OR ALTER VIEW dbo.vw_BaoCaoDoanhThu
+AS
+SELECT p.MaPT, p.SoPhieu, CAST(p.NgayThu AS DATE) AS NgayThu, YEAR(p.NgayThu) AS Nam, MONTH(p.NgayThu) AS Thang,
+       DATEPART(QUARTER, p.NgayThu) AS Quy, p.HinhThuc, l.MaCN, cn.TenCN, k.MaCT, ct.TenCT, k.MaKH, k.TenKH, l.MaLop,
+       d.MaHV, c.SoTien
+FROM dbo.CT_PHIEUTHU c
+JOIN dbo.PHIEUTHU p     ON p.MaPT = c.MaPT
+JOIN dbo.DANGKY d       ON d.MaDK = c.MaDK
+JOIN dbo.LOPHOC l       ON l.MaLop = d.MaLop
+JOIN dbo.CHINHANH cn    ON cn.MaCN = l.MaCN
+JOIN dbo.KHOAHOC k      ON k.MaKH = l.MaKH
+JOIN dbo.CHUONGTRINH ct ON ct.MaCT = k.MaCT;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_BangLuong
+AS
+SELECT b.Thang, b.MaGV, nv.HoTen, nv.MaCN, gv.LoaiGV, b.SoBuoiDay, b.DonGiaBuoi, b.LuongCoBan, b.TongLuong, b.NgayTinh
+FROM dbo.BANGLUONG b JOIN dbo.NHANVIEN nv ON nv.MaNV = b.MaGV JOIN dbo.GIAOVIEN gv ON gv.MaGV = b.MaGV;
+GO
+
+PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo, 2 view học tập, 2 view tài chính, 2 view báo cáo.';
 GO
