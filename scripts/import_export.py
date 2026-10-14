@@ -108,7 +108,10 @@ def cmd_export(args):
     with connect() as cn:
         df = read_df(cn, EXPORT_QUERY)
         no = read_df(cn, "SELECT MaHV, HoTen, SoDienThoai, MaLop, TenKH, ThanhTien, DaThu, ConNo, HanDongHP, QuaHan "
-                         "FROM dbo.vw_CongNoHocVien ORDER BY ConNo DESC", cn)
+                         "FROM dbo.vw_CongNoHocVien ORDER BY ConNo DESC")
+    for c in df.columns:                                   # ngày dạng yyyy-MM-dd thay vì timestamp
+        if df[c].map(lambda v: hasattr(v, "isoformat")).any():
+            df[c] = df[c].map(lambda v: v.isoformat() if hasattr(v, "isoformat") else v)
     done = []
     for fmt in args.format:
         path = EXPORT_DIR / f"si_so_lop.{fmt}"
@@ -122,7 +125,7 @@ def cmd_export(args):
                     for col in ws.columns:
                         ws.column_dimensions[col[0].column_letter].width = min(40, max(10, max(len(str(c.value or "")) for c in col) + 2))
         elif fmt == "json":
-            path.write_text(json.dumps(json.loads(df.to_json(orient="records", date_format="iso", force_ascii=False)),
+            path.write_text(json.dumps(json.loads(df.to_json(orient="records", force_ascii=False)),
                                        ensure_ascii=False, indent=2), encoding="utf-8")
         elif fmt == "xml":
             df.to_xml(path, root_name="SiSoLop", row_name="Lop", index=False, encoding="utf-8")
