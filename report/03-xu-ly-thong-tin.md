@@ -401,6 +401,55 @@ Bản phục hồi có **503 phiếu thu** – tức là giữ được cả 2 p
 
 **Tự động hoá:** SQL Server Agent (bản Developer/Standard; `docker-compose.yml` bật `MSSQL_AGENT_ENABLED`) – mục 4 của script có mẫu `sp_add_job`/`sp_add_schedule`. Bản Express không có Agent: dùng [`scripts/backup.sh`](../scripts/backup.sh) với cron (hoặc Task Scheduler gọi `sqlcmd`). Mục 5 của script có mẫu sao lưu **mã hoá AES-256** bằng certificate (phải sao lưu riêng certificate, mất certificate là không phục hồi được).
 
+### 3.2.5 Nhập / xuất dữ liệu
+
+**Nhập: ETL đăng ký online.** Bộ phận marketing gửi file `data/import/hocvien_online.csv` (1 200 dòng đăng ký online, có dòng lỗi). [`database/12_import_export.sql`](../database/12_import_export.sql) xử lý theo 3 bước:
+
+1. **Extract** – `BULK INSERT` vào bảng staging `STG_HOCVIEN_ONLINE` (mọi cột kiểu chuỗi để nhận cả dữ liệu sai; `MAXERRORS` bỏ qua dòng hỏng cấu trúc). Cột dùng collation **UTF-8** (`Latin1_General_100_CI_AS_SC_UTF8`) nên đọc đúng tiếng Việt trên cả Windows lẫn Linux – tuỳ chọn `CODEPAGE = '65001'` không có trên SQL Server for Linux.
+2. **Transform** – chuẩn hoá (cắt khoảng trắng, bỏ dấu chấm/gạch trong SĐT, `TRY_CONVERT(DATE, …, 103)`), kiểm tra 9 quy tắc chất lượng, đánh dấu lỗi vào cột `Loi`.
+3. **Load** – dòng hợp lệ vào HOCVIEN với mã mới trong một transaction; dòng lỗi lưu ở `STG_HOCVIEN_LOI` để trả lại.
+
+| Kết quả | Số dòng |
+|---|--:|
+| Đọc từ CSV | 1 200 (34 ms) |
+| Hợp lệ → HOCVIEN | **1 160** |
+| Lỗi | **40**: khoá học không tồn tại 8 · ngày sinh sai định dạng 8 · chi nhánh không tồn tại 6 · email sai 6 · trùng SĐT trong file 5 · thiếu họ tên 4 · SĐT sai 3 |
+
+Mặc định script chạy với `@GhiThat = 0` (rollback) để demo được nhiều lần. [`scripts/import_export.py import`](../scripts/import_export.py) làm cùng việc bằng pandas và cho **cùng kết quả 1 160 / 40**, ghi file dòng lỗi `data/export/hocvien_online_loi.csv`.
+
+**Đọc file bằng OPENROWSET(BULK …)**: file XML kết quả thi của đối tác (`SINGLE_BLOB` → `CAST AS XML` → `.nodes()`) và file CSV danh mục khoá học (`SINGLE_CLOB` + `STRING_SPLIT`) được đọc trực tiếp trong câu SELECT mà không cần bảng trung gian.
+
+**Xuất**
+
+| Định dạng | Cách làm | Kết quả |
+|---|---|---|
+| JSON | `FOR JSON PATH, ROOT` – lớp đang học kèm mảng học viên lồng bên trong; `OPENJSON … WITH` đọc ngược JSON thành bảng | Chuỗi JSON cho API / ứng dụng di động |
+| XML | `FOR XML PATH, ROOT` – công nợ theo học viên | `<CongNo><HocVien MaHV="…">…` |
+| CSV | `bcp "SELECT …" queryout … -c -C 65001 -t,`; Python `to_csv(encoding='utf-8-sig')` | `data/export/si_so_lop.csv` – BOM để Excel mở đúng tiếng Việt |
+| Excel | SQL Server Import and Export Wizard; Python + openpyxl (2 sheet *SiSoLop*, *CongNo*, tự giãn cột) | `data/export/si_so_lop.xlsx` |
+| JSON / XML từ Python | `DataFrame.to_json`, `to_xml` | `data/export/si_so_lop.json`, `.xml` |
+
+**So sánh tốc độ nhập 10 000 dòng** (`hocvien_10000.csv` vào staging, SQL Server 2025 Docker, `scripts/import_export.py bench` và phần 1.4 của script SQL):
+
+| Phương pháp | Thời gian | Dòng / giây | Ghi chú |
+|---|--:|--:|---|
+| `BULK INSERT` (file trên máy chủ, `TABLOCK`) | **38 ms** | ~262 000 | Nhanh nhất: máy chủ đọc file trực tiếp, ghi log tối thiểu; nhưng file phải nằm trên máy chủ (hoặc ổ chia sẻ) |
+| `bcp in` | 513 ms | ~19 500 | Đọc file phía máy khách, gửi theo lô; thời gian gồm khởi động tiến trình qua `docker exec` |
+| Python `executemany(fast_executemany=True)` | 352 ms | ~28 400 | Gửi cả mảng tham số trong ít lượt mạng; cách ứng dụng web nên dùng |
+| Python `executemany()` mặc định | 10 133 ms | ~990 | Mỗi dòng một lượt gọi ODBC |
+| Python `execute()` từng dòng | 16 865 ms | ~590 | Mỗi dòng một lượt mạng + một lần commit vòng lặp |
+| T-SQL `INSERT` từng dòng bằng cursor (cùng phiên) | 7 842 ms | ~1 280 | Không có độ trễ mạng nhưng vẫn 10 000 câu lệnh, 10 000 lần ghi log |
+
+**Đánh giá công cụ**
+
+| Công cụ | Tốc độ | Tiện dụng | Kiểm soát chất lượng | Phù hợp |
+|---|:-:|---|---|---|
+| BULK INSERT | ★★★★★ | Cần quyền `ADMINISTER BULK OPERATIONS`, file trên máy chủ | Qua staging + T-SQL | Nạp định kỳ số lượng lớn |
+| bcp | ★★★★ | Dòng lệnh, chạy được từ máy khách, dễ đưa vào script | Gần như không | Sao chép dữ liệu giữa máy chủ |
+| Import/Export Wizard (SSMS) | ★★★ | Giao diện, chọn Excel/CSV trực quan, lưu thành gói SSIS | Ánh xạ kiểu cơ bản | Thao tác một lần của người không lập trình |
+| Python pandas + pyodbc | ★★★★ (fast_executemany) | Linh hoạt, kiểm tra dữ liệu bằng code, xuất Excel/JSON/XML | Mạnh nhất | Ứng dụng web ECMS, báo cáo |
+| OPENROWSET / OPENJSON / FOR JSON / FOR XML | ★★★★ | Ngay trong câu SQL | T-SQL | Trao đổi dữ liệu bán cấu trúc |
+
 ## 3.3 Lập trình trên CSDL
 
 ### 3.3.1 Stored procedure và transaction
