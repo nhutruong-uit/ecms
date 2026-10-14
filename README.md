@@ -62,7 +62,15 @@ ecms/
 
 ## Cài đặt & chạy
 
-Hướng dẫn chi tiết sẽ có ở `docs/SETUP.md` (task T03).
+Hướng dẫn chi tiết: [docs/SETUP.md](docs/SETUP.md). Tóm tắt trên macOS:
+
+```bash
+cp .env.example .env
+docker compose up -d                 # SQL Server 2022
+database/run_all.sh                  # dựng CSDL ECMS (01 → 09)
+pip install -r requirements.txt
+streamlit run app/main.py            # http://localhost:8501
+```
 
 ## Làm việc nhóm
 

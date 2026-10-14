@@ -1,0 +1,29 @@
+# SQL Server 2022 cho môi trường phát triển (macOS / Linux / Windows có Docker).
+#   docker compose up -d          # khởi động
+#   database/run_all.sh           # dựng CSDL ECMS
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64          # Apple Silicon chạy qua Rosetta
+    container_name: ecms-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Ecms@12345}
+      MSSQL_COLLATION: Vietnamese_CI_AS
+    ports:
+      - "${DB_PORT:-1433}:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql          # dữ liệu CSDL, giữ lại khi xoá container
+      - ./backups:/var/opt/mssql/backup    # file .bak/.trn của T17 thấy được từ máy thật
+      - ./database:/database:ro            # script SQL cho run_all.sh
+      - ./data:/data                       # CSV / XML cho BULK INSERT, OPENROWSET (T10, T18)
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  mssql-data:
