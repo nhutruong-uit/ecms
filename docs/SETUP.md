@@ -72,7 +72,19 @@ streamlit run app/main.py
 
 Mở http://localhost:8501 → **Kiểm tra kết nối**. Trang báo *Kết nối thành công* kèm số bảng là môi trường đã sẵn sàng.
 
-> Trước khi có `08_security.sql` (T15), đặt tạm `DB_USER=sa` và `DB_PASSWORD=<SA_PASSWORD>` trong `.env`. Sau T15 ứng dụng dùng tài khoản ít quyền `ecms_app`.
+Ứng dụng kết nối CSDL bằng login ít quyền `ecms_app` (tạo ở `08_security.sql`, mật khẩu trong `.env.example`): chỉ được gọi procedure và đọc view, không truy cập bảng.
+
+**Tài khoản demo** (dữ liệu mẫu, chỉ dùng cho môi trường phát triển):
+
+| Tài khoản | Mật khẩu | Vai trò |
+|---|---|---|
+| `quanly` | `Ecms@2026` | Quản lý trung tâm (xem mọi chi nhánh) |
+| `giaovu` | `Ecms@2026` | Giáo vụ CN01 |
+| `ketoan` | `Ecms@2026` | Kế toán CN01 |
+| `giaovien` | `Ecms@2026` | Giáo viên |
+| `hocvien` | `Hocvien@2026` | Học viên |
+
+Login SQL Server minh hoạ từng vai trò (`ecms_quanly`, `ecms_giaovu`, …) có mật khẩu ghi trong đầu file `database/08_security.sql`.
 
 ## 5. Lỗi thường gặp
 
