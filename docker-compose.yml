@@ -11,6 +11,8 @@ services:
       MSSQL_PID: Developer
       MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Ecms@12345}
       MSSQL_COLLATION: Vietnamese_CI_AS
+      MSSQL_BACKUP_DIR: /var/opt/mssql/backup   # thư mục sao lưu mặc định (T17)
+      MSSQL_AGENT_ENABLED: "true"              # SQL Server Agent cho lịch sao lưu tự động
     ports:
       - "${DB_PORT:-1433}:1433"
     volumes:
