@@ -101,6 +101,106 @@ Dữ liệu mẫu nhỏ (10 nghìn điểm danh) nên phần cuối `10_queries.
 
 ## 3.2 An ninh dữ liệu
 
+### 3.2.1 Xác thực
+
+**Hai cơ chế xác thực của SQL Server**
+
+| | Windows Authentication | SQL Server Authentication |
+|---|---|---|
+| Ai xác thực | Windows / Active Directory (Kerberos, NTLM) | SQL Server, mật khẩu băm lưu trong `master` |
+| Ưu điểm | Không truyền mật khẩu, dùng chính sách mật khẩu và khoá tài khoản của domain, đăng nhập một lần | Dùng được từ Linux/macOS, container, ứng dụng web ngoài domain |
+| Nhược điểm | Cần máy trong domain hoặc tài khoản Windows | Phải tự quản lý mật khẩu, dễ lộ trong chuỗi kết nối |
+| Trong ECMS | Thành viên dùng Windows + SSMS kết nối quản trị (`-E`) | Ứng dụng web (`ecms_app`) và 5 login minh hoạ vai trò |
+
+ECMS dùng **Mixed mode** (cả hai). Script kiểm tra bằng `SERVERPROPERTY('IsIntegratedSecurityOnly')` → *Mixed mode*; trên Windows bật bằng *Server Properties → Security → SQL Server and Windows Authentication mode* (hoặc `xp_instance_regwrite … LoginMode = 2`) rồi khởi động lại dịch vụ.
+
+**Login** ([`database/08_security.sql`](../database/08_security.sql)) – tạo mới nếu chưa có, chạy lại thì đổi mật khẩu:
+
+| Login | User trong ECMS | Role | CHECK_POLICY | CHECK_EXPIRATION |
+|---|---|---|:-:|:-:|
+| `ecms_app` | u_app | r_App | ON | OFF (tài khoản dịch vụ, không được hết hạn đột ngột) |
+| `ecms_quanly` | u_quanly | r_QuanLy | ON | ON |
+| `ecms_giaovu` | u_giaovu | r_GiaoVu | ON | ON |
+| `ecms_ketoan` | u_ketoan | r_KeToan | ON | ON |
+| `ecms_giaovien` | u_giaovien | r_GiaoVien | ON | ON |
+| `ecms_hocvien` | u_hocvien | r_HocVien | ON | ON |
+
+`CHECK_POLICY = ON` áp chính sách độ phức tạp và khoá tài khoản (trên Windows lấy từ Group Policy); `CHECK_EXPIRATION = ON` buộc đổi mật khẩu định kỳ.
+
+**Tài khoản ứng dụng (TAIKHOAN) – băm mật khẩu có salt**
+
+Người dùng web không có login SQL Server riêng: họ đăng nhập bằng bảng TAIKHOAN, còn kết nối tới CSDL luôn là `ecms_app`. Mật khẩu không bao giờ được lưu dạng rõ:
+
+```sql
+MatKhauHash = HASHBYTES('SHA2_256', Salt + CAST(@MatKhau AS VARBINARY(200)))   -- dbo.fn_BamMatKhau
+Salt        = CRYPT_GEN_RANDOM(16)                                              -- ngẫu nhiên cho từng tài khoản, đổi khi đổi mật khẩu
+```
+
+| Procedure | Chức năng |
+|---|---|
+| `sp_DangNhap` (@TenDangNhap, @MatKhau, @ThongBao OUTPUT) | So hash; đúng → trả thông tin người dùng + phạm vi chi nhánh (`PhamViCN`), sai → tăng `SoLanSai`, **sai 5 lần khoá tài khoản**. Thông báo chung "Sai tên đăng nhập hoặc mật khẩu" để không tiết lộ tài khoản nào tồn tại |
+| `sp_DoiMatKhau` | Kiểm tra mật khẩu cũ, độ mạnh mật khẩu mới (`fn_MatKhauHopLe`: ≥ 8 ký tự, hoa, thường, số, ký tự đặc biệt), sinh salt mới |
+| `sp_TaoTaiKhoan`, `sp_CapNhatTaiKhoan` | Quản trị tạo tài khoản, khoá / mở khoá, đặt lại mật khẩu |
+| `vw_TaiKhoan` | Danh sách tài khoản cho trang quản trị – **không** có cột hash, salt |
+
+`sp_DangNhap` không `THROW` khi sai mật khẩu mà trả về `@ThongBao`: nếu THROW, transaction của ứng dụng bị rollback và lần tăng `SoLanSai` cũng mất, khiến cơ chế khoá tài khoản vô hiệu.
+
+### 3.2.2 Phân quyền
+
+**Role và nguyên tắc.** 6 role theo tác nhân ở mục 1.4.1, áp dụng **quyền tối thiểu**. Mọi view, function, procedure và bảng cùng thuộc `dbo`, nên khi người dùng gọi view/procedure, SQL Server **không kiểm tra quyền trên bảng bên dưới** (ownership chaining). Nhờ đó có thể `DENY` bảng gốc mà view/procedure vẫn chạy – procedure không dùng SQL động để không làm đứt chuỗi sở hữu.
+
+**r_App** được cấp tự động bằng vòng lặp trên `sys.objects`: `GRANT EXECUTE` mọi procedure và hàm vô hướng, `GRANT SELECT` mọi view và hàm trả về bảng, **`DENY SELECT, INSERT, UPDATE, DELETE` trên mọi bảng**. Kể cả khi ứng dụng bị chèn SQL, kẻ tấn công cũng không đọc được bảng TAIKHOAN hay sửa phiếu thu trực tiếp.
+
+**Ma trận phân quyền** (G = GRANT, D = DENY, G* = GRANT … WITH GRANT OPTION, – = không cấp; *qua view/proc* = chỉ truy cập gián tiếp)
+
+| Đối tượng | r_QuanLy | r_GiaoVu | r_KeToan | r_GiaoVien | r_HocVien | r_App |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| NHANVIEN (gồm lương) | G SELECT, UPDATE | **D SELECT** | G SELECT | **D SELECT** | – | D |
+| HOCVIEN | G SELECT | G SELECT, INSERT, UPDATE | – | – | – | D |
+| DANGKY | G SELECT | – | G SELECT **mức cột** (không có điểm), **D UPDATE** | – | – | D |
+| PHIEUTHU, CT_PHIEUTHU | G SELECT, **D INSERT/UPDATE/DELETE** | **D** mọi thao tác (PHIEUTHU) | G SELECT, **D UPDATE/DELETE** | **D SELECT** | – | D |
+| TAIKHOAN | G SELECT, **D SELECT (MatKhauHash, Salt)** | – | – | – | – | D |
+| Bảng khác | G SELECT (schema) | G SELECT KHOAHOC, CHUONGTRINH; G SELECT, INSERT KIEMTRA_DAUVAO | G SELECT BANGLUONG | – | G SELECT KHOAHOC | D |
+| vw_NhanVien_CongKhai | G | G | – | – | – | G |
+| vw_HocVien_ChiNhanh | G | G | G | – | – | G |
+| vw_CongNoHocVien | G | G | G | **D** | – | G |
+| vw_SiSoLop | **G*** | G | – | – | – | G |
+| vw_BangDiem, vw_LichDayGiaoVien | G | – | – | G | – | G |
+| fn_LichHocHocVien | G | – | – | – | G | G |
+| sp_DangKyHoc, sp_ChuyenLop, sp_XepLichLop, sp_SinhBuoiHoc, sp_TimKiemHocVien | – | G EXEC | – | – | – | G |
+| sp_ThuHocPhi | – | – | G EXEC | – | – | G |
+| sp_ThongKeDoanhThu, sp_TinhLuongGiaoVien | G EXEC | – | G EXEC | – | – | G |
+| sp_DiemDanhBuoi, sp_NhapDiem, sp_CanhBaoChuyenCan | G EXEC (cảnh báo) | – | – | G EXEC | – | G |
+| sp_DangNhap, sp_DoiMatKhau, sp_TaoTaiKhoan… | – | – | – | – | – | G |
+
+**GRANT / REVOKE / DENY**
+
+- `GRANT` cấp quyền; `DENY` cấm tường minh và **thắng mọi GRANT** (kể cả GRANT qua role khác hay mức schema) – VD `DENY SELECT ON TAIKHOAN (MatKhauHash, Salt)` vẫn chặn dù r_QuanLy có `GRANT SELECT ON SCHEMA::dbo`.
+- `REVOKE` gỡ một GRANT *hoặc* DENY đã có, đưa về trạng thái "không được cấp". Script minh hoạ: `DENY SELECT ON SCHEMA::dbo TO r_HocVien` rồi `REVOKE` – học viên chỉ còn các quyền GRANT riêng.
+- `WITH GRANT OPTION`: u_quanly được cấp `SELECT ON vw_SiSoLop WITH GRANT OPTION` nên tự cấp tiếp cho giáo viên, và tự thu hồi được; giáo vụ (không có grant option) thì không.
+- Quyền **mức cột**: kế toán chỉ được SELECT các cột học phí của DANGKY, không xem điểm.
+
+**Kiểm thử bằng `EXECUTE AS USER`** – [`database/tests/test_security.sql`](../database/tests/test_security.sql), 36 ca, trích:
+
+| Người dùng | Thao tác | Kết quả |
+|---|---|---|
+| u_app | `SELECT … FROM HOCVIEN` | BỊ CHẶN (229) The SELECT permission was denied on the object 'HOCVIEN' ✔ |
+| u_app | `EXEC sp_TimKiemHocVien` (đọc HOCVIEN bên trong) | ĐƯỢC – ownership chaining ✔ |
+| u_app | `SELECT MatKhauHash FROM TAIKHOAN` | BỊ CHẶN (229) ✔ |
+| u_giaovu | Xem lương trong NHANVIEN / xem `vw_NhanVien_CongKhai` | BỊ CHẶN (229) / ĐƯỢC ✔ |
+| u_giaovu | Tự lập phiếu thu | BỊ CHẶN (229) ✔ |
+| u_ketoan | `SELECT DiemCK FROM DANGKY` / `SELECT ThanhTien …` | BỊ CHẶN (230) mức cột / ĐƯỢC ✔ |
+| u_ketoan | Sửa phiếu thu đã lập | BỊ CHẶN (229) ✔ |
+| u_quanly | Xem `MatKhauHash` (DENY cột thắng GRANT schema) | BỊ CHẶN (230) ✔ |
+| u_giaovien | Xem phiếu thu / công nợ / bảng điểm | BỊ CHẶN / BỊ CHẶN / ĐƯỢC ✔ |
+| u_quanly → u_giaovien | GRANT tiếp `vw_SiSoLop` → giáo viên xem được → REVOKE → bị chặn lại | ✔ |
+| u_giaovu | GRANT tiếp (không có grant option) | BỊ CHẶN (15151) ✔ |
+| quanly / giaovu | `sp_DangNhap` đúng mật khẩu | QuanLy phạm vi **ALL** / GiaoVu phạm vi **CN01** ✔ |
+| test.a, test.b | Cùng mật khẩu `Test@12345` | Hash khác nhau: `0xAF91BBB9…` / `0xF4C73B81…` ✔ |
+| test.a | Sai 5 lần rồi nhập đúng | Tài khoản đã bị khoá ✔ |
+
+Kết quả **36/36 PASS**. Kết nối thật bằng login `ecms_app` từ Python: `sp_DangNhap` trả thông tin người dùng, `SELECT * FROM NHANVIEN` bị từ chối – ứng dụng chỉ có đúng quyền tối thiểu.
+
 ### 3.2.3 View bảo mật và view phục vụ báo cáo
 
 File [`database/04_views.sql`](../database/04_views.sql) gồm **9 view**. Ứng dụng web và các vai trò nghiệp vụ được cấp quyền `SELECT` trên view thay vì bảng gốc (ma trận quyền ở mục 3.2.2).
