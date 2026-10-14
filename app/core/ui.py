@@ -101,17 +101,17 @@ def run(action: Callable[[], object], success: str | None = None, rerun: bool = 
 
 
 @st.cache_data(ttl=60, show_spinner=False)
-def options(sql: str) -> list[tuple]:
+def options(sql: str, params: tuple = ()) -> list[tuple]:
     """Danh sách lựa chọn cho selectbox, cache 60 giây (dùng chung mọi phiên: chỉ dùng cho danh mục,
     KHÔNG dùng cho view lọc theo SESSION_CONTEXT như vw_HocVien_ChiNhanh)."""
-    df = db.query(sql)
+    df = db.query(sql, list(params))
     return list(df.itertuples(index=False, name=None))
 
 
 def pick(label: str, sql: str, current=None, allow_empty: bool = False, key: str | None = None,
-         empty_label: str = "— không chọn —", **kw):
-    """selectbox từ câu SELECT 2 cột (giá trị, nhãn). Trả về giá trị."""
-    opts = options(sql)
+         empty_label: str = "— không chọn —", params: tuple = (), **kw):
+    """selectbox từ câu SELECT 2 cột (giá trị, nhãn), có tham số (?). Trả về giá trị."""
+    opts = options(sql, tuple(params))
     values = ([None] if allow_empty else []) + [o[0] for o in opts]
     names = {o[0]: f"{o[0]} – {o[1]}" for o in opts}
     names[None] = empty_label

@@ -589,5 +589,146 @@ BEGIN
 END
 GO
 
+/* =====================================================================
+   ĐÀO TẠO – chương trình, khoá học, lớp học cho ứng dụng web (T20)   (lỗi 5014x)
+   ===================================================================== */
+CREATE OR ALTER PROCEDURE dbo.sp_LuuChuongTrinh @MaCT VARCHAR(5), @TenCT NVARCHAR(100), @DoiTuong NVARCHAR(100), @MoTa NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.CHUONGTRINH WHERE MaCT = @MaCT)
+        UPDATE dbo.CHUONGTRINH SET TenCT = @TenCT, DoiTuong = @DoiTuong, MoTa = @MoTa WHERE MaCT = @MaCT;
+    ELSE
+        INSERT dbo.CHUONGTRINH (MaCT, TenCT, DoiTuong, MoTa) VALUES (@MaCT, @TenCT, @DoiTuong, @MoTa);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaChuongTrinh @MaCT VARCHAR(5)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.KHOAHOC WHERE MaCT = @MaCT)
+        THROW 50140, N'Chương trình còn khoá học – chuyển hoặc xoá khoá học trước (quan hệ kết tập).', 1;
+    DELETE dbo.CHUONGTRINH WHERE MaCT = @MaCT;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_LuuKhoaHoc
+    @MaKH VARCHAR(6), @TenKH NVARCHAR(100), @MaCT VARCHAR(5), @CapDo TINYINT,
+    @DiemDauVaoTu DECIMAL(3,1), @DiemDauVaoDen DECIMAL(3,1), @MucTieuDauRa NVARCHAR(50),
+    @SoBuoi TINYINT, @HocPhi DECIMAL(12,0), @MaKHTienQuyet VARCHAR(6) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @MaKHTienQuyet IS NOT NULL
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM dbo.KHOAHOC WHERE MaKH = @MaKHTienQuyet AND MaCT = @MaCT)
+            THROW 50141, N'Khoá tiên quyết phải thuộc cùng chương trình.', 1;
+        -- Chặn vòng lặp tiên quyết: đi ngược chuỗi tiên quyết từ khoá được chọn, không được gặp lại chính khoá này
+        DECLARE @Vong INT;
+        WITH Chuoi AS (
+            SELECT MaKH, MaKHTienQuyet, 1 AS Buoc FROM dbo.KHOAHOC WHERE MaKH = @MaKHTienQuyet
+            UNION ALL
+            SELECT k.MaKH, k.MaKHTienQuyet, c.Buoc + 1 FROM dbo.KHOAHOC k JOIN Chuoi c ON k.MaKH = c.MaKHTienQuyet WHERE c.Buoc < 50)
+        SELECT @Vong = COUNT(*) FROM Chuoi WHERE MaKH = @MaKH;
+        IF @Vong > 0 THROW 50142, N'Khoá tiên quyết tạo thành vòng lặp (A cần B, B lại cần A).', 1;
+    END
+    IF EXISTS (SELECT 1 FROM dbo.KHOAHOC WHERE MaKH = @MaKH)
+    BEGIN
+        IF EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaKH = @MaKH AND TrangThai IN (N'Đang học', N'Đã kết thúc'))
+           AND EXISTS (SELECT 1 FROM dbo.KHOAHOC WHERE MaKH = @MaKH AND SoBuoi <> @SoBuoi)
+            THROW 50143, N'Khoá đã có lớp học / kết thúc – không đổi được số buổi.', 1;
+        UPDATE dbo.KHOAHOC SET TenKH = @TenKH, MaCT = @MaCT, CapDo = @CapDo, DiemDauVaoTu = @DiemDauVaoTu,
+               DiemDauVaoDen = @DiemDauVaoDen, MucTieuDauRa = @MucTieuDauRa, SoBuoi = @SoBuoi, HocPhi = @HocPhi,
+               MaKHTienQuyet = @MaKHTienQuyet
+        WHERE MaKH = @MaKH;          -- học phí mới chỉ áp dụng cho đăng ký sau này (DANGKY lưu học phí lúc ghi danh)
+    END
+    ELSE
+        INSERT dbo.KHOAHOC (MaKH, TenKH, MaCT, CapDo, DiemDauVaoTu, DiemDauVaoDen, MucTieuDauRa, SoBuoi, HocPhi, MaKHTienQuyet)
+        VALUES (@MaKH, @TenKH, @MaCT, @CapDo, @DiemDauVaoTu, @DiemDauVaoDen, @MucTieuDauRa, @SoBuoi, @HocPhi, @MaKHTienQuyet);
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_XoaKhoaHoc @MaKH VARCHAR(6)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaKH = @MaKH) THROW 50144, N'Khoá học đã mở lớp – không thể xoá.', 1;
+    IF EXISTS (SELECT 1 FROM dbo.KHOAHOC WHERE MaKHTienQuyet = @MaKH) THROW 50145, N'Khoá học đang là tiên quyết của khoá khác.', 1;
+    DELETE dbo.KHOAHOC WHERE MaKH = @MaKH;
+END
+GO
+
+-- Mở lớp / sửa lớp. @MaLop NULL = mở lớp mới, mã tự sinh <MaKH>-<yy><stt>
+CREATE OR ALTER PROCEDURE dbo.sp_LuuLopHoc
+    @MaLop VARCHAR(10) = NULL, @TenLop NVARCHAR(100), @MaKH VARCHAR(6), @MaCN CHAR(4), @MaGV CHAR(6),
+    @NgayKhaiGiang DATE, @SiSoToiDa TINYINT, @TrangThai NVARCHAR(20) = N'Sắp mở',
+    @MaLopMoi VARCHAR(10) = NULL OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.GIAOVIEN g JOIN dbo.NHANVIEN n ON n.MaNV = g.MaGV WHERE g.MaGV = @MaGV AND n.TrangThai = 1)
+        THROW 50146, N'Giáo viên không tồn tại hoặc đã nghỉ việc.', 1;
+    IF @MaLop IS NULL
+    BEGIN
+        IF @NgayKhaiGiang < CAST(GETDATE() AS DATE) THROW 50147, N'Ngày khai giảng của lớp mới không được ở quá khứ.', 1;
+        DECLARE @yy CHAR(2) = RIGHT(CAST(YEAR(@NgayKhaiGiang) AS CHAR(4)), 2);
+        SELECT @MaLop = @MaKH + '-' + @yy + RIGHT('0' + CAST(ISNULL(MAX(CAST(RIGHT(MaLop, 2) AS INT)), 0) + 1 AS VARCHAR(2)), 2)
+        FROM dbo.LOPHOC WITH (UPDLOCK, HOLDLOCK) WHERE MaLop LIKE @MaKH + '-' + @yy + '__';
+        INSERT dbo.LOPHOC (MaLop, TenLop, MaKH, MaCN, MaGV, NgayKhaiGiang, SiSoToiDa, TrangThai)
+        VALUES (@MaLop, @TenLop, @MaKH, @MaCN, @MaGV, @NgayKhaiGiang, @SiSoToiDa, N'Sắp mở');
+    END
+    ELSE
+    BEGIN
+        DECLARE @Cu TABLE (MaKH VARCHAR(6), MaCN CHAR(4), MaGV CHAR(6), NgayKG DATE, SiSo TINYINT, TrangThai NVARCHAR(20));
+        INSERT @Cu SELECT MaKH, MaCN, MaGV, NgayKhaiGiang, SiSoHienTai, TrangThai FROM dbo.LOPHOC WHERE MaLop = @MaLop;
+        IF NOT EXISTS (SELECT 1 FROM @Cu) THROW 50148, N'Lớp học không tồn tại.', 1;
+        IF EXISTS (SELECT 1 FROM @Cu WHERE SiSo > @SiSoToiDa) THROW 50149, N'Sĩ số tối đa nhỏ hơn số học viên đang có.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.DANGKY WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE MaKH <> @MaKH OR MaCN <> @MaCN)
+            THROW 50150, N'Lớp đã có học viên – không đổi được khoá học hoặc chi nhánh.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.BUOIHOC WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE NgayKG <> @NgayKhaiGiang)
+            THROW 50151, N'Lớp đã sinh buổi học – muốn đổi ngày khai giảng hãy sinh lại buổi học.', 1;
+        IF EXISTS (SELECT 1 FROM @Cu WHERE TrangThai = N'Đã kết thúc') AND @TrangThai <> N'Đã kết thúc'
+            THROW 50152, N'Lớp đã kết thúc không thể mở lại.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.LICHHOC WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE MaGV <> @MaGV)
+        BEGIN
+            -- đổi giáo viên: kiểm tra trùng lịch của giáo viên mới
+            DECLARE @Trung VARCHAR(10) = (SELECT TOP 1 lh2.MaLop FROM dbo.LICHHOC lh JOIN dbo.LICHHOC lh2 ON lh2.Thu = lh.Thu AND lh2.MaCa = lh.MaCa
+                                          JOIN dbo.LOPHOC l2 ON l2.MaLop = lh2.MaLop AND l2.MaGV = @MaGV AND l2.MaLop <> @MaLop
+                                          JOIN dbo.LOPHOC l ON l.MaLop = lh.MaLop
+                                          WHERE lh.MaLop = @MaLop AND l2.TrangThai <> N'Huỷ'
+                                            AND l2.NgayKhaiGiang <= ISNULL(l.NgayKetThuc, '9999-12-31') AND l.NgayKhaiGiang <= ISNULL(l2.NgayKetThuc, '9999-12-31'));
+            IF @Trung IS NOT NULL
+            BEGIN
+                DECLARE @msg NVARCHAR(200) = CONCAT(N'Giáo viên mới trùng lịch với lớp ', @Trung, N'.');
+                THROW 50153, @msg, 1;
+            END
+        END
+        UPDATE dbo.LOPHOC SET TenLop = @TenLop, MaKH = @MaKH, MaCN = @MaCN, MaGV = @MaGV, NgayKhaiGiang = @NgayKhaiGiang,
+               SiSoToiDa = @SiSoToiDa, TrangThai = @TrangThai
+        WHERE MaLop = @MaLop;
+    END
+    SET @MaLopMoi = @MaLop;
+END
+GO
+
+-- Lớp chưa có học viên thì xoá hẳn; đã có học viên thì chỉ chuyển trạng thái Huỷ
+CREATE OR ALTER PROCEDURE dbo.sp_XoaLopHoc @MaLop VARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.DANGKY WHERE MaLop = @MaLop)
+    BEGIN
+        IF EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaLop = @MaLop AND TrangThai <> N'Sắp mở')
+            THROW 50154, N'Chỉ huỷ được lớp chưa khai giảng.', 1;
+        UPDATE dbo.LOPHOC SET TrangThai = N'Huỷ' WHERE MaLop = @MaLop;
+        SELECT N'Lớp đã có học viên ghi danh nên được chuyển sang trạng thái Huỷ.' AS ThongBao;
+        RETURN;
+    END
+    DELETE dbo.LOPHOC WHERE MaLop = @MaLop;      -- lịch học, buổi học xoá theo cascade
+    SELECT N'Đã xoá lớp.' AS ThongBao;
+END
+GO
+
 PRINT N'✓ 05_procedures.sql: 9 procedure nghiệp vụ + procedure danh mục cho web.';
 GO
