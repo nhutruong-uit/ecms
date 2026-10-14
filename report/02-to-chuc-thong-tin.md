@@ -543,3 +543,86 @@ Cây XML gom dữ liệu theo phân cấp tự nhiên Chi nhánh → Lớp → H
 | Phù hợp trong ECMS | Nhập liệu ban đầu, báo cáo gửi đi | **Lưu trữ chính** của toàn hệ thống | Kết quả kiểm tra đầu vào (cấu trúc linh hoạt), trao đổi danh sách lớp với hệ thống khác (T10) |
 
 **Kết luận:** ECMS dùng mô hình quan hệ làm nền, kết hợp kiểu XML cho phần dữ liệu bán cấu trúc (kết quả test đầu vào) – tận dụng ưu điểm của cả hai, đúng hướng các hệ quản trị hiện đại hỗ trợ đa mô hình.
+
+## 2.7 Cài đặt CSDL trên SQL Server
+
+### 2.7.1 Script DDL
+
+Toàn bộ lược đồ nằm trong [`database/01_schema.sql`](../database/01_schema.sql), chạy lại được từ đầu: nếu CSDL `ECMS` đã có thì chuyển sang `SINGLE_USER WITH ROLLBACK IMMEDIATE` để ngắt kết nối rồi `DROP DATABASE`, sau đó tạo mới với collation **`Vietnamese_CI_AS`** (so sánh không phân biệt hoa thường, sắp xếp đúng thứ tự tiếng Việt).
+
+```bash
+database/run_all.sh 01      # hoặc mở file trong SSMS, nhấn F5
+```
+
+| Thành phần | Số lượng | Ví dụ |
+|---|:-:|---|
+| Bảng | 22 | 19 bảng nghiệp vụ + NGAYLE, CANHBAO_CHUYENCAN, BANGLUONG |
+| PRIMARY KEY | 22 | Khoá phức hợp cho thực thể yếu: `PK_BUOIHOC (MaLop, STT)` |
+| FOREIGN KEY | 32 | Khoá ngoại phức hợp `FK_LICHHOC_LOPHOC (MaLop, MaCN)`, `FK_DIEMDANH_DANGKY (MaDK, MaLop)` |
+| UNIQUE | 13 + 4 chỉ mục UNIQUE có lọc | `UQ_DANGKY_HV_Lop`; `UX_CHINHANH_QuanLy … WHERE MaNVQuanLy IS NOT NULL` cho quan hệ 1–1 cho phép NULL |
+| CHECK | 51 | `CK_LOPHOC_SiSo (SiSoHienTai <= SiSoToiDa)`, `CK_TAIKHOAN_ChuSoHuu` |
+| DEFAULT | 29 | `NgayDK DEFAULT GETDATE()`, `NguoiThucHien DEFAULT SUSER_SNAME()` |
+| Cột tính toán | 8 | `ThanhTien`, `DiemTB`, `HanDongHP`, `SoPhieu`, `TongLuong` (PERSISTED); `Tuoi`, `HoTen` |
+| Cột XML | 1 | `KIEMTRA_DAUVAO.KetQuaChiTiet` (gắn XML Schema ở `09_xml.sql`) |
+| Chỉ mục nonclustered | 18 | Xem 2.7.3 |
+
+**Hành vi ON DELETE**
+
+| Khoá ngoại | Hành vi | Lý do |
+|---|---|---|
+| GIAOVIEN → NHANVIEN, CHUNGCHI_GV → GIAOVIEN | CASCADE | Lớp con / thuộc tính đa trị không tồn tại độc lập |
+| PHONGHOC → CHINHANH, BUOIHOC → LOPHOC, LICHHOC → LOPHOC | CASCADE | Thực thể yếu và quan hệ thành phần |
+| CT_PHIEUTHU → PHIEUTHU, DIEMDANH → DANGKY | CASCADE | Chi tiết của master–detail |
+| DANGKY → HOCVIEN / LOPHOC, PHIEUTHU → HOCVIEN | NO ACTION (mặc định) | Không cho xoá học viên/lớp đã phát sinh học phí – giữ lịch sử tài chính |
+| KHOAHOC → CHUONGTRINH | NO ACTION | Quan hệ kết tập: phải chuyển khoá sang chương trình khác trước khi xoá |
+
+SQL Server không cho phép nhiều đường cascade tới cùng một bảng (VD: DIEMDANH vừa từ DANGKY vừa từ BUOIHOC), nên `FK_DIEMDANH_BUOIHOC` để NO ACTION; xoá buổi học phải xoá điểm danh trước (procedure T11 xử lý).
+
+### 2.7.2 Thuộc tính suy diễn bằng computed column
+
+```sql
+ThanhTien AS CAST(ROUND(HocPhi * (100 - GiamGia) / 100, -3) AS DECIMAL(12,0)) PERSISTED,
+DiemTB    AS CAST(ROUND(DiemGK * 0.4 + DiemCK * 0.6, 2) AS DECIMAL(4,2)) PERSISTED,
+HanDongHP AS DATEADD(DAY, 14, NgayDK) PERSISTED,
+Tuoi      AS (DATEDIFF(YEAR, NgaySinh, GETDATE()) - CASE WHEN ... THEN 1 ELSE 0 END)   -- không PERSISTED được
+```
+
+`PERSISTED` lưu giá trị vào trang dữ liệu và cập nhật khi cột nguồn đổi, nên có thể đánh chỉ mục; `Tuoi` dùng `GETDATE()` (không tất định) nên chỉ tính khi đọc.
+
+### 2.7.3 Chỉ mục
+
+SQL Server tự tạo chỉ mục clustered cho khoá chính và chỉ mục cho UNIQUE, nhưng **không** tự tạo cho khoá ngoại. Nhóm chọn chỉ mục theo hai nhóm:
+
+| Nhóm | Chỉ mục | Phục vụ |
+|---|---|---|
+| Khoá ngoại hay JOIN | `IX_DANGKY_MaLop (MaLop) INCLUDE (MaHV, TrangThai, TrangThaiHP)` | Danh sách lớp, đếm sĩ số (trigger T13) – *covering index* tránh tra lại bảng |
+| | `IX_CT_PHIEUTHU_MaDK (MaDK) INCLUDE (SoTien)` | Tính số tiền đã đóng của một đăng ký (công nợ) |
+| | `IX_LOPHOC_MaGV`, `IX_LICHHOC_Phong` | Kiểm tra trùng lịch giáo viên / phòng |
+| | `IX_DIEMDANH_Buoi (MaLop, STT)` | Điểm danh cả lớp theo buổi |
+| Tìm kiếm, lọc, báo cáo | `IX_HOCVIEN_Ten (TenHV, HoHV)`, `IX_HOCVIEN_SDT` | Tra cứu học viên theo tên (người Việt hay tìm theo tên, không theo họ), theo SĐT khi tư vấn |
+| | `IX_PHIEUTHU_NgayThu (NgayThu) INCLUDE (TongTien, MaHV)` | Doanh thu theo khoảng thời gian |
+| | `IX_BUOIHOC_Ngay (NgayHoc, MaCa)` | Lịch theo ngày, đếm buổi dạy trong tháng để tính lương |
+| | `IX_NHATKY_Bang_ThoiGian` | Xem nhật ký mới nhất theo bảng |
+
+Hiệu quả của chỉ mục được đo ở mục 3.1 (T09).
+
+### 2.7.4 Kiểm thử ràng buộc
+
+```text
+INSERT CAHOC VALUES (1, N'Sáng 1', '09:00', '08:00');
+→ The INSERT statement conflicted with the CHECK constraint "CK_CAHOC_Gio".
+
+INSERT CHINHANH (MaCN, ...) VALUES ('X1', ...);
+→ The INSERT statement conflicted with the CHECK constraint "CK_CHINHANH_MaCN".
+
+INSERT LICHHOC VALUES ('L1', 2, 1, 'CN01', 'P101');      -- lớp L1 không tồn tại ở chi nhánh CN01
+→ The INSERT statement conflicted with the FOREIGN KEY constraint "FK_LICHHOC_LOPHOC".
+```
+
+Script đã chạy sạch hai lần liên tiếp trên CSDL trống (SQL Server 2022/2025): `✓ 01_schema.sql: đã tạo CSDL ECMS với 22 bảng.`
+
+### 2.7.5 Sơ đồ CSDL
+
+![Database Diagram](../docs/design/db-diagram.png)
+
+*Hình 2.4 – Sơ đồ CSDL sinh từ metadata (`sys.tables`, `sys.columns`, `sys.foreign_keys`) sau khi chạy `01_schema.sql`, tương đương Database Diagram của SSMS: **PK** khoá chính, **FK** khoá ngoại, ✱ NOT NULL, chữ nghiêng là cột tính toán. Đối chiếu với lược đồ ở mục 2.4: đủ 22 bảng, 32 khoá ngoại khớp các mối kết hợp của ERD.*
