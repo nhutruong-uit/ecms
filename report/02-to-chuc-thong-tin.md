@@ -384,7 +384,7 @@ Từ điển dưới đây được sinh trực tiếp từ CSDL sau khi cài đ
 | **Kết hợp** (association) có bản số | Đường thẳng | GiaoVien 1 — 0..* LopHoc; KhoaHoc 0..1 — 0..* KhoaHoc (tiên quyết) | Liên kết thông thường, có thể đệ quy |
 | **Lớp liên kết** (association class) | Nét đứt nối vào kết hợp | DangKy gắn với kết hợp HocVien 0..* — 0..* LopHoc | Kết hợp N–M có thuộc tính riêng |
 
-## 2.4 So sánh ERD và Class Diagram trên bài toán ECMS
+### 2.3.3 So sánh ERD và Class Diagram trên bài toán ECMS
 
 | Tiêu chí | ERD (Chen) | Class Diagram (UML) |
 |---|---|---|
@@ -399,6 +399,147 @@ Từ điển dưới đây được sinh trực tiếp từ CSDL sau khi cài đ
 | Bản số | (min,max) đặt cạnh thực thể | Multiplicity `0..1, 1..*, *` đặt ở đầu kia |
 | Quan hệ toàn thể – bộ phận | Chỉ biểu diễn gián tiếp qua thực thể yếu / quan hệ xác định | Phân biệt rõ composition và aggregation |
 | N–M có thuộc tính | Mối kết hợp có thuộc tính (ĐĂNG KÝ) | Lớp liên kết DangKy |
-| Chuyển sang cài đặt | Gần như 1–1 sang lược đồ quan hệ (mục 2.5) | Sang mã nguồn hoặc CSDL hướng đối tượng (Chương 5) |
+| Chuyển sang cài đặt | Gần như 1–1 sang lược đồ quan hệ (mục 2.4) | Sang mã nguồn hoặc CSDL hướng đối tượng (Chương 5) |
 
 **Nhận xét:** hai sơ đồ nhất quán về tập lớp/thực thể và bản số. ERD phù hợp để thiết kế CSDL quan hệ của đồ án; Class Diagram bổ sung góc nhìn hành vi – các phương thức trong sơ đồ được hiện thực trong CSDL dưới dạng function/procedure (Chương 3) và là nền cho lược đồ ODL ở Chương 5.
+
+## 2.4 Mô hình quan hệ và chuẩn hoá
+
+### 2.4.1 Quy tắc chuyển ERD sang lược đồ quan hệ
+
+| Cấu trúc ERD | Quy tắc | Áp dụng trong ECMS |
+|---|---|---|
+| Thực thể mạnh | Mỗi thực thể → 1 quan hệ, khoá thực thể → khoá chính | CHINHANH, HOCVIEN, KHOAHOC, … |
+| Thực thể yếu | Quan hệ mới, khoá chính = khoá thực thể chủ + khoá bộ phận | PHONGHOC (<u>MaCN, MaPhong</u>), BUOIHOC (<u>MaLop, STT</u>) |
+| Thuộc tính phức hợp | Chỉ giữ thuộc tính thành phần | HoHV, TenHV; SoNha, PhuongXa, QuanHuyen, TinhTP |
+| Thuộc tính đa trị | Quan hệ riêng gồm khoá thực thể + giá trị | CHUNGCHI_GV (<u>MaGV, TenChungChi</u>, …) |
+| Thuộc tính suy diễn | Không lưu, hoặc lưu có kiểm soát | Computed column / trigger (xem `docs/design/relational-schema.md`) |
+| 1–1 | Đặt khoá ngoại ở phía tham gia một phần + UNIQUE | CHINHANH.*MaNVQuanLy* (UNIQUE có lọc), TAIKHOAN.*MaNV*, *MaHV* |
+| 1–N | Khoá ngoại đặt ở phía N | LOPHOC.*MaKH*, *MaCN*, *MaGV*; PHIEUTHU.*MaHV* |
+| N–M | Quan hệ mới, khoá = tổ hợp khoá hai phía (+ thuộc tính kết hợp) | DANGKY (khoá thay thế MaDK, UNIQUE(MaHV, MaLop)), CT_PHIEUTHU, DIEMDANH |
+| Đệ quy | Khoá ngoại trỏ về chính quan hệ | NHANVIEN.*MaNVQuanLy*, KHOAHOC.*MaKHTienQuyet* |
+| 3 ngôi | Quan hệ mới chứa khoá của cả ba thực thể | LICHHOC (<u>*MaLop*, Thu, *MaCa*</u>, *MaCN*, *MaPhong*) |
+| Chuyên biệt hoá | Quan hệ cho lớp cha + quan hệ cho lớp con, khoá lớp con = khoá lớp cha (phương án "mỗi lớp một bảng") | NHANVIEN, GIAOVIEN (<u>*MaGV*</u>) |
+
+**Vì sao DANGKY dùng khoá thay thế MaDK?** Khoá tự nhiên (MaHV, MaLop) vẫn được giữ bằng UNIQUE, nhưng MaDK (INT IDENTITY) ngắn hơn khi làm khoá ngoại ở DIEMDANH, CT_PHIEUTHU, CANHBAO_CHUYENCAN – giảm kích thước chỉ mục và đơn giản tham số procedure.
+
+### 2.4.2 Lược đồ quan hệ
+
+Lược đồ đầy đủ 22 quan hệ (gạch chân khoá chính, in nghiêng khoá ngoại) và bảng phụ thuộc hàm từng quan hệ: [`docs/design/relational-schema.md`](../docs/design/relational-schema.md).
+
+### 2.4.3 Kiểm tra dạng chuẩn
+
+- **1NF:** mọi thuộc tính nguyên tố – thuộc tính phức hợp đã tách cột, đa trị đã tách bảng. Riêng `KetQuaChiTiet` (XML) được xem là một giá trị nguyên tố đối với mô hình quan hệ, chỉ được phân tích bằng phương thức XML (T10).
+- **2NF:** quan hệ có khoá phức hợp (CHUNGCHI_GV, PHONGHOC, LICHHOC, BUOIHOC, DIEMDANH, CT_PHIEUTHU, BANGLUONG) không có thuộc tính không khoá phụ thuộc một phần vào khoá, **trừ LICHHOC.MaCN** (giữ có chủ đích, xem dưới).
+- **3NF/BCNF:** 17/22 quan hệ đạt BCNF. Các phụ thuộc bắc cầu còn lại đều thuộc về thuộc tính suy diễn được SQL Server tự tính (computed column) hoặc duy trì bằng trigger, nên không gây dị thường cập nhật.
+
+| Quan hệ | Chỗ chưa đạt BCNF | Lý do giữ | Cơ chế bảo đảm nhất quán |
+|---|---|---|---|
+| LICHHOC | MaLop → MaCN (phụ thuộc một phần) | FK (MaCN, MaPhong) bắt phòng thuộc đúng chi nhánh của lớp | FK (MaLop, MaCN) → LOPHOC(MaLop, MaCN) |
+| DIEMDANH | MaDK → MaLop | FK (MaLop, STT) bắt buổi học thuộc đúng lớp của đăng ký | FK (MaDK, MaLop) → DANGKY(MaDK, MaLop) |
+| DANGKY | HocPhi, GiamGia → ThanhTien; GK, CK → DiemTB | Truy vấn công nợ, bảng điểm nhanh | Computed column PERSISTED |
+| LOPHOC | SiSoHienTai = đếm DANGKY | Kiểm tra lớp còn chỗ ở mỗi lần ghi danh | Trigger `trg_DangKy_SiSo` |
+| PHIEUTHU | TongTien = Σ CT_PHIEUTHU | Báo cáo doanh thu | Trigger `trg_CTPhieuThu_TongTien` |
+
+**So sánh phương án chuẩn hoá đầy đủ cho LICHHOC.** Nếu bỏ MaCN khỏi LICHHOC (đạt BCNF), FK tới PHONGHOC phải đổi thành (MaPhong) – không đủ vì MaPhong chỉ duy nhất trong một chi nhánh – hoặc dùng trigger tra ngược LOPHOC.MaCN mỗi lần thêm/sửa lịch. Phương án giữ MaCN tốn 4 byte/dòng nhưng để CSDL tự kiểm tra bằng ràng buộc khai báo, nhanh và không thể bị bỏ qua. Nhóm chọn phương án này.
+
+## 2.5 Ràng buộc toàn vẹn
+
+### 2.5.1 Đặc tả
+
+| Mã | Loại | Nội dung | Bối cảnh | Cài đặt |
+|---|---|---|---|---|
+| RB01 | Miền giá trị | Giới tính ∈ {Nam, Nữ} | NHANVIEN, HOCVIEN | CHECK |
+| RB02 | Miền giá trị | 0 ≤ DiemGK, DiemCK ≤ 10; 0 ≤ GiamGia ≤ 50 (%) | DANGKY | CHECK |
+| RB03 | Miền giá trị | Trạng thái điểm danh ∈ {Có mặt, Vắng, Muộn, Có phép} | DIEMDANH | CHECK |
+| RB04 | Liên thuộc tính | GioKetThuc > GioBatDau | CAHOC | CHECK |
+| RB05 | Liên thuộc tính | NgayKetThuc > NgayKhaiGiang | LOPHOC | CHECK |
+| RB06 | Liên thuộc tính | SiSoHienTai ≤ SiSoToiDa | LOPHOC | CHECK + trigger chặn khi lớp đầy |
+| RB07 | Liên thuộc tính | Nhân viên đủ 18 tuổi khi vào làm | NHANVIEN | CHECK |
+| RB08 | Liên bộ | Mỗi học viên đăng ký một lớp tối đa một lần | DANGKY | UNIQUE (MaHV, MaLop) |
+| RB09 | Liên bộ | Một phòng, một ca, một thứ chỉ có một lớp trong cùng khoảng thời gian | LICHHOC × LOPHOC | Trigger `trg_LichHoc_KiemTraTrung`, `sp_XepLichLop` |
+| RB10 | Liên bộ | Giáo viên không dạy hai lớp cùng thứ – ca trong cùng khoảng thời gian | LICHHOC × LOPHOC | Trigger `trg_LichHoc_KiemTraTrung` |
+| RB11 | Khoá ngoại | Mỗi lớp thuộc một khoá học, chi nhánh, giáo viên đang tồn tại | LOPHOC | FOREIGN KEY |
+| RB12 | Liên quan hệ | Phòng của lịch học phải thuộc chi nhánh của lớp | LICHHOC, LOPHOC, PHONGHOC | FK phức hợp (MaLop, MaCN), (MaCN, MaPhong) |
+| RB13 | Liên quan hệ | Học viên chỉ được điểm danh ở buổi học của lớp mình đăng ký | DIEMDANH, DANGKY, BUOIHOC | FK phức hợp (MaDK, MaLop), (MaLop, STT) |
+| RB14 | Liên quan hệ | SiSoHienTai = số đăng ký "Đang học"/"Hoàn thành" của lớp | LOPHOC, DANGKY | Trigger `trg_DangKy_SiSo` |
+| RB15 | Liên quan hệ | TongTien phiếu thu = tổng SoTien chi tiết | PHIEUTHU, CT_PHIEUTHU | Trigger `trg_CTPhieuThu_TongTien` |
+| RB16 | Liên quan hệ | Đăng ký trong chi tiết phiếu thu phải của chính học viên trên phiếu; tổng đã thu ≤ ThanhTien | CT_PHIEUTHU, PHIEUTHU, DANGKY | Trigger `trg_CTPhieuThu_TongTien` |
+| RB17 | Liên quan hệ | Học viên chỉ đăng ký khoá có tiên quyết khi đã *Đạt* khoá tiên quyết | DANGKY, LOPHOC, KHOAHOC | `sp_DangKyHoc` |
+| RB18 | Liên quan hệ | Tài khoản vai trò HocVien gắn MaHV, các vai trò khác gắn MaNV | TAIKHOAN | CHECK |
+
+### 2.5.2 Bảng tầm ảnh hưởng
+
+Ký hiệu: **+** thao tác có thể vi phạm ràng buộc (phải kiểm tra), **–** không vi phạm, **+(cột)** chỉ vi phạm khi sửa cột đó.
+
+| RBTV | Quan hệ | Thêm | Xoá | Sửa |
+|---|---|:-:|:-:|:-:|
+| RB05 | LOPHOC | + | – | +(NgayKhaiGiang, NgayKetThuc) |
+| RB06 / RB14 | LOPHOC | + | – | +(SiSoToiDa, SiSoHienTai) |
+| | DANGKY | + | + | +(MaLop, TrangThai) |
+| RB08 | DANGKY | + | – | +(MaHV, MaLop) |
+| RB09 / RB10 | LICHHOC | + | – | +(Thu, MaCa, MaPhong) |
+| | LOPHOC | – | – | +(MaGV, NgayKhaiGiang, NgayKetThuc) |
+| RB12 | LICHHOC | + | – | +(MaCN, MaPhong) |
+| | LOPHOC | – | – | +(MaCN) – bị FK chặn |
+| | PHONGHOC | – | + | +(MaCN, MaPhong) |
+| RB13 | DIEMDANH | + | – | +(MaDK, MaLop, STT) |
+| | DANGKY | – | + (cascade) | +(MaLop) |
+| | BUOIHOC | – | + | +(MaLop, STT) |
+| RB15 / RB16 | CT_PHIEUTHU | + | + | +(SoTien, MaDK) |
+| | PHIEUTHU | – | + (cascade) | +(MaHV) |
+| | DANGKY | – | + | +(HocPhi, GiamGia) |
+| RB17 | DANGKY | + | – | +(MaLop) |
+| | DANGKY (của khoá tiên quyết) | – | + | +(KetQua) |
+
+## 2.6 So sánh mô hình phẳng – quan hệ – XML
+
+### 2.6.1 Mô hình phẳng (hiện trạng)
+
+File `docs/design/flat-example.xlsx` mô phỏng file ghi danh Excel của chi nhánh Thủ Đức: mỗi dòng gộp học viên + lớp + khoá + giáo viên + lịch + tiền. Sheet *DiThuong* liệt kê dị thường:
+
+| Dị thường | Ví dụ |
+|---|---|
+| Dư thừa | Thông tin giáo viên Trần Thị Mai lặp ở 4 dòng |
+| Cập nhật | Học viên An có 2 số điện thoại khác nhau ở dòng 1 và 3 |
+| Thêm | Không thể ghi nhận lớp TC650-03 khi chưa có học viên |
+| Xoá | Xoá dòng của học viên Hà làm mất mức học phí 6.800.000 đã thoả thuận |
+| Không nhất quán | "IELTS 5,5" và "IELTS 5.5", "P.101" và "P101" |
+
+### 2.6.2 Mô hình XML cho cùng dữ liệu
+
+```xml
+<TrungTam>
+  <ChiNhanh MaCN="CN01" Ten="Thủ Đức">
+    <Lop MaLop="IE55-01" KhoaHoc="IELTS 5.5" HocPhi="6500000">
+      <GiaoVien MaGV="NV0004" HoTen="Trần Thị Mai" SDT="0912000111"/>
+      <Lich Thu="2" Ca="5" Phong="P101"/>
+      <Lich Thu="4" Ca="5" Phong="P101"/>
+      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567" DaDong="6500000"/>
+      <HocVien MaHV="HV0002" HoTen="Lê Thị Bình" SDT="0987654321" DaDong="3000000"/>
+    </Lop>
+    <Lop MaLop="TC650-02" KhoaHoc="TOEIC 650" HocPhi="5000000">
+      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567" DaDong="5000000"/>
+    </Lop>
+  </ChiNhanh>
+</TrungTam>
+```
+
+Cây XML gom dữ liệu theo phân cấp tự nhiên Chi nhánh → Lớp → Học viên, nhưng học viên An học 2 lớp vẫn bị **lặp** ở hai nhánh. Muốn tránh lặp phải dùng tham chiếu `ID/IDREF`, khi đó XML mất ưu điểm đọc trực quan.
+
+### 2.6.3 Bảng so sánh
+
+| Tiêu chí | Phẳng (Excel) | Quan hệ (SQL Server) | XML |
+|---|---|---|---|
+| Cấu trúc | Một bảng hai chiều | Nhiều quan hệ liên kết qua khoá | Cây phân cấp |
+| Lược đồ | Không có (tiêu đề cột) | Bắt buộc, chặt (DDL) | Tuỳ chọn (XSD), linh hoạt |
+| Dư thừa | Rất cao | Thấp (chuẩn hoá 3NF/BCNF) | Trung bình (lặp khi quan hệ N–M) |
+| Dị thường thêm/xoá/sửa | Có đủ ba loại | Hầu như không | Có với dữ liệu N–M |
+| Toàn vẹn | Data validation đơn giản | PK, FK, CHECK, trigger, transaction | XSD kiểm kiểu và cấu trúc, không kiểm liên tài liệu |
+| Truy vấn | Lọc, pivot thủ công | SQL mạnh: JOIN, GROUP BY, cửa sổ | XPath/XQuery, tốt cho một cây, kém khi kết nối nhiều tài liệu |
+| Đồng thời, phân quyền | Khoá cả file | Theo dòng, theo cột, theo vai trò | Theo tài liệu |
+| Trao đổi dữ liệu | CSV, dễ nhưng mất kiểu | Cần export | **Tốt nhất**: tự mô tả, chuẩn mở |
+| Dữ liệu cấu trúc thay đổi | Thêm cột tuỳ ý | Phải ALTER TABLE | Thêm phần tử tuỳ ý |
+| Phù hợp trong ECMS | Nhập liệu ban đầu, báo cáo gửi đi | **Lưu trữ chính** của toàn hệ thống | Kết quả kiểm tra đầu vào (cấu trúc linh hoạt), trao đổi danh sách lớp với hệ thống khác (T10) |
+
+**Kết luận:** ECMS dùng mô hình quan hệ làm nền, kết hợp kiểu XML cho phần dữ liệu bán cấu trúc (kết quả test đầu vào) – tận dụng ưu điểm của cả hai, đúng hướng các hệ quản trị hiện đại hỗ trợ đa mô hình.
