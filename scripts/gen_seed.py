@@ -222,8 +222,9 @@ starts_2026 = {1: date(2026, 4, 20), 2: date(2026, 8, 10), 3: date(2026, 10, 26)
 cn_cycle = ["CN01", "CN02", "CN03"]
 for i, k in enumerate(KHOAHOC):
     lvl = k[3]
-    CLASS_PLAN.append((k[0], cn_cycle[i % 3], starts_2025[lvl] + timedelta(days=7 * (i % 3)), 25))
-    CLASS_PLAN.append((k[0], cn_cycle[(i + 1) % 3], starts_2026[lvl] + timedelta(days=7 * (i % 3)), 30 if lvl < 3 else 25))
+    # xoay vòng chi nhánh theo cả chương trình lẫn cấp độ để chi nhánh nào cũng có đủ các cấp
+    CLASS_PLAN.append((k[0], cn_cycle[(i // 3 + i) % 3], starts_2025[lvl] + timedelta(days=7 * (i // 3)), 25))
+    CLASS_PLAN.append((k[0], cn_cycle[(i // 3 + i + 1) % 3], starts_2026[lvl] + timedelta(days=7 * (i // 3)), 30 if lvl < 3 else 25))
 # một lớp IELTS 5.5 mở thêm ở CN01 – lớp hot, sẽ đầy sĩ số
 CLASS_PLAN.append(("IE55", "CN01", date(2026, 8, 17), 20))
 CLASS_PLAN.sort(key=lambda c: (c[2], c[0]))
@@ -535,6 +536,15 @@ for (ma_hv, ngay), dks in sorted(by_student_day.items(), key=lambda x: x[0][1]):
 for dk in DANGKY:
     p, tt = paid[dk["MaDK"]], thanh_tien(dk)
     dk["TrangThaiHP"] = "Đã đóng" if p >= tt else ("Đóng một phần" if p > 0 else "Chưa đóng")
+
+# ----------------------------------------------------------------- khách tiềm năng
+# Đã kiểm tra đầu vào nhưng chưa ghi danh (giáo vụ cần gọi lại tư vấn)
+for _ in range(15):
+    cn = rnd.choice(cn_cycle)
+    ma_kh = rnd.choice([k[0] for k in KHOAHOC])
+    created = REF_DATE - timedelta(days=rnd.randint(1, 45))
+    hv = new_student(cn, KH[ma_kh][2] == "KIDS", created)
+    add_test(hv, ma_kh, created)
 
 # ----------------------------------------------------------------- tài khoản
 TAIKHOAN = []
