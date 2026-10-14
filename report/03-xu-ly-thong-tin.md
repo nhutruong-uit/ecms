@@ -332,3 +332,69 @@ Khi chạy lại `03_functions.sql`, ràng buộc này được xoá trước r�
 | Gọi hàm / thủ tục khác | Chỉ gọi function | Gọi được cả hai |
 | Hiệu năng | Inline TVF được tối ưu như view; scalar UDF chạy từng dòng (SQL Server 2019+ có thể tự *inline*) | Kế hoạch thực thi được cache |
 | Trong ECMS dùng cho | Tính toán dùng lại: chuyên cần, xếp loại, công nợ, lịch | Nghiệp vụ ghi dữ liệu: ghi danh, thu phí, điểm danh (T11) |
+
+### 3.3.3 Trigger và nhật ký kiểm toán
+
+File [`database/06_triggers.sql`](../database/06_triggers.sql) gồm **11 trigger**:
+
+| Trigger | Bảng / view | Loại · sự kiện | Nhiệm vụ | RBTV |
+|---|---|---|---|---|
+| `trg_DangKy_KiemTraSiSo` | DANGKY | AFTER INSERT, UPDATE · **First** | Chặn ghi danh làm lớp vượt sĩ số (THROW 50070) | RB06 |
+| `trg_DangKy_SiSo` | DANGKY | AFTER INSERT, UPDATE, DELETE · **Last** | Tính lại `LOPHOC.SiSoHienTai` | RB14 |
+| `trg_DangKy_KetQua` | DANGKY | AFTER INSERT, UPDATE (DiemGK, DiemCK) | Kết quả Đạt / Không đạt theo điểm TB | – |
+| `trg_CTPhieuThu_TongTien` | CT_PHIEUTHU | AFTER INSERT, UPDATE, DELETE | Chặn sai học viên / thu vượt; cập nhật `PHIEUTHU.TongTien`, `DANGKY.TrangThaiHP` | RB15, RB16 |
+| `trg_LichHoc_KiemTraTrung` | LICHHOC | AFTER INSERT, UPDATE | Chặn trùng phòng, trùng giáo viên khi thời gian lớp giao nhau | RB09, RB10 |
+| `trg_NhatKy_DangKy` | DANGKY | AFTER INSERT, UPDATE, DELETE | Ghi nhật ký (bỏ qua UPDATE không đổi giá trị) | NFR03 |
+| `trg_NhatKy_PhieuThu` | PHIEUTHU | AFTER INSERT, UPDATE, DELETE | Ghi nhật ký phiếu thu | NFR03 |
+| `trg_NhatKy_Luong` | NHANVIEN | AFTER UPDATE (LuongCoBan) | Ghi lương cũ / mới, % thay đổi | NFR03 |
+| `trg_NhatKy_ChiDoc` | NHATKY | **INSTEAD OF** UPDATE, DELETE | Nhật ký chỉ được thêm | NFR03 |
+| `trg_vwDangKyChiTiet_Insert` | **view** vw_DangKyChiTiet | **INSTEAD OF** INSERT | Ghi danh qua view JOIN 4 bảng, học phí lấy từ KHOAHOC | – |
+| `trg_vwDangKyChiTiet_Delete` | **view** vw_DangKyChiTiet | **INSTEAD OF** DELETE | "Xoá" qua view = huỷ đăng ký (xoá mềm), chặn nếu đã có phiếu thu | – |
+
+**Bảng inserted / deleted.** Trong trigger, SQL Server cung cấp hai bảng ảo cùng cấu trúc với bảng gốc:
+
+| Thao tác | `inserted` | `deleted` |
+|---|---|---|
+| INSERT | Các dòng mới | rỗng |
+| DELETE | rỗng | Các dòng bị xoá |
+| UPDATE | Giá trị **sau** khi sửa | Giá trị **trước** khi sửa |
+
+Mọi trigger trong ECMS được viết **theo tập hợp**: một câu `INSERT … SELECT` có thể thêm 30 đăng ký cùng lúc, nên trigger luôn JOIN với `inserted`/`deleted` (VD tính lại sĩ số cho mọi lớp trong `SELECT MaLop FROM inserted UNION SELECT MaLop FROM deleted`), không gán `@MaLop = (SELECT MaLop FROM inserted)` vốn chỉ đúng khi có một dòng.
+
+**Thứ tự kích hoạt.** DANGKY có 4 AFTER trigger cho INSERT. Dùng `sp_settriggerorder` để `trg_DangKy_KiemTraSiSo` chạy **đầu tiên** (chặn sớm, trả lỗi tiếng Việt thay vì lỗi CHECK `CK_LOPHOC_SiSo`) và `trg_DangKy_SiSo` chạy **cuối cùng**; các trigger còn lại chạy theo thứ tự không xác định. Thứ tự đầy đủ của một câu `INSERT DANGKY`: kiểm tra ràng buộc (CHECK, FK, UNIQUE) → INSERT → AFTER trigger (First → … → Last) → COMMIT. INSTEAD OF trigger chạy *thay cho* thao tác, trước cả bước kiểm tra ràng buộc.
+
+**Nhật ký kiểm toán.** Mỗi dòng NHATKY lưu dữ liệu cũ/mới dạng JSON (`FOR JSON PATH, WITHOUT_ARRAY_WRAPPER`), login SQL Server (`SUSER_SNAME()`, mặc định của cột) và tài khoản ứng dụng (`SESSION_CONTEXT(N'app_user')` do web đặt khi đăng nhập – vì mọi người dùng web đều kết nối bằng cùng một login `ecms_app`):
+
+```text
+NHANVIEN  {"LuongCoBan":11500000} → {"LuongCoBan":12650000,"PhanTramThayDoi":10.00}  bởi sa / kiemthu
+```
+
+**Kiểm thử** – [`database/tests/test_triggers.sql`](../database/tests/test_triggers.sql) thao tác **trực tiếp lên bảng** (bỏ qua procedure) để chứng minh CSDL tự bảo vệ. Vì lỗi trong trigger luôn làm transaction "doomed" (trigger chạy với `XACT_ABORT ON`), mỗi ca chạy trong transaction riêng rồi rollback:
+
+| Trigger | Ca | Kết quả |
+|---|---|---|
+| trg_DangKy_KiemTraSiSo | INSERT thẳng vào lớp đầy IE55-2602 | 50070 Lớp IE55-2602 đã đủ sĩ số, không thể ghi danh thêm. ✔ |
+| trg_DangKy_SiSo | INSERT 1 đăng ký / chuyển sang Bảo lưu | 10 → 11 → 10 ✔ |
+| trg_DangKy_KetQua | GK 4, CK 5 → sửa CK 7 | 4.60 Không đạt → 5.80 Đạt ✔ |
+| trg_CTPhieuThu_TongTien | Thêm 1,5 tr → sửa 4 tr → xoá | Đóng một phần → Đã đóng → Chưa đóng; TongTien khớp ✔ |
+| | Thu thêm cho đăng ký đã đóng đủ | 50072 Tổng số tiền đã thu vượt quá học phí phải đóng. ✔ |
+| | Chi tiết là đăng ký của học viên khác | 50071 ✔ |
+| trg_LichHoc_KiemTraTrung | Xếp GT3-2601 vào T7 ca 1 P101 | 50073 Trùng phòng P101 (CN03) với lớp IE55-2601. ✔ |
+| trg_NhatKy_* | Các thao tác trên | 13 dòng nhật ký có `app_user = kiemthu` ✔; tăng lương 10% ghi 1 dòng, sửa cột khác không ghi ✔ |
+| trg_NhatKy_ChiDoc | Sửa nhật ký | 50074 Nhật ký kiểm toán chỉ được thêm, không được sửa hoặc xoá. ✔ |
+| trg_vwDangKyChiTiet_* | INSERT qua view / DELETE qua view / lớp đã kết thúc | HocPhi 4 000 000, ThanhTien 3 600 000, sĩ số +1 / Huỷ, sĩ số −1 / 50075 ✔ |
+
+Kết quả **17/17 PASS**. `02_seed.sql` chạy lại được khi đã có trigger (tạm `DISABLE TRIGGER ALL` lúc nạp), `test_procedures.sql` vẫn 25/25 PASS khi trigger hoạt động.
+
+**So sánh trigger và CHECK constraint**
+
+| Tiêu chí | CHECK constraint | Trigger |
+|---|---|---|
+| Phạm vi | Một dòng của một bảng (liên thuộc tính) | Nhiều dòng, nhiều bảng (liên bộ, liên quan hệ) |
+| Ví dụ ECMS | `GioKetThuc > GioBatDau`, `SiSoHienTai <= SiSoToiDa` | Trùng phòng giữa các lớp, tổng tiền phiếu thu |
+| Thời điểm | Trước khi ghi dòng | Sau khi ghi (AFTER) hoặc thay cho thao tác (INSTEAD OF) |
+| Thay đổi dữ liệu khác | Không | Có (cập nhật sĩ số, ghi nhật ký) |
+| Hiệu năng | Rất nhanh, optimizer tận dụng được | Chậm hơn, chạy thêm truy vấn mỗi lần ghi |
+| Thông báo lỗi | Chuẩn của SQL Server (tên ràng buộc) | Tự viết, tiếng Việt |
+| Bị vô hiệu khi | `NOCHECK` | `DISABLE TRIGGER` |
+| Nguyên tắc nhóm áp dụng | Dùng CHECK/FK/UNIQUE trước; chỉ dùng trigger khi ràng buộc vượt quá một dòng | |
