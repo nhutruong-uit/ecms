@@ -626,3 +626,63 @@ Script đã chạy sạch hai lần liên tiếp trên CSDL trống (SQL Server 
 ![Database Diagram](../docs/design/db-diagram.png)
 
 *Hình 2.4 – Sơ đồ CSDL sinh từ metadata (`sys.tables`, `sys.columns`, `sys.foreign_keys`) sau khi chạy `01_schema.sql`, tương đương Database Diagram của SSMS: **PK** khoá chính, **FK** khoá ngoại, ✱ NOT NULL, chữ nghiêng là cột tính toán. Đối chiếu với lược đồ ở mục 2.4: đủ 22 bảng, 32 khoá ngoại khớp các mối kết hợp của ERD.*
+
+## 2.8 Dữ liệu mẫu
+
+### 2.8.1 Cách sinh
+
+Dữ liệu được sinh bằng [`scripts/gen_seed.py`](../scripts/gen_seed.py) (Python + **Faker `vi_VN`** cho họ tên, đường phố tiếng Việt) rồi ghi ra [`database/02_seed.sql`](../database/02_seed.sql). Script dùng **seed cố định** (`103`) và **ngày tham chiếu cố định** 15/10/2026 thay cho ngày hiện tại, nên chạy lại luôn ra cùng một file – cả nhóm có cùng bộ dữ liệu để so kết quả truy vấn.
+
+```bash
+pip install faker
+python3 scripts/gen_seed.py          # sinh lại 02_seed.sql và data/import/*.csv
+database/run_all.sh 02               # nạp vào CSDL
+```
+
+Thay vì sinh ngẫu nhiên độc lập từng bảng, script **mô phỏng nghiệp vụ** theo thứ tự thời gian:
+
+1. Danh mục: 3 chi nhánh, 20 nhân viên (3 quản lý, 4 giáo vụ, 3 kế toán, 10 giáo viên – 4 bản ngữ), 12 phòng, 6 ca, 4 chương trình, 12 khoá học (mỗi chương trình 3 cấp, cấp sau có tiên quyết là cấp trước), 30 ngày lễ 2025–2026.
+2. Mở 25 lớp từ 02/2025 đến 11/2026. Lịch học được xếp **tham lam**: thử từng mẫu (thứ 2–4, 3–5, 7–CN…) × ca, chỉ nhận khi phòng và giáo viên rảnh trong toàn bộ khoảng thời gian của lớp. Buổi học sinh theo lịch, **bỏ qua ngày lễ**; ngày kết thúc = ngày buổi cuối.
+3. Với mỗi lớp (theo ngày khai giảng): ưu tiên học viên đã **Đạt** khoá tiên quyết ở lớp kết thúc trước đó (giảm 10%), phần còn lại là học viên mới – lập hồ sơ, **kiểm tra đầu vào** (XML 4 kỹ năng, điểm nằm đúng khoảng của khoá) rồi ghi danh.
+4. Mô phỏng từng buổi đã diễn ra: mỗi học viên có "hồ sơ chuyên cần" (đa số 90–97%, 10% chỉ ~68% để tạo trường hợp vắng nhiều) → điểm danh → điểm GK/CK tương quan với năng lực và chuyên cần → kết quả.
+5. Học phí: 72% đóng đủ một lần, ~18% đóng hai đợt, còn lại nợ; một số học viên ghi danh 2 lớp cùng ngày → một phiếu thu nhiều dòng (master–detail).
+6. Tính sẵn các giá trị suy diễn: sĩ số hiện tại, tổng tiền phiếu thu, trạng thái học phí, kết quả.
+
+Khi nạp, `02_seed.sql` tạm **tắt trigger** (`ALTER TABLE … DISABLE TRIGGER ALL`) để giá trị suy diễn tính sẵn không bị trigger tính lại hay chặn, nạp xong bật lại; script xoá sạch dữ liệu cũ trước khi nạp nên chạy lại được nhiều lần.
+
+### 2.8.2 Thống kê số dòng
+
+| Bảng | Số dòng | Bảng | Số dòng |
+|---|--:|---|--:|
+| CHINHANH | 3 | HOCVIEN | 350 |
+| NHANVIEN | 20 | KIEMTRA_DAUVAO | 358 |
+| GIAOVIEN | 10 | DANGKY | 566 |
+| CHUNGCHI_GV | 17 | DIEMDANH | 10 803 |
+| PHONGHOC | 12 | PHIEUTHU | 523 |
+| CAHOC | 6 | CT_PHIEUTHU | 530 |
+| CHUONGTRINH | 4 | TAIKHOAN | 80 |
+| KHOAHOC | 12 | NGAYLE | 30 |
+| LOPHOC | 25 | BUOIHOC | 598 |
+| LICHHOC | 50 | NHATKY, CANHBAO_CHUYENCAN, BANGLUONG | 0 (sinh bởi trigger / procedure) |
+
+Trạng thái lớp: 16 *Đã kết thúc*, 5 *Đang học*, 4 *Sắp mở*. Doanh thu trải đều 2025 (~1,13 tỷ) và 2026 (~1,19 tỷ) để báo cáo theo tháng/quý có ý nghĩa.
+
+### 2.8.3 Trường hợp biên có sẵn
+
+| Trường hợp | Số lượng | Dùng để kiểm thử |
+|---|--:|---|
+| Lớp đã đủ sĩ số | 2 | `sp_DangKyHoc`, trigger chặn lớp đầy (T11, T13) |
+| Đăng ký còn nợ học phí (chưa đóng / đóng một phần) | 67 | Công nợ, tô đỏ nợ quá hạn (T16, T23) |
+| Học viên vắng > 20% | ~15 | `sp_CanhBaoChuyenCan` (T14), trang cảnh báo (T22) |
+| Học viên *Không đạt* | ~50 | Bảng điểm, xếp loại (T12) |
+| Học viên bảo lưu giữa khoá | vài | Sĩ số không tính bảo lưu |
+| Học viên học tiếp khoá cấp sau | ~200 | Kiểm tra khoá tiên quyết, CTE đệ quy (T09) |
+| Phiếu thu nhiều dòng | 7 | Master–detail (T23) |
+
+### 2.8.4 Kiểm tra nhất quán
+
+[`database/tests/test_seed.sql`](../database/tests/test_seed.sql) kiểm tra 11 điều kiện (sĩ số, tổng tiền, không thu vượt, không trùng phòng/giáo viên, khoá tiên quyết, buổi học không rơi vào ngày lễ…). Kết quả: **0 lỗi ở cả 11 điều kiện**, seed nạp không vi phạm ràng buộc nào.
+
+### 2.8.5 Dữ liệu cho nhập / xuất
+
+`data/import/` có `hocvien_online.csv` (1 200 dòng đăng ký online, ~4% dòng lỗi cố ý: ngày sai, thiếu SĐT, email sai, chi nhánh / khoá không tồn tại, trùng), `hocvien_10000.csv` (10 000 dòng sạch để đo tốc độ) và `khoahoc.csv` – dùng ở T18.
