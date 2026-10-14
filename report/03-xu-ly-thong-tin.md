@@ -99,6 +99,67 @@ Dữ liệu mẫu nhỏ (10 nghìn điểm danh) nên phần cuối `10_queries.
 - P3 cho thấy **điều kiện không SARGable** (bọc cột trong hàm `YEAR()`) làm mất khả năng seek dù đã có chỉ mục – quy tắc viết truy vấn nhóm áp dụng cho view báo cáo (T16) và procedure thống kê doanh thu (T11).
 - Thời gian (ms) dao động giữa các lần chạy; logical reads ổn định nên được dùng làm thước đo chính.
 
+## 3.2 An ninh dữ liệu
+
+### 3.2.3 View bảo mật và view phục vụ báo cáo
+
+File [`database/04_views.sql`](../database/04_views.sql) gồm **9 view**. Ứng dụng web và các vai trò nghiệp vụ được cấp quyền `SELECT` trên view thay vì bảng gốc (ma trận quyền ở mục 3.2.2).
+
+| View | Loại | Mục đích | Kỹ thuật |
+|---|---|---|---|
+| `vw_NhanVien_CongKhai` | **Bảo mật – theo cột** | Danh bạ nhân viên, *ẩn lương và ngày sinh* | JOIN tự thân lấy tên người quản lý |
+| `vw_HocVien_ChiNhanh` | **Bảo mật – theo dòng** | Mỗi chi nhánh chỉ thấy học viên của mình | `SESSION_CONTEXT(N'ma_cn')` |
+| `vw_LichDayGiaoVien` | Bảo mật – theo cột | Lịch dạy, không lộ học viên, học phí, lương | Tính thứ trong tuần không phụ thuộc `DATEFIRST` |
+| `vw_DangKyChiTiet` | Nghiệp vụ | Nguồn form ghi danh, cho phép INSERT qua view | INSTEAD OF trigger (T13) |
+| `vw_CongNoHocVien` | Báo cáo | Đăng ký chưa đóng đủ, số ngày quá hạn | `OUTER APPLY` |
+| `vw_BangDiem` | Báo cáo | Điểm, xếp loại, chuyên cần | Gọi `fn_XepLoai`, `fn_TyLeChuyenCan` (T12) |
+| `vw_DoanhThuThang` | Báo cáo | Doanh thu chi nhánh × tháng | **Indexed view**: `WITH SCHEMABINDING` + `UNIQUE CLUSTERED INDEX` |
+| `vw_SiSoLop` | Báo cáo | Sĩ số, tỷ lệ lấp đầy, lịch học dạng chuỗi | `FOR XML PATH` ghép chuỗi |
+| `vw_LopHoc_DangMo` | Form | Lớp *Sắp mở / Đang học*, cập nhật được | **`WITH CHECK OPTION`** |
+
+**Row-level security bằng SESSION_CONTEXT.** Sau khi đăng nhập, ứng dụng gọi `EXEC sp_set_session_context N'ma_cn', 'CN02'` trên kết nối; quản lý trung tâm nhận giá trị `'ALL'`. View lọc `WHERE CAST(SESSION_CONTEXT(N'ma_cn') AS VARCHAR(4)) IN (h.MaCN, 'ALL')`:
+
+| Ngữ cảnh phiên | Kết quả `SELECT MaCN, COUNT(*) FROM vw_HocVien_ChiNhanh GROUP BY MaCN` |
+|---|---|
+| Chưa đặt | 0 dòng – mặc định **không thấy gì** (an toàn khi quên đặt) |
+| `ma_cn = 'CN02'` | CN02: 119 |
+| `ma_cn = 'ALL'` | CN01: 133 · CN02: 119 · CN03: 97 |
+
+**WITH CHECK OPTION** chặn sửa dữ liệu qua view làm dòng không còn thoả điều kiện của view:
+
+```sql
+UPDATE vw_LopHoc_DangMo SET TrangThai = N'Đã kết thúc' WHERE MaLop = 'GT3-2601';
+-- Msg 550: The attempted insert or update failed because the target view either specifies
+-- WITH CHECK OPTION ... did not qualify under the CHECK OPTION constraint.
+```
+
+**Ví dụ kết quả**
+
+`vw_CongNoHocVien` – 67 đăng ký còn nợ, tổng **283 218 000 đ**, trong đó 44 đăng ký quá hạn:
+
+| MaDK | Học viên | Lớp | Thành tiền | Đã thu | Còn nợ | Hạn | Quá hạn (ngày) |
+|--:|---|---|--:|--:|--:|---|--:|
+| 182 | Hoàng Kim Xuân | IE65-2501 | 9 000 000 | 0 | 9 000 000 | 09/10/2025 | 370 |
+| 376 | Mai Đức Bảo | IE55-2601 | 7 500 000 | 0 | 7 500 000 | 23/08/2026 | 52 |
+| 487 | Nguyễn Mai Chi | IE65-2601 | 8 100 000 | 0 | 8 100 000 | 29/10/2026 | – |
+
+`vw_SiSoLop` (lớp chưa kết thúc, trích):
+
+| Lớp | Khoá | Chi nhánh | Sĩ số | Lấp đầy | Lịch |
+|---|---|---|:-:|--:|---|
+| IE55-2602 | IELTS 5.5 | Thủ Đức | 20/20 | 100,0% | T4 Tối 2 (P101), T6 Tối 2 (P101) |
+| IE55-2601 | IELTS 5.5 | Bình Thạnh | 28/30 | 93,3% | T7 Sáng 1 (P101), CN Sáng 1 (P101) |
+| GT3-2601 | Giao tiếp Nâng cao | Bình Thạnh | 10/25 | 40,0% | T3 Tối 1 (P101), T5 Tối 1 (P101) |
+
+**Indexed view – so sánh tốc độ.** Tổng doanh thu theo chi nhánh × năm:
+
+| Cách truy vấn | Logical reads | Ghi chú |
+|---|--:|---|
+| Gộp trực tiếp 4 bảng (`OPTION (EXPAND VIEWS)`) | 16 (DANGKY 5, CT_PHIEUTHU 4, PHIEUTHU 5, LOPHOC 2) + worktable | Phải JOIN và hash aggregate mỗi lần |
+| Đọc `vw_DoanhThuThang WITH (NOEXPAND)` | **2** | Kết quả gộp sẵn theo tháng trong chỉ mục clustered của view |
+
+Chênh lệch tăng theo kích thước dữ liệu vì indexed view chỉ lưu ~3 chi nhánh × 24 tháng = 72 dòng dù có hàng trăm nghìn dòng thu. Đổi lại, mỗi lần thêm/sửa CT_PHIEUTHU, SQL Server phải cập nhật thêm chỉ mục của view – phù hợp với dữ liệu *đọc nhiều, ghi ít* như doanh thu. Ràng buộc của indexed view: `SCHEMABINDING`, tên hai phần `dbo.X`, không `OUTER JOIN`, phải có `COUNT_BIG(*)` khi `GROUP BY`, và các phiên ghi vào bảng gốc phải bật `QUOTED_IDENTIFIER`, `ANSI_NULLS` (nên `run_all` gọi `sqlcmd -I`).
+
 ## 3.3 Lập trình trên CSDL
 
 ### 3.3.2 Hàm do người dùng định nghĩa (function)
