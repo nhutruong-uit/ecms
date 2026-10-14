@@ -168,3 +168,105 @@ CREATE VIEW dbo.NHANVIEN AS                       -- tái thiết mảnh dọc b
 - **Điểm yếu của 2PC:** trạm giữ khoá suốt thời gian chờ; điều phối viên sự cố giữa hai pha làm trạm bị "treo" (blocking). Vì vậy thiết kế phân mảnh dẫn xuất để **phần lớn giao tác chỉ chạm một trạm** (ghi danh, điểm danh, thu phí của lớp đều cục bộ).
 - **Đồng thời:** mỗi trạm dùng khoá cục bộ (như `UPDLOCK` trong `sp_DangKyHoc`); giao tác toàn cục cần khoá ở mọi trạm tham gia theo thứ tự cố định để tránh deadlock phân tán, hoặc dùng mức cô lập *snapshot* cho truy vấn báo cáo toàn cục để không khoá chi nhánh.
 - **Nhân bản danh mục:** thay đổi khoá học / học phí được thực hiện ở trung tâm và lan truyền tới chi nhánh (SQL Server Replication kiểu *transactional* hoặc *merge*); chấp nhận trễ vài giây vì danh mục ít thay đổi.
+
+## 5.3 Cơ sở dữ liệu phi quan hệ (NoSQL)
+
+### 5.3.1 Hạn chế của mô hình quan hệ với một phần dữ liệu ECMS
+
+| Dữ liệu | Khó khăn trên mô hình quan hệ |
+|---|---|
+| Kết quả kiểm tra đầu vào (4 kỹ năng, nhận xét, có thể thêm kỹ năng / điểm thành phần) | Cấu trúc thay đổi theo đề thi → phải dùng cột XML + XML Schema + XQuery (mục 3.1.3), truy vấn dài dòng |
+| Hồ sơ học tập (đăng ký → điểm → điểm danh từng buổi) | Đọc một hồ sơ cần JOIN 4–5 bảng; DIEMDANH tăng nhanh nhất (~10 000 dòng chỉ với 25 lớp) |
+| Nhật ký kiểm toán | Cấu trúc dữ liệu cũ / mới khác nhau theo bảng → đang lưu JSON trong cột NVARCHAR(MAX) |
+| Phiên đăng nhập, bộ đếm sai mật khẩu, cache danh sách lớp | Đọc / ghi rất thường xuyên, không cần JOIN, dữ liệu tạm |
+| Đồ thị khoá tiên quyết, gợi ý lộ trình | Phải dùng CTE đệ quy |
+
+### 5.3.2 Bốn mô hình NoSQL áp dụng trên ECMS
+
+| Mô hình | Cấu trúc | Ví dụ trên ECMS | Sản phẩm |
+|---|---|---|---|
+| **Key-value** | khoá → giá trị (không xem bên trong) | `session:<token>` → thông tin người đăng nhập (TTL 8 giờ); `login_fail:<user>` → số lần sai (TTL 15 phút); cache `lop_dang_mo:CN01` | Redis |
+| **Document** | khoá → document JSON/BSON lồng nhau, lược đồ linh hoạt | Hồ sơ học viên nhúng kết quả kiểm tra, đăng ký, điểm danh; phiếu thu nhúng chi tiết | **MongoDB** (demo) |
+| **Column-family** | dòng → nhiều họ cột, cột thưa, ghi rất nhanh, phân tán theo khoá phân vùng | Nhật ký điểm danh / truy cập theo `(MaLop, ngày)` khi mở rộng hàng trăm chi nhánh | Cassandra, HBase |
+| **Graph** | đỉnh – cạnh có thuộc tính, duyệt quan hệ nhiều bước | `(:KhoaHoc)-[:TIEN_QUYET]->(:KhoaHoc)`, `(:HocVien)-[:DA_HOC {diem}]->(:KhoaHoc)` → gợi ý khoá tiếp theo, học viên cùng lộ trình | Neo4j |
+
+### 5.3.3 Thiết kế document MongoDB
+
+Nguyên tắc: **nhúng** khi dữ liệu con luôn đọc cùng cha và thuộc về một cha duy nhất; **tham chiếu** khi dữ liệu dùng chung hoặc tăng không giới hạn.
+
+| Collection | Nhúng | Tham chiếu | Lý do |
+|---|---|---|---|
+| `khoa_hoc` | chương trình (tên) | `tien_quyet` → `khoa_hoc._id` | Danh mục nhỏ, dùng chung; tiên quyết là đồ thị |
+| `lop_hoc` | lịch (thứ – ca – phòng), giáo viên tóm tắt | `khoa_hoc` | Lịch luôn đọc cùng lớp |
+| `hoc_vien` | địa chỉ, `kiem_tra[]` (4 kỹ năng), `dang_ky[]` (học phí, điểm, `diem_danh[]`) | `dang_ky.lop`, `dang_ky.khoa_hoc` | Hồ sơ học viên đọc bằng **một truy vấn**; mỗi học viên vài lớp × ~30 buổi → document < 30 KB, xa giới hạn 16 MB |
+| `phieu_thu` | `chi_tiet[]` (master–detail) | `hoc_vien`, `chi_tiet.ma_dk` | Phiếu thu bất biến sau khi lập |
+
+```json
+{ "_id": "HV0019", "ho_ten": { "ho": "Nguyễn Thành", "ten": "Khoa" }, "sdt": "0853337655", "chi_nhanh": "CN01",
+  "kiem_tra": [ { "ngay": "2025-01-…", "diem_tong": 1.4, "de_xuat": "IEF",
+                  "ky_nang": { "listening": { "diem": 1.2, "nhan_xet": "…" }, "speaking": { "diem": 1.0 }, … } } ],
+  "dang_ky": [ { "ma_dk": 18, "lop": "IEF-2501", "khoa_hoc": "IEF",
+                 "hoc_phi": { "goc": 5500000, "giam_gia": 0, "thanh_tien": 5500000, "da_thu": 5500000, "trang_thai": "Đã đóng" },
+                 "diem": { "gk": 7.25, "ck": 7.6, "tb": 7.45 }, "ket_qua": "Đạt",
+                 "diem_danh": [ { "buoi": 1, "ngay": "2025-02-10", "trang_thai": "Có mặt" }, … ] }, … ] }
+```
+
+### 5.3.4 Chuyển dữ liệu SQL Server → MongoDB
+
+[`nosql/migrate.py`](../nosql/migrate.py) đọc SQL Server bằng pyodbc, tách XML kết quả kiểm tra thành document lồng, gom đăng ký + điểm danh theo học viên, ghi bằng pymongo và tạo chỉ mục (`sdt`, `dang_ky.lop`, `ngay_thu`, `chi_nhanh + trang_thai`). Kết quả đối chiếu số lượng:
+
+| MongoDB | SQL Server | Số lượng |
+|---|---|--:|
+| `khoa_hoc` | KHOAHOC | 12 = 12 ✓ |
+| `lop_hoc` | LOPHOC | 25 = 25 ✓ |
+| `hoc_vien` | HOCVIEN | 349 = 349 ✓ |
+| `phieu_thu` | PHIEUTHU | 502 = 502 ✓ |
+| `hoc_vien.dang_ky[]` | DANGKY | 539 = 539 ✓ |
+| `hoc_vien.dang_ky[].diem_danh[]` | DIEMDANH | 10 063 = 10 063 ✓ |
+| `hoc_vien.kiem_tra[]` | KIEMTRA_DAUVAO | 357 = 357 ✓ |
+| `phieu_thu.chi_tiet[]` | CT_PHIEUTHU | 510 = 510 ✓ |
+
+22 bảng quan hệ thành **4 collection** (~1,1 MB BSON), chuyển trong 0,7 giây.
+
+### 5.3.5 So sánh truy vấn tương đương
+
+[`nosql/queries.js`](../nosql/queries.js) (mongosh) và [`nosql/compare.py`](../nosql/compare.py) chạy cùng câu hỏi trên hai hệ, kiểm tra kết quả giống nhau và đo trung bình 20 lần (SQL Server 2025 và MongoDB 7 cùng chạy Docker trên một máy, truy vấn qua driver Python):
+
+| # | Câu hỏi | SQL Server | MongoDB | Dòng | SQL (ms) | Mongo (ms) | Kết quả |
+|:-:|---|---|---|--:|--:|--:|:-:|
+| 1 | Hồ sơ học viên kèm lớp, điểm, số buổi vắng | JOIN 3 bảng + truy vấn con | `find_one({_id})` – dữ liệu nhúng | 6 | 4,53 | 1,47 | ✓ |
+| 2 | Doanh thu chi nhánh × tháng 2026 | JOIN + `GROUP BY` | `$match` + `$group` | 18 | 3,70 | 1,92 | ✓ |
+| 3 | Bài kiểm tra có Speaking < 3 | XQuery `.exist()` trên cột XML | lọc trường lồng `kiem_tra.ky_nang.speaking.diem` | 160 | 18,77 | 2,93 | ✓ |
+| 4 | Top 10 tỷ lệ vắng | JOIN + `GROUP BY` + `ORDER BY` | `$unwind` + `$filter` + `$sort` | 10 | 4,30 | 2,46 | ✓ |
+| 5 | Chuỗi khoá tiên quyết | CTE đệ quy | `$graphLookup` | 4 | 1,58 | 1,49 | ✓ |
+| 6 | Lớp đang mở còn chỗ + tên khoá | `JOIN` | `$lookup` | 8 | 1,31 | 1,48 | ✓ |
+
+**Nhận xét.** MongoDB nhanh hơn rõ ở truy vấn đọc theo **đơn vị đã nhúng** (hồ sơ học viên, kết quả kiểm tra – nhanh hơn ~6 lần so với XQuery) vì không phải JOIN hay phân tích XML. Với truy vấn cần **kết nối nhiều tập** (#5, #6) hai bên tương đương, `$lookup` thậm chí chậm hơn JOIN. Cái giá của việc nhúng là cập nhật phức tạp hơn: sửa một ô điểm danh phải dùng `arrayFilters` trên mảng lồng 2 cấp (mục 7 của `queries.js`); thông tin lớp, khoá học bị lặp trong nhiều document và không có khoá ngoại / CHECK / trigger để giữ nhất quán (sĩ số, tổng phiếu thu phải do ứng dụng tự tính).
+
+### 5.3.6 Giới thiệu và đánh giá các hệ NoSQL cho ECMS
+
+| Hệ | Mô hình | Điểm mạnh | Hạn chế | Dùng cho ECMS |
+|---|---|---|---|---|
+| **MongoDB** | Document | Lược đồ linh hoạt, truy vấn và aggregation mạnh, chỉ mục phụ, transaction đa document (4.0+) | Không có ràng buộc liên collection, dữ liệu lặp khi nhúng | Kết quả kiểm tra đầu vào, hồ sơ học tập để đọc nhanh (bản sao chỉ đọc từ SQL Server) |
+| **Redis** | Key-value (in-memory) | Độ trễ dưới mili giây, TTL tự xoá, cấu trúc list/set/sorted set | Dữ liệu chủ yếu trong RAM, truy vấn theo khoá | Phiên đăng nhập, đếm sai mật khẩu, cache danh mục và dashboard |
+| **Cassandra** | Column-family | Ghi cực nhanh, mở rộng ngang, không có điểm lỗi đơn | Phải thiết kế bảng theo truy vấn, không JOIN, nhất quán cuối cùng | Chỉ cần khi chuỗi có hàng trăm chi nhánh, lưu nhật ký điểm danh / truy cập |
+| **Neo4j** | Graph | Truy vấn đường đi nhiều bước (Cypher) rất nhanh | Không hợp cho thống kê tổng hợp | Lộ trình học, gợi ý khoá tiếp theo dựa trên học viên tương tự |
+
+## 5.4 So sánh, đánh giá các mô hình cho bài toán ECMS
+
+| Tiêu chí | Quan hệ (SQL Server) | Hướng đối tượng | Phân tán (theo chi nhánh) | NoSQL (MongoDB) |
+|---|---|---|---|---|
+| Mô hình hoá ECMS | Tốt, cần tách bảng cho đa trị / phức hợp | Tự nhiên nhất (kế thừa, kiểu phức) | Như quan hệ, thêm phân mảnh | Tự nhiên cho hồ sơ, kết quả test |
+| Toàn vẹn & giao dịch | **Mạnh nhất**: PK/FK/CHECK/trigger, ACID | Trong phương thức | ACID cục bộ, 2PC liên trạm | Yếu: không FK, transaction có giới hạn |
+| Truy vấn thống kê, báo cáo | **Mạnh nhất** | Yếu (N+1, ít hỗ trợ OQL) | Tốt nếu truy vấn cục bộ; toàn cục chậm hơn | Khá (aggregation), kém khi cần JOIN |
+| Đọc một hồ sơ trọn vẹn | Cần nhiều JOIN | Duyệt đối tượng | Như quan hệ | **Nhanh nhất** (1 document) |
+| Lược đồ thay đổi | ALTER TABLE | Sửa lớp | Sửa ở mọi trạm | **Linh hoạt nhất** |
+| Mở rộng quy mô | Dọc (máy mạnh hơn) | Dọc | **Ngang theo chi nhánh** | **Ngang** (sharding) |
+| Bảo mật, kiểm toán, sao lưu | **Đầy đủ** | Phụ thuộc sản phẩm | Phải làm ở mọi trạm | Có, kém chi tiết hơn |
+| Số liệu demo | – | Tổng công nợ: 889 câu SQL, 1 873 ms (lazy) so với 1 câu, 40 ms | Truy vấn toàn cục khớp 100%, chỉ đọc 1 trạm khi lọc chi nhánh | Hồ sơ học viên 1,47 ms so với 4,53 ms; lọc kết quả test 2,93 ms so với 18,77 ms |
+
+**Kết luận của nhóm.** Với quy mô hiện tại (3 chi nhánh, vài trăm học viên) và yêu cầu chính là *giao dịch đúng* (ghi danh, thu phí) + *báo cáo* (doanh thu, công nợ, chuyên cần), **CSDL quan hệ tập trung** là lựa chọn đúng cho ECMS và là phần nhóm đã cài đặt đầy đủ. Các mô hình khác bổ sung có chọn lọc:
+
+1. **Hướng đối tượng** ở tầng ứng dụng (lớp nghiệp vụ / ORM có eager loading) – không thay CSDL.
+2. **Phân tán** khi mở rộng nhiều tỉnh: phân mảnh ngang theo chi nhánh với thiết kế đã kiểm chứng ở 5.2.
+3. **NoSQL** làm kho phụ: Redis cho phiên đăng nhập / cache; MongoDB làm bản sao chỉ đọc cho cổng thông tin học viên và lưu kết quả kiểm tra linh hoạt – kiến trúc *polyglot persistence*, SQL Server vẫn là nguồn dữ liệu gốc.

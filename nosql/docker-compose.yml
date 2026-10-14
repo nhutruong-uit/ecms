@@ -1,0 +1,11 @@
+# MongoDB cho demo Chương 5 (T27):  docker compose -f nosql/docker-compose.yml up -d
+services:
+  mongo:
+    image: mongo:7
+    container_name: ecms-mongo
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:
