@@ -99,6 +99,92 @@ Dữ liệu mẫu nhỏ (10 nghìn điểm danh) nên phần cuối `10_queries.
 - P3 cho thấy **điều kiện không SARGable** (bọc cột trong hàm `YEAR()`) làm mất khả năng seek dù đã có chỉ mục – quy tắc viết truy vấn nhóm áp dụng cho view báo cáo (T16) và procedure thống kê doanh thu (T11).
 - Thời gian (ms) dao động giữa các lần chạy; logical reads ổn định nên được dùng làm thước đo chính.
 
+### 3.1.3 Truy vấn dữ liệu XML (Bài thực hành 2)
+
+Kết quả kiểm tra đầu vào có cấu trúc linh hoạt (4 kỹ năng, nhận xét từng kỹ năng, nhận xét chung, khoá đề xuất) nên được lưu trong cột `KIEMTRA_DAUVAO.KetQuaChiTiet` kiểu **XML**. File [`database/09_xml.sql`](../database/09_xml.sql).
+
+**XML Schema và typed XML.** `XSC_KetQuaKiemTra` quy định: phần tử gốc `KetQua` có thuộc tính bắt buộc `HinhThuc` ∈ {Online, Tại trung tâm}; **đúng 4** phần tử `KyNang`, mỗi phần tử có `Ten` ∈ {Listening, Reading, Writing, Speaking} và `Diem` kiểu `Diem` (decimal 0–10, 1 chữ số thập phân); `NhanXetChung`, `DeXuat` tuỳ chọn. Gắn vào cột bằng `ALTER COLUMN KetQuaChiTiet XML(DOCUMENT dbo.XSC_KetQuaKiemTra)` – toàn bộ 357 tài liệu trong dữ liệu mẫu được kiểm tra lại và hợp lệ.
+
+XML sai cấu trúc bị từ chối:
+
+| Trường hợp | Kết quả |
+|---|---|
+| Điểm 11 | ✗ 6926 XML Validation: Invalid simple type value: '11'. Location: /KetQua[1]/KyNang[1]/@Diem |
+| Thiếu một kỹ năng (3/4) | ✗ 6908 XML Validation: Invalid content. Expected element(s): 'KyNang'. |
+| Tên kỹ năng "Grammar" | ✗ 6926 Invalid simple type value: 'Grammar' |
+| Thiếu `HinhThuc` | ✗ 6906 Required attribute 'HinhThuc' is missing. |
+| Hợp lệ | ✓ |
+
+Typed XML còn giúp truy vấn: SQL Server biết `@Diem` là số nên so sánh `@Diem >= 7` không cần ép kiểu, nhưng cũng chặt hơn – `.modify()` phải đưa vào đúng kiểu (`"5.5" cast as Diem?`), phần tử kiểu đơn không dùng được `text()`.
+
+**Các truy vấn** (X01–X17):
+
+| # | Câu hỏi | Phương thức / kỹ thuật |
+|:-:|---|---|
+| X01 | Điểm từng kỹ năng của các bài gần nhất | `.value()` với vị từ `[@Ten="Listening"]` |
+| X02 | Bài có Speaking thấp hơn điểm tổng ≥ 0,7 (26 bài) | `.exist()` + `sql:column()` |
+| X03 | Tách 4 kỹ năng thành 4 dòng | `.nodes()` + `CROSS APPLY` |
+| X04 | Điểm TB từng kỹ năng theo hình thức thi | `.nodes()` + `GROUP BY` (qua bảng dẫn xuất) |
+| X05 | Mảnh XML các kỹ năng ≥ 7 điểm | `.query()` |
+| X06 | Kỹ năng yếu nhất của mỗi bài | **FLWOR** `let / for / where / order by / return` |
+| X07 | Chênh lệch kỹ năng mạnh – yếu | `max()`, `min()` trong XQuery |
+| X08 | Khoá đề xuất trong XML khớp cột quan hệ | `sql:column()`, `sql:variable()` |
+| X09 | Phúc khảo: sửa điểm Writing | `.modify(replace value of …)` |
+| X10 | Thêm / sửa nhận xét chung | `.modify(insert … after …)`, `replace value of` |
+| X11 | Xoá nhận xét Listening | `.modify(delete …)` |
+| X12 | XML sai cấu trúc bị từ chối | XML Schema |
+| X13 | Xuất danh mục khoá học | `FOR XML RAW, ROOT` |
+| X14 | Chương trình → khoá học | `FOR XML AUTO` |
+| X15 | Chi nhánh → lớp đang học → học viên | `FOR XML PATH` lồng 3 cấp, `TYPE` |
+| X16 | Nhập kết quả thi từ đối tác | `OPENXML` (`sp_xml_preparedocument` / `sp_xml_removedocument`) |
+| X17 | Chuyển XML đối tác sang cấu trúc ECMS, kiểm tra bằng schema | `.nodes()` + `FOR XML PATH` + `CAST AS XML(DOCUMENT …)` |
+
+**Ví dụ – FLWOR (X06):**
+
+```sql
+SELECT MaKT, KetQuaChiTiet.query('
+    let $min := min(/KetQua/KyNang/@Diem)
+    for $k in /KetQua/KyNang
+    where $k/@Diem = $min
+    order by $k/@Ten
+    return <YeuNhat KyNang="{data($k/@Ten)}" Diem="{data($k/@Diem)}"/>') AS KyNangYeu
+FROM KIEMTRA_DAUVAO;
+```
+
+| MaKT | KyNangYeu |
+|--:|---|
+| 1 | `<YeuNhat KyNang="Writing" Diem="1.3"/>` |
+| 2 | `<YeuNhat KyNang="Speaking" Diem="2.3"/>` |
+| 4 | `<YeuNhat KyNang="Speaking" Diem="0.2"/>` |
+
+**X04 – điểm TB theo hình thức thi:** thi tại trung tâm cao hơn online ở cả 4 kỹ năng (Listening 4,22 so với 3,49; Reading 4,33 / 3,47; Writing 4,22 / 3,54; Speaking 4,14 / 3,52) – thông tin giúp trung tâm xem lại độ khó đề online.
+
+**X15 – FOR XML PATH lồng nhiều cấp** xuất danh sách lớp đang học gửi đối tác ([`data/xml/danhsach_lop_dang_hoc.xml`](../data/xml/danhsach_lop_dang_hoc.xml)):
+
+```xml
+<ECMS>
+  <ChiNhanh Ma="CN01" Ten="ECMS Thủ Đức">
+    <Lop Ma="IE55-2602">
+      <KhoaHoc>IELTS 5.5</KhoaHoc> <KhaiGiang>2026-08-19</KhaiGiang> <GiaoVien>…</GiaoVien>
+      <DanhSach>
+        <HocVien Ma="HV…"><HoTen>…</HoTen><NgaySinh>…</NgaySinh><HocPhi>Đã đóng</HocPhi></HocVien>
+        …
+```
+
+**Đối tượng phục vụ ứng dụng web (T21):** `vw_KiemTraChiTiet` tách XML thành cột (`.value()`), `sp_GhiKetQuaKiemTra` dựng XML bằng `FOR XML PATH` vào biến kiểu `XML(DOCUMENT XSC_KetQuaKiemTra)`, tính điểm tổng và gợi ý khoá qua `fn_GoiYKhoaHoc`. Thử: L 5.5, R 6, W 5, S 4.5, chương trình IELTS → điểm tổng 5.3, đề xuất **IE55**; nhập Listening = 11 → bị XML Schema từ chối.
+
+**So sánh lưu XML và tách thành bảng quan hệ**
+
+| Tiêu chí | Cột XML (cách ECMS dùng) | Bảng quan hệ KETQUA_KYNANG (MaKT, KyNang, Diem, NhanXet) |
+|---|---|---|
+| Thay đổi cấu trúc (thêm kỹ năng Grammar, thêm điểm thành phần) | Sửa XSD, dữ liệu cũ vẫn giữ | ALTER TABLE / thêm bảng, di chuyển dữ liệu |
+| Đọc nguyên một kết quả | 1 dòng, 1 cột | JOIN 4 dòng |
+| Truy vấn thống kê theo kỹ năng | `.nodes()` + `.value()`, chậm hơn, cú pháp phức tạp | `GROUP BY` đơn giản, dùng chỉ mục thường |
+| Ràng buộc | XSD: kiểu, miền, số lần xuất hiện | CHECK, FK, UNIQUE (MaKT, KyNang) |
+| Trao đổi với hệ thống khác | Xuất / nhập nguyên văn | Phải dựng lại XML (`FOR XML`) |
+| Chỉ mục | XML index (primary / secondary), tốn dung lượng | B-tree thông thường |
+| Kết luận cho ECMS | Phù hợp vì kết quả test chủ yếu được ghi một lần, đọc nguyên khối và gửi đi; điểm tổng cần lọc thường xuyên được tách sẵn thành cột `DiemTong` | Phù hợp nếu cần phân tích sâu từng kỹ năng thường xuyên |
+
 ## 3.2 An ninh dữ liệu
 
 ### 3.2.1 Xác thực
