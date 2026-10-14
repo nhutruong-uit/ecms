@@ -74,7 +74,7 @@ BEGIN
     SELECT @No = SUM(d.ThanhTien - ISNULL(t.DaThu, 0))
     FROM dbo.DANGKY d
     OUTER APPLY (SELECT SUM(c.SoTien) AS DaThu FROM dbo.CT_PHIEUTHU c WHERE c.MaDK = d.MaDK) t
-    WHERE d.MaHV = @MaHV AND d.TrangThai <> N'Huỷ';
+    WHERE d.MaHV = @MaHV AND d.TrangThai NOT IN (N'Huỷ', N'Đã chuyển lớp');   -- khoản đã đóng đi theo đăng ký mới khi chuyển lớp
     RETURN ISNULL(@No, 0);
 END
 GO
