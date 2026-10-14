@@ -8,3 +8,6 @@ openpyxl>=3.1
 
 # Công cụ sinh dữ liệu mẫu (scripts/gen_seed.py)
 faker>=30
+
+# Demo Chương 5 – MongoDB (nosql/migrate.py, nosql/compare.py)
+pymongo>=4.8
