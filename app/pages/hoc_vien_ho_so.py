@@ -57,7 +57,7 @@ if sel:
                                  b.XepLoai, b.ChuyenCan, d.KetQua
                           FROM vw_DangKyChiTiet d LEFT JOIN vw_BangDiem b ON b.MaDK = d.MaDK
                           WHERE d.MaHV = ? ORDER BY d.NgayKhaiGiang""", [r["MaHV"]])
-        ui.table(lop, {"MaLop": "Lớp", "TenKH": "Khoá học", "NgayKhaiGiang": "Khai giảng", "TrangThaiLop": "Lớp", "TrangThai": "Đăng ký",
+        ui.table(lop, {"MaLop": "Lớp", "TenKH": "Khoá học", "NgayKhaiGiang": "Khai giảng", "TrangThaiLop": "Trạng thái lớp", "TrangThai": "Đăng ký",
                        "DiemGK": "GK", "DiemCK": "CK", "DiemTB": "TB", "XepLoai": "Xếp loại", "ChuyenCan": "Chuyên cần %",
                        "KetQua": "Kết quả"}, key="t_lsh", select=False)
     with t2:
