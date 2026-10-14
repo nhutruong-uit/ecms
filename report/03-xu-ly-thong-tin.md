@@ -98,3 +98,103 @@ Dữ liệu mẫu nhỏ (10 nghìn điểm danh) nên phần cuối `10_queries.
 - P2 lọc ra ~1% bảng nên vẫn đọc 150 trang, nhưng ít hơn quét toàn bộ 40 lần.
 - P3 cho thấy **điều kiện không SARGable** (bọc cột trong hàm `YEAR()`) làm mất khả năng seek dù đã có chỉ mục – quy tắc viết truy vấn nhóm áp dụng cho view báo cáo (T16) và procedure thống kê doanh thu (T11).
 - Thời gian (ms) dao động giữa các lần chạy; logical reads ổn định nên được dùng làm thước đo chính.
+
+## 3.3 Lập trình trên CSDL
+
+### 3.3.2 Hàm do người dùng định nghĩa (function)
+
+File [`database/03_functions.sql`](../database/03_functions.sql) gồm **10 hàm** thuộc đủ 3 loại:
+
+| Hàm | Loại | Tham số → Kết quả | Dùng ở |
+|---|---|---|---|
+| `fn_TinhTuoi` | Vô hướng, `SCHEMABINDING` | (@NgaySinh, @NgayTinh = hôm nay) → INT | CHECK `CK_NHANVIEN_TuoiLaoDong`, báo cáo |
+| `fn_TyLeChuyenCan` | Vô hướng | (@MaDK) → % có mặt (Muộn tính có mặt, Có phép không tính) | View bảng điểm, cursor cảnh báo (T14), web T22 |
+| `fn_XepLoai` | Vô hướng, `SCHEMABINDING` | (@DiemTB) → Xuất sắc / Giỏi / Khá / Trung bình / Yếu | Bảng điểm, báo cáo |
+| `fn_SoTienDaDong` | Vô hướng | (@MaDK) → tổng đã thu | Công nợ, phiếu thu |
+| `fn_SoTienConNo` | Vô hướng | (@MaHV) → tổng còn nợ | Hồ sơ học viên (T21) |
+| `fn_SoChoConLai` | Vô hướng | (@MaLop) → số chỗ trống | Ghi danh (T21) |
+| `fn_LichHocHocVien` | **Inline TVF** | (@MaHV, @Tuan) → lịch tuần chứa ngày @Tuan | Trang học viên |
+| `fn_LopCuaGiaoVien` | Inline TVF | (@MaGV) → các lớp của giáo viên | Giáo viên chỉ thấy lớp mình (T22) |
+| `fn_GoiYKhoaHoc` | Inline TVF | (@Diem, @MaCT = NULL) → khoá phù hợp + số lớp còn chỗ | Kiểm tra đầu vào (T21) |
+| `fn_BangDiemLop` | **Multi-statement TVF** | (@MaLop) → bảng điểm có xếp loại, chuyên cần, thứ hạng, ghi chú | Báo cáo bảng điểm (T24) |
+
+**Ví dụ gọi và kết quả** (dữ liệu mẫu):
+
+```sql
+-- Hàm vô hướng trong SELECT, WHERE, ORDER BY và GROUP BY
+SELECT TOP 3 MaHV, HoTen, dbo.fn_SoTienConNo(MaHV) AS ConNo
+FROM HOCVIEN WHERE dbo.fn_SoTienConNo(MaHV) > 0 ORDER BY ConNo DESC;
+```
+
+| MaHV | HoTen | ConNo |
+|---|---|--:|
+| HV0019 | Nguyễn Thành Khoa | 15 275 000 |
+| HV0162 | Đặng Quang Hưng | 13 500 000 |
+| HV0022 | Bùi Kim Xuân | 9 000 000 |
+
+```sql
+SELECT dbo.fn_XepLoai(DiemTB) AS XepLoai, COUNT(*) AS SoHV
+FROM DANGKY WHERE DiemTB IS NOT NULL GROUP BY dbo.fn_XepLoai(DiemTB);
+```
+
+| Xuất sắc | Giỏi | Khá | Trung bình | Yếu |
+|:-:|:-:|:-:|:-:|:-:|
+| 22 | 55 | 115 | 111 | 41 |
+
+```sql
+SELECT * FROM dbo.fn_GoiYKhoaHoc(5.0, NULL);          -- học viên test được 5.0 điểm
+```
+
+| MaKH | TenKH | Mục tiêu | Học phí | Lớp còn chỗ |
+|---|---|---|--:|:-:|
+| GT2 | Giao tiếp Trung cấp | B1 | 3 500 000 | 1 |
+| IE55 | IELTS 5.5 | IELTS 5.5 | 7 500 000 | 1 |
+| KD2 | Kids Movers | Cambridge Movers | 4 200 000 | 1 |
+| TC650 | TOEIC 650 | TOEIC 650 | 4 500 000 | 1 |
+
+```sql
+SELECT * FROM dbo.fn_LichHocHocVien('HV0004', '2026-10-15');   -- tuần 12–18/10/2026
+```
+
+| NgayHoc | Thu | Ca | Lớp | Phòng | Buổi | Giáo viên |
+|---|---|---|---|---|:-:|---|
+| 2026-10-17 | Thứ 7 | Sáng 1 | IE55-2601 | P101 | 19 | Wilson David |
+| 2026-10-18 | Chủ nhật | Sáng 1 | IE55-2601 | P101 | 20 | Wilson David |
+
+`fn_LichHocHocVien` tính thứ Hai đầu tuần bằng `DATEDIFF(DAY, '19000101', @Tuan) % 7` (01/01/1900 là thứ Hai) nên không phụ thuộc `SET DATEFIRST` / `SET LANGUAGE` của phiên kết nối.
+
+```sql
+SELECT TOP 5 * FROM dbo.fn_BangDiemLop('GT1-2501') ORDER BY Hang;   -- multi-statement TVF
+```
+
+| Hạng | Họ tên | GK | CK | TB | Xếp loại | Chuyên cần | Kết quả |
+|:-:|---|:-:|:-:|:-:|---|:-:|---|
+| 1 | Trần Mai Vân | 10.00 | 10.00 | 10.00 | Xuất sắc | 100.00 | Đạt |
+| 2 | Hoàng Kim Mai | 7.50 | 9.00 | 8.40 | Giỏi | 100.00 | Đạt |
+| 3 | Bùi Minh Chi | 9.00 | 7.75 | 8.25 | Giỏi | 100.00 | Đạt |
+
+Hàm multi-statement cần nhiều bước: nạp biến bảng → cập nhật xếp loại/chuyên cần bằng hàm vô hướng → tính `RANK()` → ghép ghi chú cảnh báo (`CONCAT_WS`). Một câu SELECT duy nhất (inline) khó viết và khó đọc hơn.
+
+**Hàm trong CHECK constraint**
+
+```sql
+ALTER TABLE NHANVIEN ADD CONSTRAINT CK_NHANVIEN_TuoiLaoDong
+    CHECK (dbo.fn_TinhTuoi(NgaySinh, NgayVaoLam) BETWEEN 18 AND 65);
+
+INSERT NHANVIEN (..., NgaySinh, ..., NgayVaoLam) VALUES (..., '1950-01-01', ..., '2026-01-01');
+-- Msg 547: The INSERT statement conflicted with the CHECK constraint "CK_NHANVIEN_TuoiLaoDong".
+```
+
+Khi chạy lại `03_functions.sql`, ràng buộc này được xoá trước rồi tạo lại vì SQL Server không cho `ALTER FUNCTION` khi hàm đang được CHECK tham chiếu.
+
+**So sánh function và stored procedure**
+
+| Tiêu chí | Function | Stored procedure |
+|---|---|---|
+| Giá trị trả về | Bắt buộc: một giá trị vô hướng hoặc một bảng | Tuỳ chọn: tập kết quả, tham số OUTPUT, mã trả về |
+| Dùng trong câu lệnh | Được: `SELECT`, `WHERE`, `JOIN`, `CHECK`, cột tính toán | Không, chỉ `EXEC` |
+| Thay đổi dữ liệu | **Không** (chỉ đọc; chỉ được sửa biến bảng cục bộ) | Được: INSERT / UPDATE / DELETE |
+| Transaction, TRY…CATCH | Không | Có |
+| Gọi hàm / thủ tục khác | Chỉ gọi function | Gọi được cả hai |
+| Hiệu năng | Inline TVF được tối ưu như view; scalar UDF chạy từng dòng (SQL Server 2019+ có thể tự *inline*) | Kế hoạch thực thi được cache |
+| Trong ECMS dùng cho | Tính toán dùng lại: chuyên cần, xếp loại, công nợ, lịch | Nghiệp vụ ghi dữ liệu: ghi danh, thu phí, điểm danh (T11) |
