@@ -631,7 +631,7 @@ Script đã chạy sạch hai lần liên tiếp trên CSDL trống (SQL Server 
 
 ### 2.8.1 Cách sinh
 
-Dữ liệu được sinh bằng [`scripts/gen_seed.py`](../scripts/gen_seed.py) (Python + **Faker `vi_VN`** cho họ tên, đường phố tiếng Việt) rồi ghi ra [`database/02_seed.sql`](../database/02_seed.sql). Script dùng **seed cố định** (`103`) và **ngày tham chiếu cố định** 15/10/2026 thay cho ngày hiện tại, nên chạy lại luôn ra cùng một file – cả nhóm có cùng bộ dữ liệu để so kết quả truy vấn.
+Dữ liệu được sinh bằng [`scripts/gen_seed.py`](../scripts/gen_seed.py) (Python + **Faker `vi_VN`** cho họ, tên, đường phố tiếng Việt – tên lót chọn từ danh sách riêng vì Faker đặt tên trước họ và kèm danh xưng) rồi ghi ra [`database/02_seed.sql`](../database/02_seed.sql). Script dùng **seed cố định** (`103`) và **ngày tham chiếu cố định** 15/10/2026 thay cho ngày hiện tại, nên chạy lại luôn ra cùng một file – cả nhóm có cùng bộ dữ liệu để so kết quả truy vấn.
 
 ```bash
 pip install faker
@@ -654,30 +654,30 @@ Khi nạp, `02_seed.sql` tạm **tắt trigger** (`ALTER TABLE … DISABLE TRIGG
 
 | Bảng | Số dòng | Bảng | Số dòng |
 |---|--:|---|--:|
-| CHINHANH | 3 | HOCVIEN | 350 |
-| NHANVIEN | 20 | KIEMTRA_DAUVAO | 358 |
-| GIAOVIEN | 10 | DANGKY | 566 |
-| CHUNGCHI_GV | 17 | DIEMDANH | 10 803 |
-| PHONGHOC | 12 | PHIEUTHU | 523 |
-| CAHOC | 6 | CT_PHIEUTHU | 530 |
+| CHINHANH | 3 | HOCVIEN | 340 |
+| NHANVIEN | 20 | KIEMTRA_DAUVAO | 348 |
+| GIAOVIEN | 10 | DANGKY | 551 |
+| CHUNGCHI_GV | 15 | DIEMDANH | 10 529 |
+| PHONGHOC | 12 | PHIEUTHU | 513 |
+| CAHOC | 6 | CT_PHIEUTHU | 521 |
 | CHUONGTRINH | 4 | TAIKHOAN | 80 |
 | KHOAHOC | 12 | NGAYLE | 30 |
 | LOPHOC | 25 | BUOIHOC | 598 |
 | LICHHOC | 50 | NHATKY, CANHBAO_CHUYENCAN, BANGLUONG | 0 (sinh bởi trigger / procedure) |
 
-Trạng thái lớp: 16 *Đã kết thúc*, 5 *Đang học*, 4 *Sắp mở*. Doanh thu trải đều 2025 (~1,13 tỷ) và 2026 (~1,19 tỷ) để báo cáo theo tháng/quý có ý nghĩa.
+Trạng thái lớp: 16 *Đã kết thúc*, 5 *Đang học*, 4 *Sắp mở*. Doanh thu trải đều 2025 (~1,13 tỷ) và 2026 (~1,21 tỷ) để báo cáo theo tháng/quý có ý nghĩa.
 
 ### 2.8.3 Trường hợp biên có sẵn
 
 | Trường hợp | Số lượng | Dùng để kiểm thử |
 |---|--:|---|
-| Lớp đã đủ sĩ số | 2 | `sp_DangKyHoc`, trigger chặn lớp đầy (T11, T13) |
-| Đăng ký còn nợ học phí (chưa đóng / đóng một phần) | 67 | Công nợ, tô đỏ nợ quá hạn (T16, T23) |
+| Lớp đã đủ sĩ số | 1 | `sp_DangKyHoc`, trigger chặn lớp đầy (T11, T13) |
+| Đăng ký còn nợ học phí (chưa đóng / đóng một phần) | 55 | Công nợ, tô đỏ nợ quá hạn (T16, T23) |
 | Học viên vắng > 20% | ~15 | `sp_CanhBaoChuyenCan` (T14), trang cảnh báo (T22) |
-| Học viên *Không đạt* | ~50 | Bảng điểm, xếp loại (T12) |
-| Học viên bảo lưu giữa khoá | vài | Sĩ số không tính bảo lưu |
+| Học viên *Không đạt* | 31 | Bảng điểm, xếp loại (T12) |
+| Học viên bảo lưu giữa khoá | 13 | Sĩ số không tính bảo lưu |
 | Học viên học tiếp khoá cấp sau | ~200 | Kiểm tra khoá tiên quyết, CTE đệ quy (T09) |
-| Phiếu thu nhiều dòng | 7 | Master–detail (T23) |
+| Phiếu thu nhiều dòng | 8 | Master–detail (T23) |
 
 ### 2.8.4 Kiểm tra nhất quán
 

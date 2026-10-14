@@ -133,8 +133,15 @@ def ascii_slug(s):
     return "".join(c for c in s if c.isalnum() and ord(c) < 128).lower()
 
 
-def gender_name(male):
-    return fake.name_male() if male else fake.name_female()
+TEN_LOT = {True: ["Văn", "Minh", "Quang", "Đức", "Hoàng", "Thành", "Hữu", "Gia", "Anh", "Tuấn"],
+           False: ["Thị", "Ngọc", "Thu", "Thanh", "Minh", "Bảo", "Kim", "Mai", "Phương", "Khánh"]}
+
+
+def gender_name(male, r=None):
+    """Họ + tên lót + tên theo đúng thứ tự tiếng Việt (Faker vi_VN đặt tên trước họ và có danh xưng)."""
+    r = r or rnd
+    first = fake.first_name_male() if male else fake.first_name_female()
+    return f"{fake.last_name()} {r.choice(TEN_LOT[male])} {first}"
 
 
 # ----------------------------------------------------------------- nhân viên, giáo viên
@@ -309,7 +316,7 @@ def new_student(cn, kids, created):
     age = rnd.randint(6, 13) if kids else rnd.choice([16, 17, 18, 19, 20, 21, 22, 23, 25, 28, 32, 38])
     ns = date(created.year - age, rnd.randint(1, 12), rnd.randint(1, 28))
     email = None if kids or rnd.random() < 0.08 else f"{ascii_slug(ten)}{ascii_slug(ho.split()[-1])}{hv_seq}@gmail.com"
-    ph = f"{fake.last_name()} {fake.first_name()}" if kids else None
+    ph = gender_name(rnd.random() < 0.5) if kids else None
     hv = [f"HV{hv_seq:04d}", ho, ten, ns, "Nam" if male else "Nữ", phone(used_phones), email,
           f"{rnd.randint(1, 450)} {fake.street_name()}", rnd.choice(PHUONG), rnd.choice(QUAN[cn]), "TP. Hồ Chí Minh",
           ph, created, cn, True]
@@ -641,7 +648,7 @@ def write_csv():
 
     def row(i, clean=True):
         male = r2.random() < 0.5
-        ho, ten = split_name(fake.name_male() if male else fake.name_female())
+        ho, ten = split_name(gender_name(male, r2))
         cn = r2.choice(cn_cycle)
         ns = date(r2.randint(1988, 2010), r2.randint(1, 12), r2.randint(1, 28))
         while True:
