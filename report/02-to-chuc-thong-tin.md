@@ -354,3 +354,51 @@ Từ điển dưới đây được sinh trực tiếp từ CSDL sau khi cài đ
 | NguoiDungUD | Tài khoản ứng dụng | NVARCHAR(30) | ✓ |  |
 | ThoiGian | Thời điểm | DATETIME2(3) |  | DEFAULT `(sysdatetime())` |
 
+
+## 2.3 Sơ đồ lớp (Class Diagram – UML)
+
+![Class Diagram](../docs/design/class-diagram.png)
+
+*Hình 2.3 – Class Diagram của ECMS (file nguồn `docs/design/class-diagram.drawio`). Phạm vi truy cập: `+` public, `-` private, `#` protected.*
+
+### 2.3.1 Các lớp chính
+
+| Lớp | Thuộc tính tiêu biểu | Phương thức | Ứng với bảng / đối tượng CSDL |
+|---|---|---|---|
+| «abstract» Nguoi | # ho, # ten, # ngaySinh, # gioiTinh | + hoTen(), + tuoi() | Cột chung của HOCVIEN, NHANVIEN; `Tuoi` computed |
+| HocVien | - maHV, - diaChi : DiaChi | + dangKy(), + congNo(), + lichHoc() | HOCVIEN; `sp_DangKyHoc`, `fn_SoTienConNo`, `fn_LichHocHocVien` |
+| NhanVien | - chucVu, - luongCoBan | + nguoiQuanLy(), + lapPhieuThu() | NHANVIEN; `sp_ThuHocPhi` |
+| GiaoVien | - loaiGV, - donGiaBuoi | + lopDangDay(), + tinhLuong() | GIAOVIEN; `fn_LopCuaGiaoVien`, `sp_TinhLuongGiaoVien` |
+| LopHoc | - maLop, - siSoToiDa | + siSoHienTai(), + siSoConLai(), + xepLich(), + sinhBuoiHoc() | LOPHOC; trigger sĩ số, `sp_XepLichLop`, `sp_SinhBuoiHoc` |
+| DangKy «association class» | - hocPhi, - giamGia, - diemGK, - diemCK | + thanhTien(), + diemTB(), + ketQua(), + tyLeChuyenCan() | DANGKY; computed column, `fn_TyLeChuyenCan` |
+| PhieuThu | - soPhieu, - ngayThu | + tinhTong(), + themDong(), + inPDF() | PHIEUTHU; trigger tổng tiền, báo cáo PDF |
+| KiemTraDauVao | - listening, reading, writing, speaking | + diemTong(), + deXuatKhoa() | KIEMTRA_DAUVAO (XML) |
+
+### 2.3.2 Các loại quan hệ giữa lớp
+
+| Quan hệ | Ký hiệu | Ví dụ trong ECMS | Ý nghĩa |
+|---|---|---|---|
+| **Kế thừa** (generalization) | Tam giác rỗng | Nguoi ← HocVien; Nguoi ← NhanVien ← GiaoVien | GiaoVien *là một* NhanVien, kế thừa họ tên, ngày sinh, phương thức tuoi() |
+| **Thành phần** (composition) | Kim cương đặc | LopHoc ◆— BuoiHoc; PhieuThu ◆— CTPhieuThu; ChiNhanh ◆— PhongHoc; GiaoVien ◆— ChungChi | Bộ phận không tồn tại độc lập: xoá lớp thì xoá buổi học (`ON DELETE CASCADE`) |
+| **Kết tập** (aggregation) | Kim cương rỗng | ChuongTrinh ◇— KhoaHoc | Khoá học thuộc chương trình nhưng vẫn có ý nghĩa riêng; xoá chương trình không xoá khoá (FK không cascade) |
+| **Kết hợp** (association) có bản số | Đường thẳng | GiaoVien 1 — 0..* LopHoc; KhoaHoc 0..1 — 0..* KhoaHoc (tiên quyết) | Liên kết thông thường, có thể đệ quy |
+| **Lớp liên kết** (association class) | Nét đứt nối vào kết hợp | DangKy gắn với kết hợp HocVien 0..* — 0..* LopHoc | Kết hợp N–M có thuộc tính riêng |
+
+## 2.4 So sánh ERD và Class Diagram trên bài toán ECMS
+
+| Tiêu chí | ERD (Chen) | Class Diagram (UML) |
+|---|---|---|
+| Mục đích | Mô hình **dữ liệu** cần lưu trữ, làm cơ sở thiết kế CSDL quan hệ | Mô hình **đối tượng**: dữ liệu + hành vi, cơ sở thiết kế phần mềm hướng đối tượng |
+| Thành phần | Thực thể, thuộc tính, mối kết hợp | Lớp, thuộc tính, **phương thức**, quan hệ |
+| Hành vi | Không thể hiện; nghiệp vụ nằm ở procedure/trigger | `LopHoc.siSoConLai()`, `PhieuThu.tinhTong()` nằm ngay trong lớp |
+| Đóng gói | Không có | Phạm vi truy cập `+ - #` |
+| Thuộc tính phức hợp | Elip con (Địa chỉ → Số nhà, Phường…) | Kiểu dữ liệu riêng `diaChi : DiaChi` |
+| Thuộc tính đa trị | Elip đôi, khi cài đặt phải tách bảng | Thuộc tính kiểu tập hợp hoặc lớp thành phần ChungChi |
+| Thuộc tính suy diễn | Elip nét đứt (Tuổi, Thành tiền) | Phương thức `tuoi()`, `thanhTien()` |
+| Chuyên biệt hoá | ISA, ràng buộc rời nhau / toàn phần | Kế thừa, đa hình (ghi đè phương thức) |
+| Bản số | (min,max) đặt cạnh thực thể | Multiplicity `0..1, 1..*, *` đặt ở đầu kia |
+| Quan hệ toàn thể – bộ phận | Chỉ biểu diễn gián tiếp qua thực thể yếu / quan hệ xác định | Phân biệt rõ composition và aggregation |
+| N–M có thuộc tính | Mối kết hợp có thuộc tính (ĐĂNG KÝ) | Lớp liên kết DangKy |
+| Chuyển sang cài đặt | Gần như 1–1 sang lược đồ quan hệ (mục 2.5) | Sang mã nguồn hoặc CSDL hướng đối tượng (Chương 5) |
+
+**Nhận xét:** hai sơ đồ nhất quán về tập lớp/thực thể và bản số. ERD phù hợp để thiết kế CSDL quan hệ của đồ án; Class Diagram bổ sung góc nhìn hành vi – các phương thức trong sơ đồ được hiện thực trong CSDL dưới dạng function/procedure (Chương 3) và là nền cho lược đồ ODL ở Chương 5.
