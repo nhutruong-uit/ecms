@@ -33,6 +33,14 @@ Khi đổi kế hoạch (thêm task, đổi hạn, đổi người), sửa `task
 6. Vì `develop` không phải nhánh mặc định nên issue không tự đóng: tick checklist, đóng issue kèm link PR, chuyển thẻ Project sang **Done**.
 7. Khi đủ task cho một bản phát hành: PR `develop → main`, CI phải xanh, rồi tạo Release.
 
+### CI (`.github/workflows/ci.yml`)
+
+Chạy khi có PR / push vào `main` (hoặc bấm *Run workflow*): khởi động SQL Server 2022 bằng `docker compose`, dựng CSDL từ đầu bằng `database/run_all.sh`, chạy `database/tests/test_{seed,procedures,triggers,security}.sql` và `10_queries.sql`, rồi smoke test giao diện (`tests/test_app_smoke.py` – mở mọi trang với từng vai trò và sinh mọi báo cáo). Chạy thử trên máy:
+
+```bash
+cd app && pytest ../tests -q
+```
+
 ## Commit đúng tên thành viên
 
 Nhóm uỷ quyền cho Như thực hiện phần code. Để lịch sử git thể hiện đúng phân công, mọi commit của một task được ghi tên người phụ trách task đó:

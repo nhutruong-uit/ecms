@@ -1,5 +1,7 @@
 # ECMS – Hệ thống Quản lý Trung tâm Tiếng Anh
 
+[![CI](https://github.com/nhutruong-uit/ecms/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nhutruong-uit/ecms/actions/workflows/ci.yml)
+
 Đồ án môn **IE103 – Quản lý thông tin** · Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM · **Nhóm 1**
 
 - 📋 **Kế hoạch & phân công chi tiết:** https://nhutruong-uit.github.io/ecms/
