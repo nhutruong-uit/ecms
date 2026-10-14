@@ -1,0 +1,40 @@
+// Quy trình nghiệp vụ trung tâm tiếng Anh ECMS (T02) – nguồn sinh quy-trinh-nghiep-vu.png / .drawio
+digraph G {
+  rankdir=LR; nodesep=0.35; ranksep=0.45; fontname="Arial"; fontsize=12;
+  node [fontname="Arial", fontsize=11, shape=box, style="rounded,filled", fillcolor="#eef2ff", color="#4f46e5", width=1.6];
+  edge [fontname="Arial", fontsize=9, color="#475569"];
+
+  start [label="Khách hàng\nliên hệ", shape=ellipse, fillcolor="#dcfce7", color="#16a34a"];
+  subgraph cluster_tv { label="Tư vấn – Giáo vụ"; style="rounded,dashed"; color="#94a3b8";
+    tuvan [label="1. Tư vấn\nchương trình"];
+    hoso  [label="Lập hồ sơ\nhọc viên"];
+    ktdv  [label="2. Kiểm tra đầu vào\n(4 kỹ năng → XML)"];
+    xeplop [label="3. Đề xuất khoá\n& xếp lớp"];
+    conCho [label="Lớp còn chỗ &\nđủ tiên quyết?", shape=diamond, fillcolor="#fef9c3", color="#ca8a04", width=1.9];
+    ghidanh [label="Ghi danh\n(DANGKY)"];
+    cho [label="Đưa vào danh sách\nchờ / lớp khác", fillcolor="#fee2e2", color="#dc2626"];
+  }
+  subgraph cluster_kt { label="Kế toán"; style="rounded,dashed"; color="#94a3b8";
+    thuphi [label="4. Thu học phí\n(phiếu thu master–detail)"];
+    congno [label="Theo dõi\ncông nợ"];
+  }
+  subgraph cluster_gv { label="Giáo viên"; style="rounded,dashed"; color="#94a3b8";
+    hoc [label="5. Học & điểm danh\ntừng buổi"];
+    canhbao [label="Cảnh báo\nvắng > 20%", fillcolor="#fee2e2", color="#dc2626"];
+    thi [label="6. Thi giữa kỳ /\ncuối kỳ, nhập điểm"];
+  }
+  subgraph cluster_ql { label="Quản lý"; style="rounded,dashed"; color="#94a3b8";
+    capcn [label="7. Cấp chứng nhận\nhoàn thành"];
+    baocao [label="Báo cáo doanh thu,\nsĩ số, chuyên cần"];
+  }
+  end [label="Học viên học tiếp\nkhoá kế tiếp", shape=ellipse, fillcolor="#dcfce7", color="#16a34a"];
+
+  start -> tuvan -> hoso -> ktdv -> xeplop -> conCho;
+  conCho -> ghidanh [label="Có"];
+  conCho -> cho [label="Không"];
+  ghidanh -> thuphi -> hoc -> thi -> capcn -> end;
+  thuphi -> congno [style=dashed, label="còn nợ"];
+  hoc -> canhbao [style=dashed];
+  thi -> baocao [style=dashed];
+  thuphi -> baocao [style=dashed];
+}
