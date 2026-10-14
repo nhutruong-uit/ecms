@@ -398,3 +398,73 @@ Kết quả **17/17 PASS**. `02_seed.sql` chạy lại được khi đã có tri
 | Thông báo lỗi | Chuẩn của SQL Server (tên ràng buộc) | Tự viết, tiếng Việt |
 | Bị vô hiệu khi | `NOCHECK` | `DISABLE TRIGGER` |
 | Nguyên tắc nhóm áp dụng | Dùng CHECK/FK/UNIQUE trước; chỉ dùng trigger khi ràng buộc vượt quá một dòng | |
+
+### 3.3.4 Cursor
+
+File [`database/07_cursors.sql`](../database/07_cursors.sql) gồm 3 procedure dùng cursor cho các nghiệp vụ cần xử lý tuần tự, kèm 2 phiên bản set-based để đối chiếu:
+
+| Procedure | Cursor | Loại cursor | Nghiệp vụ |
+|---|---|---|---|
+| `sp_SinhBuoiHoc` (@MaLop, @SinhLai, @SoBuoiTao OUTPUT) | `cur_Lich` – các dòng LICHHOC trùng thứ của ngày đang xét | `LOCAL FAST_FORWARD` | Duyệt từng ngày từ ngày khai giảng, bỏ ngày lễ, sinh BUOIHOC tới đủ số buổi của khoá; cập nhật ngày kết thúc lớp. Chặn sinh lại khi lớp đã điểm danh |
+| `sp_TinhLuongGiaoVien` (@Thang) | `cur_GV` – giáo viên đang làm | `LOCAL STATIC READ_ONLY` | Đếm buổi *Đã dạy* trong tháng × đơn giá + lương cơ bản → UPSERT BANGLUONG |
+| `sp_CanhBaoChuyenCan` (@NguongVang = 20, @SoBuoiToiThieu = 4, @MaLop, @SoCanhBao OUTPUT) | `cur_DK` – đăng ký đang học | `LOCAL FAST_FORWARD` | Tính tỷ lệ vắng; > ngưỡng thì ghi CANHBAO_CHUYENCAN (> 30% *Nghiêm trọng*) |
+| `sp_TinhLuongGiaoVien_SetBased`, `sp_CanhBaoChuyenCan_SetBased` | – | – | Cùng kết quả bằng một câu `MERGE` / `INSERT … SELECT … GROUP BY` |
+
+**Vòng đời cursor** (trích `sp_SinhBuoiHoc`):
+
+```sql
+DECLARE cur_Lich CURSOR LOCAL FAST_FORWARD FOR            -- 1. DECLARE: định nghĩa câu SELECT
+    SELECT MaCa, MaPhong FROM dbo.LICHHOC WHERE MaLop = @MaLop AND Thu = @Thu ORDER BY MaCa;
+OPEN cur_Lich;                                             -- 2. OPEN: thực thi, tạo tập kết quả
+FETCH NEXT FROM cur_Lich INTO @MaCa, @MaPhong;             -- 3. FETCH: lấy từng dòng vào biến
+WHILE @@FETCH_STATUS = 0 AND @STT < @SoBuoi                --    0 = lấy được; -1 = hết dòng; -2 = dòng đã bị xoá
+BEGIN
+    SET @STT += 1;
+    INSERT dbo.BUOIHOC (...) VALUES (@MaLop, @STT, @Ngay, @MaCa, @MaPhong, ...);
+    FETCH NEXT FROM cur_Lich INTO @MaCa, @MaPhong;
+END
+CLOSE cur_Lich;                                            -- 4. CLOSE: giải phóng tập kết quả, khoá
+DEALLOCATE cur_Lich;                                       -- 5. DEALLOCATE: huỷ định nghĩa cursor
+```
+
+`LOCAL` giới hạn cursor trong procedure (không đụng tên với phiên khác); khối `CATCH` kiểm tra `CURSOR_STATUS` để `DEALLOCATE` khi lỗi xảy ra giữa chừng.
+
+**Kết quả chạy**
+
+`sp_SinhBuoiHoc 'IE65-2601', 1` sinh **30 buổi**, ngày kết thúc 07/02/2027 – trùng khớp 100% với lịch trong dữ liệu mẫu (0 buổi khác). Gọi cho lớp IE55-2602 đã điểm danh: `50083 Lớp đã điểm danh, không thể sinh lại buổi học.`
+
+`sp_TinhLuongGiaoVien '2026-09'` (trích):
+
+| Giáo viên | Buổi dạy | Đơn giá | Lương cơ bản | Tổng lương |
+|---|:-:|--:|--:|--:|
+| Wilson David | 8 | 700 000 | 7 000 000 | 12 600 000 |
+| Smith John | 8 | 800 000 | 6 000 000 | 12 400 000 |
+| Lê Thanh Yến | 8 | 450 000 | 7 500 000 | 11 100 000 |
+| Bùi Đức Nhiên | 0 | 400 000 | 8 000 000 | 8 000 000 |
+
+`sp_CanhBaoChuyenCan @NguongVang = 15` → 11 cảnh báo, đầu danh sách:
+
+| Học viên | Lớp | Đã học | Vắng | Tỷ lệ vắng | Mức độ |
+|---|---|:-:|:-:|--:|---|
+| Phạm Khánh Duyên | TC650-2601 | 16 | 7 | 43,75% | Nghiêm trọng |
+| Trần Phương Dương | KD2-2601 | 13 | 3 | 23,08% | Nhắc nhở |
+| Vũ Minh Châu | KD2-2601 | 10 | 2 | 20,00% | Nhắc nhở |
+
+**Các loại cursor** – [`database/tests/bench_cursor.sql`](../database/tests/bench_cursor.sql) mở cursor trên bảng 3 dòng, đọc dòng 1, rồi **sửa dòng 2** và **thêm dòng 4** trong khi cursor đang mở:
+
+| Loại | Thấy dòng bị sửa | Thấy dòng mới | Duyệt được | Đặc điểm |
+|---|:-:|:-:|---|---|
+| `STATIC` | Không | Không | 1:10 2:20 3:30 | Chụp toàn bộ kết quả vào tempdb lúc OPEN; cuộn tới/lui được; không cập nhật được |
+| `KEYSET` | Có | Không | 1:10 **2:999** 3:30 | Lưu tập *khoá* lúc OPEN, đọc giá trị mới nhất theo khoá |
+| `DYNAMIC` | Có | Có | 1:10 **2:999** 3:30 **4:40** | Đánh giá lại mỗi lần FETCH, tốn nhất |
+| `FAST_FORWARD` | Có | Có | 1:10 2:999 3:30 4:40 | Chỉ tiến, chỉ đọc, tối ưu nhất – mặc định nên dùng |
+
+**So sánh thời gian cursor và set-based** (trung bình 20 lần, mỗi lần trong transaction rồi rollback, SQL Server 2025 Docker):
+
+| Bài toán | Cursor (ms) | Set-based (ms) | Cursor chậm hơn | Kết quả giống nhau |
+|---|--:|--:|--:|:-:|
+| Cảnh báo chuyên cần (toàn bộ đăng ký đang học) | 13,25 | 5,94 | 2,2 lần | ✔ |
+| Bảng lương 12 tháng năm 2025 (tổng 1 000 400 000 đ) | 47,98 | 11,51 | 4,2 lần | ✔ |
+| Sinh 30 buổi học (lớp IE65-2601) | 10,50 | 4,77 | 2,2 lần | ✔ (cùng ngày kết thúc) |
+
+**Nhận xét.** Set-based nhanh hơn 2–4 lần ngay trên dữ liệu nhỏ, và khoảng cách tăng theo số dòng vì cursor thực hiện một truy vấn con cho *mỗi* dòng (10 giáo viên × 12 tháng = 120 lần đếm buổi) trong khi set-based để optimizer gộp thành một kế hoạch. Cursor vẫn hợp lý khi logic phụ thuộc kết quả bước trước (sinh buổi học: số thứ tự và điều kiện dừng phụ thuộc số buổi đã sinh, dễ đọc hơn hẳn câu CTE dùng bảng số), khi cần gọi procedure cho từng dòng, hoặc xử lý theo lô nhỏ để tránh khoá lâu. Nguyên tắc nhóm áp dụng: **mặc định set-based, chỉ dùng cursor `LOCAL FAST_FORWARD` khi bài toán thật sự tuần tự**.
