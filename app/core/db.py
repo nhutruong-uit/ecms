@@ -39,10 +39,36 @@ def _friendly(err: pyodbc.Error) -> DbError:
     return DbError(raw)
 
 
-def connect() -> pyodbc.Connection:
-    """Mở kết nối mới (ODBC tự quản lý connection pool)."""
+def _session_context() -> dict:
+    """Ngữ cảnh người dùng đang đăng nhập (đặt vào SESSION_CONTEXT của kết nối).
+
+    - app_user: tài khoản ứng dụng → trigger ghi vào NHATKY.NguoiDungUD
+    - ma_cn: phạm vi chi nhánh → vw_HocVien_ChiNhanh lọc dòng ('ALL' = mọi chi nhánh)
+    """
     try:
-        return pyodbc.connect(DB.connection_string, timeout=5, autocommit=False)
+        import streamlit as st
+        user = st.session_state.get("user")
+    except Exception:          # chạy ngoài Streamlit (script, test)
+        user = None
+    if not user:
+        return {}
+    return {"app_user": user["username"], "ma_cn": user["pham_vi_cn"], "vai_tro": user["role"],
+            "ma_nv": user.get("ma_nv"), "ma_hv": user.get("ma_hv")}
+
+
+def connect() -> pyodbc.Connection:
+    """Mở kết nối mới (ODBC tự quản lý connection pool) và đặt SESSION_CONTEXT của người dùng.
+
+    Khi kết nối được trả về pool, sp_reset_connection xoá SESSION_CONTEXT, nên mỗi lần mở đều đặt lại.
+    """
+    try:
+        conn = pyodbc.connect(DB.connection_string, timeout=5, autocommit=False)
+        ctx = {k: v for k, v in _session_context().items() if v is not None}
+        if ctx:
+            cur = conn.cursor()
+            for k, v in ctx.items():
+                cur.execute("EXEC sp_set_session_context @key = ?, @value = ?", k, v)
+        return conn
     except pyodbc.Error as e:
         raise _friendly(e) from e
 
