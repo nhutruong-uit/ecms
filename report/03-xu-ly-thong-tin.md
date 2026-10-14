@@ -162,6 +162,79 @@ Chênh lệch tăng theo kích thước dữ liệu vì indexed view chỉ lưu 
 
 ## 3.3 Lập trình trên CSDL
 
+### 3.3.1 Stored procedure và transaction
+
+File [`database/05_procedures.sql`](../database/05_procedures.sql) đóng gói các nghiệp vụ ghi dữ liệu. Ứng dụng web chỉ được `EXECUTE` procedure (T15) nên mọi kiểm tra nghiệp vụ nằm tại CSDL, không thể bị bỏ qua từ phía giao diện.
+
+| Procedure | Tham số vào | OUTPUT | Transaction | Kiểm tra chính |
+|---|---|---|:-:|---|
+| `sp_DangKyHoc` | @MaHV, @MaLop, @GiamGia | @MaDK | ✔ | Học viên tồn tại, lớp đang mở, không trùng, **còn chỗ** (khoá dòng `UPDLOCK, HOLDLOCK`), **tiên quyết** (đã Đạt khoá trước hoặc test đầu vào đủ điểm) |
+| `sp_ThuHocPhi` | @MaHV, @MaNV, @HinhThuc, **@ChiTiet (JSON)**, @GhiChu | @MaPT, @TongTien | ✔ | Master–detail: đăng ký thuộc học viên, không thu vượt nợ, người lập là kế toán/quản lý |
+| `sp_XepLichLop` / `sp_XoaLichLop` | @MaLop, @Thu, @MaCa, @MaPhong | – | | Phòng thuộc chi nhánh, đủ sức chứa, **trùng phòng**, **trùng giáo viên** trong khoảng thời gian giao nhau |
+| `sp_DiemDanhBuoi` | @MaLop, @STT, **@DanhSach (JSON)** | – | ✔ | Điểm danh cả lớp một lần lưu bằng `MERGE`; buổi đã tới ngày; học viên thuộc lớp |
+| `sp_NhapDiem` | @MaLop, @DanhSach (JSON) | @SoDong | ✔ | Điểm 0–10, học viên đang học |
+| `sp_ChuyenLop` | @MaDK, @MaLopMoi | @MaDKMoi | ✔ | Cùng khoá, lớp mới còn chỗ; 3 bước: đánh dấu ĐK cũ → tạo ĐK mới → chuyển khoản đã đóng |
+| `sp_ThongKeDoanhThu` | @TuNgay, @DenNgay, @MaCN | @TongDoanhThu | | Trả bảng chi nhánh × tháng + tổng qua OUTPUT |
+| `sp_TimKiemHocVien` | @TuKhoa, @MaCN, @MaKH, @ConNo, @Trang, @SoDongTrang | @TongSo | | Tiêu chí tuỳ chọn, phân trang `OFFSET … FETCH`, tự lọc chi nhánh qua `vw_HocVien_ChiNhanh` |
+
+Tổng cộng **9 procedure**, 7 procedure có tham số OUTPUT, **5 procedure dùng transaction**.
+
+**Mẫu transaction dùng chung** – procedure tự mở transaction khi được gọi độc lập, nhưng nếu người gọi đã có transaction thì chỉ đặt *savepoint*, lỗi xảy ra chỉ rollback phần của mình:
+
+```sql
+DECLARE @tc INT = @@TRANCOUNT;
+IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_DangKyHoc;
+BEGIN TRY
+    ...  -- kiểm tra, THROW 5000x với thông báo tiếng Việt
+    INSERT dbo.DANGKY (...) ...;
+    SET @MaDK = SCOPE_IDENTITY();
+    IF @tc = 0 COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF XACT_STATE() = -1 OR (XACT_STATE() = 1 AND @tc = 0) ROLLBACK TRANSACTION;   -- transaction hỏng / của mình
+    ELSE IF XACT_STATE() = 1 ROLLBACK TRANSACTION sp_DangKyHoc;                   -- chỉ về savepoint
+    THROW;                                                                          -- trả lỗi gốc cho ứng dụng
+END CATCH
+```
+
+**Tại sao khoá `UPDLOCK, HOLDLOCK` khi đọc sĩ số?** Nếu hai giáo vụ cùng ghi danh vào chỗ cuối cùng, cả hai cùng đọc "còn 1 chỗ" rồi cùng INSERT → lớp vượt sĩ số. `UPDLOCK` giữ khoá cập nhật trên dòng LOPHOC tới hết transaction nên phiên thứ hai phải chờ, đọc lại thấy lớp đã đầy và nhận lỗi 50004. Trigger ở T13 là lớp bảo vệ thứ hai.
+
+**Truyền danh sách bằng JSON.** `sp_ThuHocPhi`, `sp_DiemDanhBuoi`, `sp_NhapDiem` nhận cả danh sách trong một tham số `NVARCHAR(MAX)` dạng JSON và tách bằng `OPENJSON … WITH (...)`. So với table-valued parameter, JSON gọi được trực tiếp từ pyodbc / sqlcmd mà không cần tạo kiểu bảng, vẫn xử lý theo tập hợp trong một transaction (một lần lưu cho cả lớp).
+
+**SQL tĩnh thay cho SQL động** trong `sp_TimKiemHocVien`: điều kiện dạng `(@x IS NULL OR cot = @x)` kèm `OPTION (RECOMPILE)` để mỗi lần chạy được tối ưu theo tham số thực. Không ghép chuỗi SQL nên không có nguy cơ SQL injection, và ownership chaining giữ nguyên – tài khoản ứng dụng không cần quyền trên bảng.
+
+**Kiểm thử** – [`database/tests/test_procedures.sql`](../database/tests/test_procedures.sql) chạy 25 ca trong một transaction rồi `ROLLBACK` (kết quả ghi vào biến bảng vì biến bảng không bị rollback huỷ):
+
+| Procedure | Ca kiểm thử | Mong đợi | Thực tế |
+|---|---|---|---|
+| sp_DangKyHoc | Ghi danh hợp lệ vào KD2-2601 | OK | OK MaDK=569 ✔ |
+| | Đăng ký trùng | 50003 | 50003 Học viên đã đăng ký lớp này. ✔ |
+| | Lớp IE55-2602 đã đủ sĩ số | 50004 | 50004 Lớp đã đủ sĩ số. ✔ |
+| | Thiếu khoá tiên quyết (GT3-2601) | 50005 | 50005 Chưa đủ điều kiện: cần Đạt khoá GT2 hoặc điểm kiểm tra đầu vào từ 6.5 trở lên. ✔ |
+| | Lớp đã kết thúc | 50002 | 50002 Lớp đã kết thúc hoặc đã huỷ, không nhận ghi danh. ✔ |
+| | Học viên không tồn tại | 50001 | 50001 ✔ |
+| sp_ThuHocPhi | Thu một phần 1 000 000 | OK | OK MaPT=524 ✔ |
+| | Thu phần còn lại (không ghi số tiền) | OK | OK Tong=2 990 000 ✔ |
+| | Thu vượt số còn nợ | 50014 | 50014 ✔ |
+| | Đăng ký của học viên khác | 50012 | 50012 ✔ |
+| | Giáo vụ lập phiếu | 50011 | 50011 Chỉ kế toán hoặc quản lý được lập phiếu thu. ✔ |
+| sp_XepLichLop | Thêm lịch phòng trống | OK | OK ✔ |
+| | Trùng lịch với GT3-2601 | 5002x | 50025 Trùng phòng P101 với lớp GT3-2601. ✔ |
+| | Phòng không thuộc chi nhánh | 50022 | 50022 ✔ |
+| sp_DiemDanhBuoi | Điểm danh cả lớp TC650-2601 buổi 17 | OK | OK 27 dòng ✔ |
+| | Buổi chưa tới | 50031 | 50031 ✔ |
+| | Học viên lớp khác | 50033 | 50033 ✔ |
+| sp_NhapDiem | Nhập điểm GK cả lớp | OK | OK 27 học viên ✔ |
+| | Điểm 11 | 50042 | 50042 Điểm phải nằm trong khoảng 0 – 10. ✔ |
+| sp_ChuyenLop | Chuyển ĐK 387 sang IE55-2601 | OK | OK, tiền đã đóng chuyển theo 6 750 000/6 750 000 ✔ |
+| | Sang lớp khác khoá | 50053 | 50053 ✔ |
+| sp_ThongKeDoanhThu | Năm 2025 | OK | 15 dòng, tổng 1 082 090 000 = tổng chi tiết ✔ |
+| | Khoảng ngày ngược | 50060 | 50060 ✔ |
+| sp_TimKiemHocVien | "Nguyễn", trang 2, 10 dòng/trang | OK | tổng 35, trang này 10 dòng ✔ |
+| | Trang 0 | 50061 | 50061 ✔ |
+
+Kết quả: **25/25 PASS**; sau khi chạy, dữ liệu mẫu giữ nguyên (`test_seed.sql` vẫn 0 lỗi). Giá trị IDENTITY đã cấp trong transaction bị rollback không được trả lại nên MaDK/MaPT tiếp theo có khoảng trống – đây là hành vi bình thường của SQL Server.
+
 ### 3.3.2 Hàm do người dùng định nghĩa (function)
 
 File [`database/03_functions.sql`](../database/03_functions.sql) gồm **10 hàm** thuộc đủ 3 loại:
