@@ -218,6 +218,10 @@ BEGIN
     DECLARE @tc INT = @@TRANCOUNT;
     IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_DiemDanhBuoi;
     BEGIN TRY
+        -- Giáo viên đăng nhập web chỉ được thao tác trên lớp mình phụ trách (SESSION_CONTEXT do ứng dụng đặt – T19)
+        IF CAST(SESSION_CONTEXT(N'vai_tro') AS VARCHAR(10)) = 'GiaoVien'
+           AND NOT EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaLop = @MaLop AND MaGV = CAST(SESSION_CONTEXT(N'ma_nv') AS CHAR(6)))
+            THROW 50035, N'Giáo viên chỉ được thao tác trên lớp mình phụ trách.', 1;
         DECLARE @Ngay DATE = (SELECT NgayHoc FROM dbo.BUOIHOC WHERE MaLop = @MaLop AND STT = @STT);
         IF @Ngay IS NULL THROW 50030, N'Buổi học không tồn tại.', 1;
         IF @Ngay > CAST(GETDATE() AS DATE) THROW 50031, N'Chưa tới ngày học, không thể điểm danh.', 1;
@@ -265,6 +269,10 @@ BEGIN
     DECLARE @tc INT = @@TRANCOUNT;
     IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_NhapDiem;
     BEGIN TRY
+        -- Giáo viên đăng nhập web chỉ được thao tác trên lớp mình phụ trách (SESSION_CONTEXT do ứng dụng đặt – T19)
+        IF CAST(SESSION_CONTEXT(N'vai_tro') AS VARCHAR(10)) = 'GiaoVien'
+           AND NOT EXISTS (SELECT 1 FROM dbo.LOPHOC WHERE MaLop = @MaLop AND MaGV = CAST(SESSION_CONTEXT(N'ma_nv') AS CHAR(6)))
+            THROW 50043, N'Giáo viên chỉ được thao tác trên lớp mình phụ trách.', 1;
         IF ISJSON(@DanhSach) <> 1 THROW 50040, N'Danh sách điểm không hợp lệ.', 1;
         DECLARE @DS TABLE (MaDK INT PRIMARY KEY, DiemGK DECIMAL(4,2), DiemCK DECIMAL(4,2));
         INSERT @DS SELECT MaDK, DiemGK, DiemCK
@@ -780,6 +788,18 @@ BEGIN
         THROW 50165, N'Học viên đã đi học – dùng chức năng bảo lưu / chuyển lớp thay vì huỷ.', 1;
     UPDATE dbo.DANGKY SET TrangThai = N'Huỷ' WHERE MaDK = @MaDK AND TrangThai = N'Đang học';
     IF @@ROWCOUNT = 0 THROW 50166, N'Chỉ huỷ được đăng ký đang học.', 1;
+END
+GO
+
+/* =====================================================================
+   HỌC TẬP – xử lý cảnh báo chuyên cần (T22)
+   ===================================================================== */
+CREATE OR ALTER PROCEDURE dbo.sp_XuLyCanhBao @MaCB INT, @DaXuLy BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.CANHBAO_CHUYENCAN SET DaXuLy = @DaXuLy WHERE MaCB = @MaCB;
+    IF @@ROWCOUNT = 0 THROW 50036, N'Cảnh báo không tồn tại.', 1;
 END
 GO
 
