@@ -556,10 +556,15 @@ for hv in HOCVIEN[:60]:
     TAIKHOAN.append([hv[0].lower(), "Hocvien@2026", "HocVien", None, hv[0]])
 # tài khoản demo dễ nhớ
 DEMO = {"QuanLy": "quanly", "GiaoVu": "giaovu", "KeToan": "ketoan", "GiaoVien": "giaovien"}
+# giáo viên demo: người đang dạy lớp ở CN01 (để demo điểm danh / nhập điểm); học viên demo: đang học một lớp
+gv_dang_day = next(l[4] for l in LOPHOC if l[9] == "Đang học" and l[3] == "CN01")
+hv_dang_hoc = next(d["MaHV"] for d in DANGKY if d["TrangThai"] == "Đang học" and LOP[d["MaLop"]][9] == "Đang học")
 for role, name in DEMO.items():
-    nv = next(t for t in TAIKHOAN if t[2] == role)
+    nv = next(t for t in TAIKHOAN if t[2] == role and (role != "GiaoVien" or t[3] == gv_dang_day))
     nv[0] = name
-next(t for t in TAIKHOAN if t[2] == "HocVien")[0] = "hocvien"
+if not any(t[4] == hv_dang_hoc for t in TAIKHOAN):
+    TAIKHOAN.append([hv_dang_hoc.lower(), "Hocvien@2026", "HocVien", None, hv_dang_hoc])
+next(t for t in TAIKHOAN if t[4] == hv_dang_hoc)[0] = "hocvien"
 
 
 # ----------------------------------------------------------------- ghi file SQL

@@ -229,5 +229,22 @@ SELECT b.MaLop, l.TenLop, l.MaCN, l.MaGV, b.STT, b.NgayHoc,
 FROM dbo.BUOIHOC b JOIN dbo.LOPHOC l ON l.MaLop = b.MaLop JOIN dbo.CAHOC c ON c.MaCa = b.MaCa;
 GO
 
-PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo.';
+/* ---------------------------------------------------------------------
+   5. VIEW PHÂN HỆ HỌC TẬP cho ứng dụng web (T22)
+   --------------------------------------------------------------------- */
+CREATE OR ALTER VIEW dbo.vw_DiemDanh
+AS
+SELECT dd.MaDK, dd.MaLop, dd.STT, d.MaHV, h.HoTen, dd.TrangThai, dd.GhiChu
+FROM dbo.DIEMDANH dd JOIN dbo.DANGKY d ON d.MaDK = dd.MaDK JOIN dbo.HOCVIEN h ON h.MaHV = d.MaHV;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_CanhBao
+AS
+SELECT c.MaCB, c.MaDK, d.MaHV, h.HoTen, h.SoDienThoai, h.HoTenPhuHuynh, d.MaLop, l.MaGV, l.MaCN, c.NgayCanhBao,
+       c.SoBuoiDaHoc, c.SoBuoiVang, c.TyLeVang, c.MucDo, c.DaXuLy
+FROM dbo.CANHBAO_CHUYENCAN c JOIN dbo.DANGKY d ON d.MaDK = c.MaDK
+JOIN dbo.HOCVIEN h ON h.MaHV = d.MaHV JOIN dbo.LOPHOC l ON l.MaLop = d.MaLop;
+GO
+
+PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo, 2 view học tập.';
 GO
