@@ -133,9 +133,22 @@ BEGIN
 END
 GO
 
+-- Các kỹ năng của một bài kiểm tra, tách bằng .nodes() (trang Kiểm tra đầu vào – T21)
+CREATE OR ALTER FUNCTION dbo.fn_KyNangKiemTra (@MaKT INT)
+RETURNS TABLE
+AS
+RETURN
+    SELECT kn.n.value('@Ten', 'VARCHAR(10)') AS KyNang,
+           kn.n.value('@Diem', 'DECIMAL(3,1)') AS Diem,
+           kn.n.value('(NhanXet)[1]', 'NVARCHAR(200)') AS NhanXet
+    FROM dbo.KIEMTRA_DAUVAO t CROSS APPLY t.KetQuaChiTiet.nodes('/KetQua/KyNang') AS kn(n)
+    WHERE t.MaKT = @MaKT;
+GO
+
 -- 08_security.sql chạy trước file này nên cấp quyền cho ứng dụng tại đây
 GRANT SELECT ON dbo.vw_KiemTraChiTiet TO r_App;
 GRANT EXECUTE ON dbo.sp_GhiKetQuaKiemTra TO r_App;
+GRANT SELECT ON dbo.fn_KyNangKiemTra TO r_App;
 GRANT SELECT ON dbo.vw_KiemTraChiTiet TO r_GiaoVu;
 GRANT EXECUTE ON dbo.sp_GhiKetQuaKiemTra TO r_GiaoVu;
 GO
