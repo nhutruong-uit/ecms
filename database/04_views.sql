@@ -186,5 +186,48 @@ SELECT cc.MaGV, nv.HoTen, cc.TenChungChi, cc.Diem, cc.NgayCap, cc.NoiCap
 FROM dbo.CHUNGCHI_GV cc JOIN dbo.NHANVIEN nv ON nv.MaNV = cc.MaGV;
 GO
 
-PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục.';
+/* ---------------------------------------------------------------------
+   4. VIEW PHÂN HỆ ĐÀO TẠO cho ứng dụng web (T20)
+   --------------------------------------------------------------------- */
+CREATE OR ALTER VIEW dbo.vw_DM_ChuongTrinh
+AS
+SELECT ct.MaCT, ct.TenCT, ct.DoiTuong, ct.MoTa,
+       (SELECT COUNT(*) FROM dbo.KHOAHOC k WHERE k.MaCT = ct.MaCT) AS SoKhoaHoc,
+       (SELECT COUNT(*) FROM dbo.LOPHOC l JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH
+        WHERE k.MaCT = ct.MaCT AND l.TrangThai IN (N'Sắp mở', N'Đang học')) AS SoLopDangMo
+FROM dbo.CHUONGTRINH ct;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_DM_KhoaHoc
+AS
+SELECT k.MaKH, k.TenKH, k.MaCT, ct.TenCT, k.CapDo, k.DiemDauVaoTu, k.DiemDauVaoDen, k.MucTieuDauRa, k.SoBuoi, k.HocPhi,
+       k.MaKHTienQuyet, tq.TenKH AS KhoaTienQuyet,
+       (SELECT COUNT(*) FROM dbo.LOPHOC l WHERE l.MaKH = k.MaKH) AS SoLop
+FROM dbo.KHOAHOC k
+JOIN dbo.CHUONGTRINH ct ON ct.MaCT = k.MaCT
+LEFT JOIN dbo.KHOAHOC tq ON tq.MaKH = k.MaKHTienQuyet;
+GO
+
+-- Lịch cố định của lớp (thứ – ca – phòng)
+CREATE OR ALTER VIEW dbo.vw_LichHoc
+AS
+SELECT lh.MaLop, l.TenLop, l.MaCN, l.MaGV, lh.Thu,
+       CASE lh.Thu WHEN 8 THEN N'Chủ nhật' ELSE N'Thứ ' + CAST(lh.Thu AS NVARCHAR(1)) END AS TenThu,
+       lh.MaCa, c.TenCa, c.GioBatDau, c.GioKetThuc, lh.MaPhong, l.NgayKhaiGiang, l.NgayKetThuc, l.TrangThai
+FROM dbo.LICHHOC lh JOIN dbo.LOPHOC l ON l.MaLop = lh.MaLop JOIN dbo.CAHOC c ON c.MaCa = lh.MaCa;
+GO
+
+-- Buổi học cụ thể kèm số học viên đã điểm danh
+CREATE OR ALTER VIEW dbo.vw_BuoiHoc
+AS
+SELECT b.MaLop, l.TenLop, l.MaCN, l.MaGV, b.STT, b.NgayHoc,
+       CASE DATEDIFF(DAY, '19000101', b.NgayHoc) % 7 WHEN 6 THEN N'Chủ nhật'
+            ELSE N'Thứ ' + CAST(DATEDIFF(DAY, '19000101', b.NgayHoc) % 7 + 2 AS NVARCHAR(1)) END AS Thu,
+       b.MaCa, c.TenCa, c.GioBatDau, c.GioKetThuc, b.MaPhong, b.NoiDung, b.TrangThai,
+       (SELECT COUNT(*) FROM dbo.DIEMDANH d WHERE d.MaLop = b.MaLop AND d.STT = b.STT) AS SoDaDiemDanh,
+       (SELECT COUNT(*) FROM dbo.DIEMDANH d WHERE d.MaLop = b.MaLop AND d.STT = b.STT AND d.TrangThai = N'Vắng') AS SoVang
+FROM dbo.BUOIHOC b JOIN dbo.LOPHOC l ON l.MaLop = b.MaLop JOIN dbo.CAHOC c ON c.MaCa = b.MaCa;
+GO
+
+PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo.';
 GO
