@@ -246,5 +246,30 @@ FROM dbo.CANHBAO_CHUYENCAN c JOIN dbo.DANGKY d ON d.MaDK = c.MaDK
 JOIN dbo.HOCVIEN h ON h.MaHV = d.MaHV JOIN dbo.LOPHOC l ON l.MaLop = d.MaLop;
 GO
 
-PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo, 2 view học tập.';
+/* ---------------------------------------------------------------------
+   6. VIEW PHÂN HỆ TÀI CHÍNH cho ứng dụng web (T23)
+   --------------------------------------------------------------------- */
+CREATE OR ALTER VIEW dbo.vw_PhieuThu
+AS
+SELECT p.MaPT, p.SoPhieu, p.NgayThu, p.HinhThuc, p.TongTien, p.GhiChu, p.MaHV, h.HoTen AS HoTenHV, h.SoDienThoai,
+       CONCAT_WS(N', ', h.SoNha, h.PhuongXa, h.QuanHuyen, h.TinhTP) AS DiaChiHV, h.MaCN,
+       p.MaNV, nv.HoTen AS NguoiLap, cn.TenCN, cn.DiaChi AS DiaChiCN, cn.SoDienThoai AS DienThoaiCN,
+       (SELECT COUNT(*) FROM dbo.CT_PHIEUTHU c WHERE c.MaPT = p.MaPT) AS SoDong
+FROM dbo.PHIEUTHU p
+JOIN dbo.HOCVIEN h   ON h.MaHV = p.MaHV
+JOIN dbo.NHANVIEN nv ON nv.MaNV = p.MaNV
+JOIN dbo.CHINHANH cn ON cn.MaCN = nv.MaCN;
+GO
+
+CREATE OR ALTER VIEW dbo.vw_CTPhieuThu
+AS
+SELECT c.MaPT, c.MaDK, d.MaLop, k.TenKH, d.HocPhi, d.GiamGia, d.ThanhTien, c.SoTien,
+       dbo.fn_SoTienDaDong(d.MaDK) AS DaThuTong, d.ThanhTien - dbo.fn_SoTienDaDong(d.MaDK) AS ConNo
+FROM dbo.CT_PHIEUTHU c
+JOIN dbo.DANGKY d  ON d.MaDK = c.MaDK
+JOIN dbo.LOPHOC l  ON l.MaLop = d.MaLop
+JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH;
+GO
+
+PRINT N'✓ 04_views.sql: 3 view bảo mật, 6 view nghiệp vụ (1 indexed view, 1 WITH CHECK OPTION), 5 view danh mục, 4 view đào tạo, 2 view học tập, 2 view tài chính.';
 GO
