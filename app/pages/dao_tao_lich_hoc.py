@@ -12,7 +12,7 @@ ui.header("🗓️ Xếp lịch & buổi học")
 ui.show_flash()
 
 THU = {2: "Thứ 2", 3: "Thứ 3", 4: "Thứ 4", 5: "Thứ 5", 6: "Thứ 6", 7: "Thứ 7", 8: "Chủ nhật"}
-tab_lop, tab_tuan = st.tabs(["Lịch của một lớp", "Lịch tuần toàn chi nhánh"])
+tab_lop, tab_tuan = st.tabs(["Lịch của một lớp", "Lịch tuần toàn chi nhánh"], key="tabs", on_change="rerun")
 
 def lich_cua_lop():
     cn = None if user["pham_vi_cn"] == "ALL" else user["ma_cn"]

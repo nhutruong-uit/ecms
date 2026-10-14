@@ -730,5 +730,58 @@ BEGIN
 END
 GO
 
+/* =====================================================================
+   HỌC VIÊN – hồ sơ cho ứng dụng web (T21)   (lỗi 5016x)
+   ===================================================================== */
+CREATE OR ALTER PROCEDURE dbo.sp_LuuHocVien
+    @MaHV CHAR(6) = NULL, @HoHV NVARCHAR(50), @TenHV NVARCHAR(20), @NgaySinh DATE, @GioiTinh NVARCHAR(3),
+    @SoDienThoai VARCHAR(15), @Email VARCHAR(100) = NULL, @SoNha NVARCHAR(100) = NULL, @PhuongXa NVARCHAR(50) = NULL,
+    @QuanHuyen NVARCHAR(50) = NULL, @TinhTP NVARCHAR(50) = N'TP. Hồ Chí Minh', @HoTenPhuHuynh NVARCHAR(70) = NULL,
+    @MaCN CHAR(4), @TrangThai BIT = 1, @MaHVMoi CHAR(6) = NULL OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF dbo.fn_TinhTuoi(@NgaySinh, DEFAULT) < 16 AND NULLIF(LTRIM(@HoTenPhuHuynh), N'') IS NULL
+        THROW 50160, N'Học viên dưới 16 tuổi phải có họ tên phụ huynh.', 1;
+    IF EXISTS (SELECT 1 FROM dbo.HOCVIEN WHERE SoDienThoai = @SoDienThoai AND MaHV <> ISNULL(@MaHV, '')
+               AND HoHV = @HoHV AND TenHV = @TenHV)
+        THROW 50161, N'Đã có học viên trùng họ tên và số điện thoại – kiểm tra lại, tránh tạo hồ sơ trùng.', 1;
+    IF @Email IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.HOCVIEN WHERE Email = @Email AND MaHV <> ISNULL(@MaHV, ''))
+        THROW 50162, N'Email đã được dùng cho học viên khác.', 1;
+    IF @MaHV IS NULL
+    BEGIN
+        SELECT @MaHV = 'HV' + RIGHT('0000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaHV, 3, 4) AS INT)), 0) + 1 AS VARCHAR(4)), 4)
+        FROM dbo.HOCVIEN WITH (UPDLOCK, HOLDLOCK);
+        INSERT dbo.HOCVIEN (MaHV, HoHV, TenHV, NgaySinh, GioiTinh, SoDienThoai, Email, SoNha, PhuongXa, QuanHuyen, TinhTP,
+                            HoTenPhuHuynh, MaCN, TrangThai)
+        VALUES (@MaHV, @HoHV, @TenHV, @NgaySinh, @GioiTinh, @SoDienThoai, @Email, @SoNha, @PhuongXa, @QuanHuyen, @TinhTP,
+                @HoTenPhuHuynh, @MaCN, @TrangThai);
+    END
+    ELSE
+    BEGIN
+        UPDATE dbo.HOCVIEN SET HoHV = @HoHV, TenHV = @TenHV, NgaySinh = @NgaySinh, GioiTinh = @GioiTinh, SoDienThoai = @SoDienThoai,
+               Email = @Email, SoNha = @SoNha, PhuongXa = @PhuongXa, QuanHuyen = @QuanHuyen, TinhTP = @TinhTP,
+               HoTenPhuHuynh = @HoTenPhuHuynh, MaCN = @MaCN, TrangThai = @TrangThai
+        WHERE MaHV = @MaHV;
+        IF @@ROWCOUNT = 0 THROW 50163, N'Học viên không tồn tại.', 1;
+    END
+    SET @MaHVMoi = @MaHV;
+END
+GO
+
+-- Huỷ đăng ký chưa đóng tiền (giáo vụ ghi danh nhầm)
+CREATE OR ALTER PROCEDURE dbo.sp_HuyDangKy @MaDK INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.CT_PHIEUTHU WHERE MaDK = @MaDK)
+        THROW 50164, N'Đăng ký đã có phiếu thu – không thể huỷ (cần hoàn tiền trước).', 1;
+    IF EXISTS (SELECT 1 FROM dbo.DIEMDANH WHERE MaDK = @MaDK)
+        THROW 50165, N'Học viên đã đi học – dùng chức năng bảo lưu / chuyển lớp thay vì huỷ.', 1;
+    UPDATE dbo.DANGKY SET TrangThai = N'Huỷ' WHERE MaDK = @MaDK AND TrangThai = N'Đang học';
+    IF @@ROWCOUNT = 0 THROW 50166, N'Chỉ huỷ được đăng ký đang học.', 1;
+END
+GO
+
 PRINT N'✓ 05_procedures.sql: 9 procedure nghiệp vụ + procedure danh mục cho web.';
 GO

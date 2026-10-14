@@ -10,7 +10,7 @@ auth.require_role("QuanLy")
 ui.header("🏢 Chi nhánh, phòng học, ca học", "Danh mục nền của trung tâm. Chọn một dòng trong bảng để sửa.")
 ui.show_flash()
 
-tab_cn, tab_ph, tab_ca = st.tabs(["Chi nhánh", "Phòng học", "Ca học"])
+tab_cn, tab_ph, tab_ca = st.tabs(["Chi nhánh", "Phòng học", "Ca học"], key="tabs", on_change="rerun")
 
 # ------------------------------------------------------------------ CHI NHÁNH
 with tab_cn:
