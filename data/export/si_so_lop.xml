@@ -1,0 +1,353 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SiSoLop>
+  <Lop>
+    <MaLop>IEF-2501</MaLop>
+    <TenLop>IELTS Foundation – 01.02/25</TenLop>
+    <TenKH>IELTS Foundation</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Trần Khánh Mai</GiaoVien>
+    <NgayKhaiGiang>2025-02-10</NgayKhaiGiang>
+    <NgayKetThuc>2025-05-07</NgayKetThuc>
+    <SiSoHienTai>19</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>76.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Tối 1 (P101), T4 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD1-2501</MaLop>
+    <TenLop>Kids Starters – 01.03/25</TenLop>
+    <TenKH>Kids Starters</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Lê Thanh Yến</GiaoVien>
+    <NgayKhaiGiang>2025-03-03</NgayKhaiGiang>
+    <NgayKetThuc>2025-05-28</NgayKetThuc>
+    <SiSoHienTai>18</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>72.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Chiều 2 (P101), T4 Chiều 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT2-2501</MaLop>
+    <TenLop>Giao tiếp Trung cấp – 01.06/25</TenLop>
+    <TenKH>Giao tiếp Trung cấp</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Mai Ngọc Duyên</GiaoVien>
+    <NgayKhaiGiang>2025-06-25</NgayKhaiGiang>
+    <NgayKetThuc>2025-08-29</NgayKetThuc>
+    <SiSoHienTai>21</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>84.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T4 Tối 1 (P101), T6 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC850-2501</MaLop>
+    <TenLop>TOEIC 850+ – 01.10/25</TenLop>
+    <TenKH>TOEIC 850+</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Lê Minh Thảo</GiaoVien>
+    <NgayKhaiGiang>2025-10-27</NgayKhaiGiang>
+    <NgayKetThuc>2026-01-14</NgayKetThuc>
+    <SiSoHienTai>24</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>96.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Tối 2 (P101), T4 Tối 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT1-2601</MaLop>
+    <TenLop>Giao tiếp Cơ bản – 01.05/26</TenLop>
+    <TenKH>Giao tiếp Cơ bản</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Trần Khánh Mai</GiaoVien>
+    <NgayKhaiGiang>2026-05-04</NgayKhaiGiang>
+    <NgayKetThuc>2026-07-08</NgayKetThuc>
+    <SiSoHienTai>29</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>96.7</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Tối 1 (P101), T4 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC650-2601</MaLop>
+    <TenLop>TOEIC 650 – 01.08/26</TenLop>
+    <TenKH>TOEIC 650</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Mai Ngọc Duyên</GiaoVien>
+    <NgayKhaiGiang>2026-08-17</NgayKhaiGiang>
+    <NgayKetThuc>2026-11-09</NgayKetThuc>
+    <SiSoHienTai>27</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>90.0</TyLeLapDay>
+    <TrangThai>Đang học</TrangThai>
+    <Lich>T2 Tối 2 (P103), T4 Tối 2 (P103)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IE55-2602</MaLop>
+    <TenLop>IELTS 5.5 – 01.08/26</TenLop>
+    <TenKH>IELTS 5.5</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Lê Thanh Yến</GiaoVien>
+    <NgayKhaiGiang>2026-08-19</NgayKhaiGiang>
+    <NgayKetThuc>2026-12-02</NgayKetThuc>
+    <SiSoHienTai>20</SiSoHienTai>
+    <SiSoToiDa>20</SiSoToiDa>
+    <TyLeLapDay>100.0</TyLeLapDay>
+    <TrangThai>Đang học</TrangThai>
+    <Lich>T4 Tối 2 (P101), T6 Tối 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IE65-2601</MaLop>
+    <TenLop>IELTS 6.5+ – 01.10/26</TenLop>
+    <TenKH>IELTS 6.5+</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Lê Minh Thảo</GiaoVien>
+    <NgayKhaiGiang>2026-10-31</NgayKhaiGiang>
+    <NgayKetThuc>2027-02-07</NgayKetThuc>
+    <SiSoHienTai>19</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>76.0</TyLeLapDay>
+    <TrangThai>Sắp mở</TrangThai>
+    <Lich>T7 Chiều 1 (P101), CN Chiều 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD3-2601</MaLop>
+    <TenLop>Kids Flyers – 01.11/26</TenLop>
+    <TenKH>Kids Flyers</TenKH>
+    <TenCN>ECMS Thủ Đức</TenCN>
+    <GiaoVien>Trần Khánh Mai</GiaoVien>
+    <NgayKhaiGiang>2026-11-21</NgayKhaiGiang>
+    <NgayKetThuc>2027-02-07</NgayKetThuc>
+    <SiSoHienTai>12</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>48.0</TyLeLapDay>
+    <TrangThai>Sắp mở</TrangThai>
+    <Lich>T7 Chiều 1 (P102), CN Chiều 1 (P102)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC450-2501</MaLop>
+    <TenLop>TOEIC 450 – 02.02/25</TenLop>
+    <TenKH>TOEIC 450</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Bảo Yến</GiaoVien>
+    <NgayKhaiGiang>2025-02-22</NgayKhaiGiang>
+    <NgayKetThuc>2025-04-27</NgayKetThuc>
+    <SiSoHienTai>24</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>96.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T7 Sáng 1 (P101), CN Sáng 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IE55-2501</MaLop>
+    <TenLop>IELTS 5.5 – 02.06/25</TenLop>
+    <TenKH>IELTS 5.5</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Đức Nhiên</GiaoVien>
+    <NgayKhaiGiang>2025-06-10</NgayKhaiGiang>
+    <NgayKetThuc>2025-09-23</NgayKetThuc>
+    <SiSoHienTai>17</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>68.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T3 Tối 1 (P101), T5 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD2-2501</MaLop>
+    <TenLop>Kids Movers – 02.07/25</TenLop>
+    <TenKH>Kids Movers</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Hoàng Quang Quang</GiaoVien>
+    <NgayKhaiGiang>2025-07-05</NgayKhaiGiang>
+    <NgayKetThuc>2025-09-21</NgayKetThuc>
+    <SiSoHienTai>21</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>84.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T7 Chiều 1 (P101), CN Chiều 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT3-2501</MaLop>
+    <TenLop>Giao tiếp Nâng cao – 02.11/25</TenLop>
+    <TenKH>Giao tiếp Nâng cao</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Bảo Yến</GiaoVien>
+    <NgayKhaiGiang>2025-11-03</NgayKhaiGiang>
+    <NgayKetThuc>2026-01-07</NgayKetThuc>
+    <SiSoHienTai>18</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>72.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Tối 1 (P101), T4 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IEF-2601</MaLop>
+    <TenLop>IELTS Foundation – 02.04/26</TenLop>
+    <TenKH>IELTS Foundation</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Đức Nhiên</GiaoVien>
+    <NgayKhaiGiang>2026-04-22</NgayKhaiGiang>
+    <NgayKetThuc>2026-07-15</NgayKetThuc>
+    <SiSoHienTai>26</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>86.7</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T4 Tối 1 (P101), T6 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD1-2601</MaLop>
+    <TenLop>Kids Starters – 02.05/26</TenLop>
+    <TenKH>Kids Starters</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Hoàng Quang Quang</GiaoVien>
+    <NgayKhaiGiang>2026-05-16</NgayKhaiGiang>
+    <NgayKetThuc>2026-08-02</NgayKetThuc>
+    <SiSoHienTai>28</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>93.3</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T7 Sáng 2 (P101), CN Sáng 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT2-2601</MaLop>
+    <TenLop>Giao tiếp Trung cấp – 02.08/26</TenLop>
+    <TenKH>Giao tiếp Trung cấp</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Bảo Yến</GiaoVien>
+    <NgayKhaiGiang>2026-08-26</NgayKhaiGiang>
+    <NgayKetThuc>2026-11-04</NgayKetThuc>
+    <SiSoHienTai>26</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>86.7</TyLeLapDay>
+    <TrangThai>Đang học</TrangThai>
+    <Lich>T4 Tối 1 (P101), T6 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC850-2601</MaLop>
+    <TenLop>TOEIC 850+ – 02.11/26</TenLop>
+    <TenKH>TOEIC 850+</TenKH>
+    <TenCN>ECMS Quận 1</TenCN>
+    <GiaoVien>Bùi Đức Nhiên</GiaoVien>
+    <NgayKhaiGiang>2026-11-04</NgayKhaiGiang>
+    <NgayKetThuc>2027-01-22</NgayKetThuc>
+    <SiSoHienTai>15</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>60.0</TyLeLapDay>
+    <TrangThai>Sắp mở</TrangThai>
+    <Lich>T4 Tối 1 (P102), T6 Tối 1 (P102)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT1-2501</MaLop>
+    <TenLop>Giao tiếp Cơ bản – 03.02/25</TenLop>
+    <TenKH>Giao tiếp Cơ bản</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Smith John</GiaoVien>
+    <NgayKhaiGiang>2025-02-26</NgayKhaiGiang>
+    <NgayKetThuc>2025-05-07</NgayKetThuc>
+    <SiSoHienTai>18</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>72.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T4 Tối 2 (P101), T6 Tối 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC650-2501</MaLop>
+    <TenLop>TOEIC 650 – 03.06/25</TenLop>
+    <TenKH>TOEIC 650</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Brown Emily</GiaoVien>
+    <NgayKhaiGiang>2025-06-21</NgayKhaiGiang>
+    <NgayKetThuc>2025-09-07</NgayKetThuc>
+    <SiSoHienTai>18</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>72.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T7 Sáng 1 (P101), CN Sáng 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IE65-2501</MaLop>
+    <TenLop>IELTS 6.5+ – 03.10/25</TenLop>
+    <TenKH>IELTS 6.5+</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Wilson David</GiaoVien>
+    <NgayKhaiGiang>2025-10-20</NgayKhaiGiang>
+    <NgayKetThuc>2026-01-28</NgayKetThuc>
+    <SiSoHienTai>20</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>80.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T2 Tối 1 (P101), T4 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD3-2501</MaLop>
+    <TenLop>Kids Flyers – 03.11/25</TenLop>
+    <TenKH>Kids Flyers</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Smith John</GiaoVien>
+    <NgayKhaiGiang>2025-11-15</NgayKhaiGiang>
+    <NgayKetThuc>2026-02-01</NgayKetThuc>
+    <SiSoHienTai>19</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>76.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T7 Sáng 2 (P101), CN Sáng 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>TC450-2601</MaLop>
+    <TenLop>TOEIC 450 – 03.04/26</TenLop>
+    <TenKH>TOEIC 450</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Brown Emily</GiaoVien>
+    <NgayKhaiGiang>2026-04-28</NgayKhaiGiang>
+    <NgayKetThuc>2026-07-07</NgayKetThuc>
+    <SiSoHienTai>24</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>80.0</TyLeLapDay>
+    <TrangThai>Đã kết thúc</TrangThai>
+    <Lich>T3 Tối 1 (P101), T5 Tối 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>IE55-2601</MaLop>
+    <TenLop>IELTS 5.5 – 03.08/26</TenLop>
+    <TenKH>IELTS 5.5</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Wilson David</GiaoVien>
+    <NgayKhaiGiang>2026-08-15</NgayKhaiGiang>
+    <NgayKetThuc>2026-11-22</NgayKetThuc>
+    <SiSoHienTai>28</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>93.3</TyLeLapDay>
+    <TrangThai>Đang học</TrangThai>
+    <Lich>T7 Sáng 1 (P101), CN Sáng 1 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>KD2-2601</MaLop>
+    <TenLop>Kids Movers – 03.08/26</TenLop>
+    <TenKH>Kids Movers</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Smith John</GiaoVien>
+    <NgayKhaiGiang>2026-08-31</NgayKhaiGiang>
+    <NgayKetThuc>2026-11-23</NgayKetThuc>
+    <SiSoHienTai>23</SiSoHienTai>
+    <SiSoToiDa>30</SiSoToiDa>
+    <TyLeLapDay>76.7</TyLeLapDay>
+    <TrangThai>Đang học</TrangThai>
+    <Lich>T2 Chiều 2 (P101), T4 Chiều 2 (P101)</Lich>
+  </Lop>
+  <Lop>
+    <MaLop>GT3-2601</MaLop>
+    <TenLop>Giao tiếp Nâng cao – 03.11/26</TenLop>
+    <TenKH>Giao tiếp Nâng cao</TenKH>
+    <TenCN>ECMS Bình Thạnh</TenCN>
+    <GiaoVien>Brown Emily</GiaoVien>
+    <NgayKhaiGiang>2026-11-10</NgayKhaiGiang>
+    <NgayKetThuc>2027-01-14</NgayKetThuc>
+    <SiSoHienTai>10</SiSoHienTai>
+    <SiSoToiDa>25</SiSoToiDa>
+    <TyLeLapDay>40.0</TyLeLapDay>
+    <TrangThai>Sắp mở</TrangThai>
+    <Lich>T3 Tối 1 (P101), T5 Tối 1 (P101)</Lich>
+  </Lop>
+</SiSoLop>
