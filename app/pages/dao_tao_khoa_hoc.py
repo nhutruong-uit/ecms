@@ -9,7 +9,7 @@ auth.require_role("QuanLy", "GiaoVu")
 ui.header("📚 Chương trình & khoá học", "Mỗi chương trình gồm nhiều khoá theo cấp độ; khoá cấp sau có thể yêu cầu khoá tiên quyết.")
 ui.show_flash()
 
-tab_kh, tab_ct = st.tabs(["Khoá học", "Chương trình"])
+tab_kh, tab_ct = st.tabs(["Khoá học", "Chương trình"], key="tabs", on_change="rerun")
 
 with tab_ct:
     df = db.query("SELECT * FROM vw_DM_ChuongTrinh ORDER BY MaCT")
