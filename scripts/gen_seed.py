@@ -133,8 +133,15 @@ def ascii_slug(s):
     return "".join(c for c in s if c.isalnum() and ord(c) < 128).lower()
 
 
-def gender_name(male):
-    return fake.name_male() if male else fake.name_female()
+TEN_LOT = {True: ["Văn", "Minh", "Quang", "Đức", "Hoàng", "Thành", "Hữu", "Gia", "Anh", "Tuấn"],
+           False: ["Thị", "Ngọc", "Thu", "Thanh", "Minh", "Bảo", "Kim", "Mai", "Phương", "Khánh"]}
+
+
+def gender_name(male, r=None):
+    """Họ + tên lót + tên theo đúng thứ tự tiếng Việt (Faker vi_VN đặt tên trước họ và có danh xưng)."""
+    r = r or rnd
+    first = fake.first_name_male() if male else fake.first_name_female()
+    return f"{fake.last_name()} {r.choice(TEN_LOT[male])} {first}"
 
 
 # ----------------------------------------------------------------- nhân viên, giáo viên
@@ -215,8 +222,9 @@ starts_2026 = {1: date(2026, 4, 20), 2: date(2026, 8, 10), 3: date(2026, 10, 26)
 cn_cycle = ["CN01", "CN02", "CN03"]
 for i, k in enumerate(KHOAHOC):
     lvl = k[3]
-    CLASS_PLAN.append((k[0], cn_cycle[i % 3], starts_2025[lvl] + timedelta(days=7 * (i % 3)), 25))
-    CLASS_PLAN.append((k[0], cn_cycle[(i + 1) % 3], starts_2026[lvl] + timedelta(days=7 * (i % 3)), 30 if lvl < 3 else 25))
+    # xoay vòng chi nhánh theo cả chương trình lẫn cấp độ để chi nhánh nào cũng có đủ các cấp
+    CLASS_PLAN.append((k[0], cn_cycle[(i // 3 + i) % 3], starts_2025[lvl] + timedelta(days=7 * (i // 3)), 25))
+    CLASS_PLAN.append((k[0], cn_cycle[(i // 3 + i + 1) % 3], starts_2026[lvl] + timedelta(days=7 * (i // 3)), 30 if lvl < 3 else 25))
 # một lớp IELTS 5.5 mở thêm ở CN01 – lớp hot, sẽ đầy sĩ số
 CLASS_PLAN.append(("IE55", "CN01", date(2026, 8, 17), 20))
 CLASS_PLAN.sort(key=lambda c: (c[2], c[0]))
@@ -309,7 +317,7 @@ def new_student(cn, kids, created):
     age = rnd.randint(6, 13) if kids else rnd.choice([16, 17, 18, 19, 20, 21, 22, 23, 25, 28, 32, 38])
     ns = date(created.year - age, rnd.randint(1, 12), rnd.randint(1, 28))
     email = None if kids or rnd.random() < 0.08 else f"{ascii_slug(ten)}{ascii_slug(ho.split()[-1])}{hv_seq}@gmail.com"
-    ph = f"{fake.last_name()} {fake.first_name()}" if kids else None
+    ph = gender_name(rnd.random() < 0.5) if kids else None
     hv = [f"HV{hv_seq:04d}", ho, ten, ns, "Nam" if male else "Nữ", phone(used_phones), email,
           f"{rnd.randint(1, 450)} {fake.street_name()}", rnd.choice(PHUONG), rnd.choice(QUAN[cn]), "TP. Hồ Chí Minh",
           ph, created, cn, True]
@@ -529,6 +537,15 @@ for dk in DANGKY:
     p, tt = paid[dk["MaDK"]], thanh_tien(dk)
     dk["TrangThaiHP"] = "Đã đóng" if p >= tt else ("Đóng một phần" if p > 0 else "Chưa đóng")
 
+# ----------------------------------------------------------------- khách tiềm năng
+# Đã kiểm tra đầu vào nhưng chưa ghi danh (giáo vụ cần gọi lại tư vấn)
+for _ in range(15):
+    cn = rnd.choice(cn_cycle)
+    ma_kh = rnd.choice([k[0] for k in KHOAHOC])
+    created = REF_DATE - timedelta(days=rnd.randint(1, 45))
+    hv = new_student(cn, KH[ma_kh][2] == "KIDS", created)
+    add_test(hv, ma_kh, created)
+
 # ----------------------------------------------------------------- tài khoản
 TAIKHOAN = []
 role_map = {"Quản lý": "QuanLy", "Giáo vụ": "GiaoVu", "Kế toán": "KeToan", "Giáo viên": "GiaoVien"}
@@ -641,7 +658,7 @@ def write_csv():
 
     def row(i, clean=True):
         male = r2.random() < 0.5
-        ho, ten = split_name(fake.name_male() if male else fake.name_female())
+        ho, ten = split_name(gender_name(male, r2))
         cn = r2.choice(cn_cycle)
         ns = date(r2.randint(1988, 2010), r2.randint(1, 12), r2.randint(1, 28))
         while True:
