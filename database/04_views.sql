@@ -85,7 +85,7 @@ JOIN dbo.HOCVIEN h ON h.MaHV = d.MaHV
 JOIN dbo.LOPHOC l  ON l.MaLop = d.MaLop
 JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH
 OUTER APPLY (SELECT SUM(c.SoTien) AS DaThu FROM dbo.CT_PHIEUTHU c WHERE c.MaDK = d.MaDK) t
-WHERE d.TrangThai <> N'Huỷ' AND d.ThanhTien > ISNULL(t.DaThu, 0);
+WHERE d.TrangThai NOT IN (N'Huỷ', N'Đã chuyển lớp') AND d.ThanhTien > ISNULL(t.DaThu, 0);
 GO
 
 -- Bảng điểm: điểm, xếp loại, chuyên cần của mọi đăng ký
