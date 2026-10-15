@@ -4,7 +4,7 @@ Mục tiêu: mọi thành viên chạy **cùng một CSDL `ECMS`** và ứng d�
 
 | Thành phần | Windows | macOS |
 |---|---|---|
-| SQL Server | SQL Server 2022 Developer/Express + SSMS | Docker Desktop + `docker compose` |
+| SQL Server | SQL Server 2022 Developer/Express + SSMS | Docker Desktop + `docker compose` (SQL Server 2025) |
 | Công cụ SQL | SSMS (có `sqlcmd`) | VS Code + extension **SQL Server (mssql)**, hoặc Azure Data Studio |
 | ODBC | ODBC Driver 18 for SQL Server | `brew install msodbcsql18` |
 | Python | 3.11+ | 3.11+ |
@@ -27,6 +27,7 @@ docker compose up -d                 # lần đầu tải image ~1,5 GB
 docker compose ps                    # chờ trạng thái "healthy"
 ```
 
+- Image mặc định là `mssql/server:2025-latest`. Không dùng image 2022 cho Linux: các bản CU24 → CU27 lỗi *Could not load the DLL (server internal)* (Msg 17750) khi gọi `sp_executesql`, `sp_set_session_context`, `sp_xml_preparedocument`.
 - Apple Silicon (M1/M2/M3): bật **Settings → General → Use Rosetta for x86/amd64 emulation** trong Docker Desktop.
 - Dữ liệu nằm trong volume `mssql-data`, xoá container không mất dữ liệu. Muốn làm lại từ đầu: `docker compose down -v`.
 - Thư mục `backups/` của repo được gắn vào `/var/opt/mssql/backup` (dùng ở T17), `data/` gắn vào `/data` (T10, T18).

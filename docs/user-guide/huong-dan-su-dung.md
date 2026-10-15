@@ -19,7 +19,7 @@ Tài liệu hướng dẫn cài đặt và sử dụng **ECMS – Hệ thống q
 | Thành phần | Yêu cầu |
 |---|---|
 | Hệ điều hành | Windows 10/11, macOS 13 trở lên hoặc Linux |
-| Cơ sở dữ liệu | SQL Server 2022 (Developer / Express) – trên macOS chạy bằng Docker Desktop |
+| Cơ sở dữ liệu | Windows: SQL Server 2022 (Developer / Express); macOS / Linux: SQL Server 2025 chạy bằng Docker Desktop |
 | Trình điều khiển | Microsoft ODBC Driver 18 for SQL Server |
 | Python | 3.11 trở lên |
 | Trình duyệt | Chrome, Edge, Firefox hoặc Safari bản mới |

@@ -1,9 +1,11 @@
-# SQL Server 2022 cho môi trường phát triển (macOS / Linux / Windows có Docker).
+# SQL Server 2025 cho môi trường phát triển (macOS / Linux / Windows có Docker).
+# Không dùng image 2022 cho Linux: các bản 2022-CU24 → CU27 lỗi "Could not load the DLL (server internal)" (Msg 17750)
+# khi gọi sp_executesql, sp_set_session_context, sp_xml_preparedocument. Đổi tag bằng biến MSSQL_IMAGE_TAG nếu cần.
 #   docker compose up -d          # khởi động
 #   database/run_all.sh           # dựng CSDL ECMS
 services:
   mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:${MSSQL_IMAGE_TAG:-2025-latest}
     platform: linux/amd64          # Apple Silicon chạy qua Rosetta
     container_name: ecms-mssql
     environment:
