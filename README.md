@@ -62,6 +62,16 @@ ecms/
 └── scripts/      # Công cụ: commit-as.sh, sync_issues.py, sync_project.py, ...
 ```
 
+## Sản phẩm nộp (v1.0.0)
+
+| Tài liệu | File | Nguồn |
+|---|---|---|
+| Báo cáo đồ án | [`report/BaoCao_IE103_Nhom1.docx`](report/BaoCao_IE103_Nhom1.docx) · [`.pdf`](report/BaoCao_IE103_Nhom1.pdf) | `report/01-…06-*.md` |
+| Hướng dẫn sử dụng | [`report/HuongDanSuDung_ECMS.docx`](report/HuongDanSuDung_ECMS.docx) · [`.pdf`](report/HuongDanSuDung_ECMS.pdf) | [`docs/user-guide/huong-dan-su-dung.md`](docs/user-guide/huong-dan-su-dung.md) |
+| Slide thuyết trình | [`slides/ECMS_Nhom1.pptx`](slides/ECMS_Nhom1.pptx) | `scripts/build_slides.py` |
+
+Dựng lại từ nguồn: `pip install -r scripts/requirements-docs.txt && python scripts/build_report.py --pdf && python scripts/build_slides.py`.
+
 ## Cài đặt & chạy
 
 Hướng dẫn chi tiết: [docs/SETUP.md](docs/SETUP.md). Tóm tắt trên macOS:
