@@ -1,0 +1,30 @@
+// ERD chi tiết các loại thuộc tính (ký hiệu Chen) – T04
+// Gạch chân: khoá · elip đôi: đa trị · elip nét đứt: suy diễn · elip có elip con: phức hợp
+graph ATTR {
+  layout=neato; overlap=false; splines=true; sep="+8"; fontname="Arial";
+  node [fontname="Arial", fontsize=10, style=filled, shape=ellipse, fillcolor="#ffffff", color="#64748b"];
+  edge [color="#94a3b8", len=1.1];
+  node [shape=box, fillcolor="#dbeafe", color="#1d4ed8", fontsize=12];
+  HOCVIEN; NHANVIEN; GIAOVIEN; DANGKY [label="ĐĂNG KÝ", shape=diamond, fillcolor="#fde68a", color="#b45309"]; LOPHOC;
+  node [shape=ellipse, fillcolor="#ffffff", color="#64748b", fontsize=10];
+  hv_ma [label=<<u>MaHV</u>>]; hv_hoten [label="Họ tên"]; hv_ho [label="Họ"]; hv_ten [label="Tên"];
+  hv_ns [label="Ngày sinh"]; hv_tuoi [label="Tuổi", style="filled,dashed"]; hv_dc [label="Địa chỉ"];
+  hv_sn [label="Số nhà"]; hv_px [label="Phường/Xã"]; hv_qh [label="Quận/Huyện"]; hv_tp [label="Tỉnh/TP"]; hv_sdt [label="SĐT"];
+  HOCVIEN -- {hv_ma hv_hoten hv_ns hv_tuoi hv_dc hv_sdt}; hv_hoten -- {hv_ho hv_ten}; hv_dc -- {hv_sn hv_px hv_qh hv_tp};
+  hv_ns -- hv_tuoi [style=dotted, label="suy ra", fontsize=8];
+
+  nv_ma [label=<<u>MaNV</u>>]; nv_ht [label="Họ tên"]; nv_cv [label="Chức vụ"]; nv_luong [label="Lương cơ bản"];
+  NHANVIEN -- {nv_ma nv_ht nv_cv nv_luong};
+  isa [shape=triangle, fillcolor="#dcfce7", color="#15803d", label="ISA"];
+  NHANVIEN -- isa; isa -- GIAOVIEN;
+  gv_loai [label="Loại GV"]; gv_dg [label="Đơn giá buổi"]; gv_cc [label="Chứng chỉ", peripheries=2];
+  gv_tencc [label="Tên CC"]; gv_diem [label="Điểm"]; gv_ngay [label="Ngày cấp"];
+  GIAOVIEN -- {gv_loai gv_dg gv_cc}; gv_cc -- {gv_tencc gv_diem gv_ngay};
+
+  dk_ngay [label="Ngày ĐK"]; dk_hp [label="Học phí"]; dk_gg [label="Giảm giá"]; dk_tt [label="Thành tiền", style="filled,dashed"];
+  dk_gk [label="Điểm GK"]; dk_ck [label="Điểm CK"]; dk_tb [label="Điểm TB", style="filled,dashed"]; dk_kq [label="Kết quả"];
+  HOCVIEN -- DANGKY [label="(0,n)", fontsize=9]; DANGKY -- LOPHOC [label="(0,n)", fontsize=9];
+  DANGKY -- {dk_ngay dk_hp dk_gg dk_tt dk_gk dk_ck dk_tb dk_kq};
+  lop_ma [label=<<u>MaLop</u>>]; lop_ss [label="Sĩ số hiện tại", style="filled,dashed"]; lop_max [label="Sĩ số tối đa"]; lop_kg [label="Ngày khai giảng"];
+  LOPHOC -- {lop_ma lop_ss lop_max lop_kg};
+}

@@ -1,5 +1,7 @@
 # ECMS – Hệ thống Quản lý Trung tâm Tiếng Anh
 
+[![CI](https://github.com/nhutruong-uit/ecms/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nhutruong-uit/ecms/actions/workflows/ci.yml)
+
 Đồ án môn **IE103 – Quản lý thông tin** · Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM · **Nhóm 1**
 
 - 📋 **Kế hoạch & phân công chi tiết:** https://nhutruong-uit.github.io/ecms/
@@ -40,7 +42,7 @@ Một chuỗi trung tâm tiếng Anh có nhiều chi nhánh, mở các chương 
 
 ## Công nghệ
 
-- **CSDL:** Microsoft SQL Server 2022 (Windows: SSMS · macOS: Docker)
+- **CSDL:** Microsoft SQL Server 2022 / 2025 (Windows: SSMS · macOS / Linux: Docker, SQL Server 2025)
 - **Ứng dụng web:** Python 3.11+, Streamlit, pyodbc (ODBC Driver 18), pandas, Plotly
 - **Báo cáo:** reportlab (PDF), openpyxl (Excel)
 - **NoSQL (Chương 5):** MongoDB
@@ -60,9 +62,27 @@ ecms/
 └── scripts/      # Công cụ: commit-as.sh, sync_issues.py, sync_project.py, ...
 ```
 
+## Sản phẩm nộp (v1.0.0)
+
+| Tài liệu | File | Nguồn |
+|---|---|---|
+| Báo cáo đồ án | [`report/BaoCao_IE103_Nhom1.docx`](report/BaoCao_IE103_Nhom1.docx) · [`.pdf`](report/BaoCao_IE103_Nhom1.pdf) | `report/01-…06-*.md` |
+| Hướng dẫn sử dụng | [`report/HuongDanSuDung_ECMS.docx`](report/HuongDanSuDung_ECMS.docx) · [`.pdf`](report/HuongDanSuDung_ECMS.pdf) | [`docs/user-guide/huong-dan-su-dung.md`](docs/user-guide/huong-dan-su-dung.md) |
+| Slide thuyết trình | [`slides/ECMS_Nhom1.pptx`](slides/ECMS_Nhom1.pptx) | `scripts/build_slides.py` |
+
+Dựng lại từ nguồn: `pip install -r scripts/requirements-docs.txt && python scripts/build_report.py --pdf && python scripts/build_slides.py`.
+
 ## Cài đặt & chạy
 
-Hướng dẫn chi tiết sẽ có ở `docs/SETUP.md` (task T03).
+Hướng dẫn chi tiết: [docs/SETUP.md](docs/SETUP.md). Tóm tắt trên macOS:
+
+```bash
+cp .env.example .env
+docker compose up -d                 # SQL Server 2025
+database/run_all.sh                  # dựng CSDL ECMS (01 → 09)
+pip install -r requirements.txt
+streamlit run app/main.py            # http://localhost:8501
+```
 
 ## Làm việc nhóm
 

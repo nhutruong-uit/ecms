@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<DanhMucKhoaHoc>
+  <KhoaHoc MaKH="GT1" TenKH="Giao tiếp Cơ bản" MaCT="GT" SoBuoi="20" HocPhi="3000000"/>
+  <KhoaHoc MaKH="GT2" TenKH="Giao tiếp Trung cấp" MaCT="GT" SoBuoi="20" HocPhi="3500000"/>
+  <KhoaHoc MaKH="GT3" TenKH="Giao tiếp Nâng cao" MaCT="GT" SoBuoi="20" HocPhi="4000000"/>
+  <KhoaHoc MaKH="IEF" TenKH="IELTS Foundation" MaCT="IELTS" SoBuoi="24" HocPhi="5500000"/>
+  <KhoaHoc MaKH="IE55" TenKH="IELTS 5.5" MaCT="IELTS" SoBuoi="30" HocPhi="7500000"/>
+  <KhoaHoc MaKH="IE65" TenKH="IELTS 6.5+" MaCT="IELTS" SoBuoi="30" HocPhi="9000000"/>
+  <KhoaHoc MaKH="KD1" TenKH="Kids Starters" MaCT="KIDS" SoBuoi="24" HocPhi="4000000"/>
+  <KhoaHoc MaKH="KD2" TenKH="Kids Movers" MaCT="KIDS" SoBuoi="24" HocPhi="4200000"/>
+  <KhoaHoc MaKH="KD3" TenKH="Kids Flyers" MaCT="KIDS" SoBuoi="24" HocPhi="4500000"/>
+  <KhoaHoc MaKH="TC450" TenKH="TOEIC 450" MaCT="TOEIC" SoBuoi="20" HocPhi="3500000"/>
+  <KhoaHoc MaKH="TC650" TenKH="TOEIC 650" MaCT="TOEIC" SoBuoi="24" HocPhi="4500000"/>
+  <KhoaHoc MaKH="TC850" TenKH="TOEIC 850+" MaCT="TOEIC" SoBuoi="24" HocPhi="5500000"/>
+</DanhMucKhoaHoc>

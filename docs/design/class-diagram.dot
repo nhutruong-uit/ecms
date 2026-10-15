@@ -1,0 +1,53 @@
+// Class Diagram UML – T05. Nguồn sinh class-diagram.png / .drawio
+digraph CD {
+  rankdir=TB; nodesep=0.5; ranksep=0.7; fontname="Arial"; splines=true;
+  node [shape=plain, fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9, color="#334155", arrowhead=none];
+  Nguoi [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>&laquo;abstract&raquo; Nguoi</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"># ho : String<BR/># ten : String<BR/># ngaySinh : Date<BR/># gioiTinh : String<BR/># soDienThoai : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ hoTen() : String<BR/>+ tuoi() : int</TD></TR></TABLE>>];
+  HocVien [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>HocVien</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maHV : String<BR/>- email : String<BR/>- diaChi : DiaChi<BR/>- hoTenPhuHuynh : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ dangKy(lop : LopHoc, giamGia : float) : DangKy<BR/>+ congNo() : Money<BR/>+ lichHoc(tuan : Date) : List</TD></TR></TABLE>>];
+  NhanVien [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>NhanVien</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maNV : String<BR/>- chucVu : String<BR/>- luongCoBan : Money<BR/>- ngayVaoLam : Date</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ nguoiQuanLy() : NhanVien<BR/>+ lapPhieuThu(hv : HocVien) : PhieuThu</TD></TR></TABLE>>];
+  GiaoVien [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>GiaoVien</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- loaiGV : String<BR/>- quocTich : String<BR/>- trinhDo : String<BR/>- donGiaBuoi : Money</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ lopDangDay() : List<BR/>+ tinhLuong(thang : String) : Money</TD></TR></TABLE>>];
+  ChungChi [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>ChungChi</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- ten : String<BR/>- diem : float<BR/>- ngayCap : Date</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  ChiNhanh [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>ChiNhanh</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maCN : String<BR/>- tenCN : String<BR/>- diaChi : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ doanhThu(tu : Date, den : Date) : Money</TD></TR></TABLE>>];
+  PhongHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>PhongHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maPhong : String<BR/>- sucChua : int<BR/>- loaiPhong : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ trong(thu : int, ca : CaHoc) : bool</TD></TR></TABLE>>];
+  CaHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>CaHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maCa : int<BR/>- gioBatDau : Time<BR/>- gioKetThuc : Time</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  ChuongTrinh [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>ChuongTrinh</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maCT : String<BR/>- tenCT : String<BR/>- doiTuong : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  KhoaHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>KhoaHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maKH : String<BR/>- tenKH : String<BR/>- capDo : int<BR/>- soBuoi : int<BR/>- hocPhi : Money</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ khoaTienQuyet() : KhoaHoc<BR/>+ phuHop(diem : float) : bool</TD></TR></TABLE>>];
+  LopHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>LopHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- maLop : String<BR/>- ngayKhaiGiang : Date<BR/>- siSoToiDa : int<BR/>- trangThai : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ siSoHienTai() : int<BR/>+ siSoConLai() : int<BR/>+ xepLich(thu, ca, phong) : void<BR/>+ sinhBuoiHoc() : void</TD></TR></TABLE>>];
+  LichHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>LichHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- thu : int</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  BuoiHoc [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>BuoiHoc</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- stt : int<BR/>- ngayHoc : Date<BR/>- noiDung : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ diemDanh(ds : Map) : void</TD></TR></TABLE>>];
+  DangKy [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>DangKy &laquo;association class&raquo;</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- ngayDK : Date<BR/>- hocPhi : Money<BR/>- giamGia : float<BR/>- diemGK : float<BR/>- diemCK : float</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ thanhTien() : Money<BR/>+ diemTB() : float<BR/>+ ketQua() : String<BR/>+ tyLeChuyenCan() : float<BR/>+ soTienConNo() : Money</TD></TR></TABLE>>];
+  DiemDanh [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>DiemDanh</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- trangThai : String<BR/>- ghiChu : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  KiemTra [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>KiemTraDauVao</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- ngayKT : Date<BR/>- listening, reading, writing, speaking : float<BR/>- nhanXet : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ diemTong() : float<BR/>+ deXuatKhoa() : KhoaHoc</TD></TR></TABLE>>];
+  PhieuThu [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>PhieuThu</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- soPhieu : String<BR/>- ngayThu : DateTime<BR/>- hinhThuc : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ tinhTong() : Money<BR/>+ themDong(dk : DangKy, tien : Money) : void<BR/>+ inPDF() : File</TD></TR></TABLE>>];
+  CTPhieuThu [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>CTPhieuThu</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- soTien : Money</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT"> </TD></TR></TABLE>>];
+  TaiKhoan [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#1d4ed8"><TR><TD BGCOLOR="#dbeafe"><B>TaiKhoan</B></TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">- tenDangNhap : String<BR/>- matKhauHash : bytes<BR/>- vaiTro : String</TD></TR><TR><TD ALIGN="LEFT" BALIGN="LEFT">+ dangNhap(mk : String) : bool<BR/>+ doiMatKhau(cu, moi : String) : void</TD></TR></TABLE>>];
+  Nguoi -> HocVien [dir=back, arrowtail=onormal];
+  Nguoi -> NhanVien [dir=back, arrowtail=onormal];
+  NhanVien -> GiaoVien [dir=back, arrowtail=onormal];
+  LopHoc -> BuoiHoc [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
+  PhieuThu -> CTPhieuThu [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
+  ChiNhanh -> PhongHoc [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
+  GiaoVien -> ChungChi [dir=back, arrowtail=diamond, taillabel="1", headlabel="0..*"];
+  ChuongTrinh -> KhoaHoc [dir=back, arrowtail=odiamond, taillabel="1", headlabel="1..*"];
+  KhoaHoc -> KhoaHoc [label="tiên quyết", taillabel="0..1", headlabel="0..*"];
+  NhanVien -> NhanVien [label="quản lý", taillabel="0..1", headlabel="0..*"];
+  KhoaHoc -> LopHoc [taillabel="1", headlabel="0..*", label="mở"];
+  ChiNhanh -> LopHoc [taillabel="1", headlabel="0..*"];
+  GiaoVien -> LopHoc [taillabel="1", headlabel="0..*", label="phụ trách"];
+  ChiNhanh -> NhanVien [taillabel="1", headlabel="1..*", label="làm việc"];
+  HocVien -> LopHoc [taillabel="0..*", headlabel="0..*", label="học", constraint=false];
+  LopHoc -> LichHoc [taillabel="1", headlabel="1..*"];
+  PhongHoc -> LichHoc [taillabel="1", headlabel="0..*"];
+  CaHoc -> LichHoc [taillabel="1", headlabel="0..*"];
+  HocVien -> KiemTra [taillabel="1", headlabel="0..*"];
+  KiemTra -> KhoaHoc [label="đề xuất", taillabel="0..*", headlabel="0..1", constraint=false];
+  DangKy -> DiemDanh [taillabel="1", headlabel="0..*"];
+  BuoiHoc -> DiemDanh [taillabel="1", headlabel="0..*"];
+  HocVien -> PhieuThu [taillabel="1", headlabel="0..*"];
+  DangKy -> CTPhieuThu [taillabel="1", headlabel="0..*"];
+  NhanVien -> PhieuThu [taillabel="1", headlabel="0..*", label="lập"];
+  Nguoi -> TaiKhoan [taillabel="1", headlabel="0..1"];
+  DangKy -> HocVien [style=dashed, arrowhead=none, label="lớp liên kết\nHocVien–LopHoc", constraint=false];
+  {rank=same; HocVien; NhanVien} {rank=same; DangKy; LopHoc}
+}

@@ -12,7 +12,8 @@ venv/
 *.bak
 *.trn
 mssql-data/
-backups/
+backups/*
+!backups/.gitkeep
 
 # Office tạm
 ~$*

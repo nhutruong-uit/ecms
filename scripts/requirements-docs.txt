@@ -1,0 +1,5 @@
+# Thư viện dựng báo cáo / hướng dẫn sử dụng / slide (T29) – không cần cho ứng dụng web
+python-docx>=1.1
+markdown-it-py>=3.0
+Pillow>=10.0
+python-pptx>=1.0

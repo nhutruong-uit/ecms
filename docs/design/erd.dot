@@ -1,0 +1,48 @@
+// ERD mức khái niệm (ký hiệu Chen) – T04. Nguồn sinh erd.png / erd.drawio
+// Hình chữ nhật: thực thể · viền đôi: thực thể yếu · hình thoi: mối quan hệ (viền đôi: quan hệ xác định)
+// Nhãn trên cạnh: bản số (min,max) của thực thể tham gia
+graph ERD {
+  layout=neato; overlap=false; splines=true; sep="+12"; fontname="Arial"; outputorder=edgesfirst;
+  node [fontname="Arial", fontsize=11, style=filled];
+  edge [fontname="Arial", fontsize=9, color="#475569", len=1.5];
+
+  node [shape=box, fillcolor="#dbeafe", color="#1d4ed8", width=1.3];
+  CHINHANH; NHANVIEN; GIAOVIEN; HOCVIEN; CHUONGTRINH; KHOAHOC; LOPHOC; CAHOC;
+  KIEMTRA_DAUVAO [label="KIỂM TRA\nĐẦU VÀO"]; PHIEUTHU; TAIKHOAN; CHUNGCHI [label="CHỨNG CHỈ GV\n(đa trị)", style="filled,dashed"];
+  node [peripheries=2, fillcolor="#e0e7ff"];
+  PHONGHOC; BUOIHOC;
+  node [peripheries=1, shape=diamond, fillcolor="#fef3c7", color="#b45309", width=1.1, height=0.6, fontsize=10];
+  r_lamviec [label="Làm việc"]; r_quanlycn [label="Quản lý CN"]; r_quanlynv [label="Quản lý"];
+  r_tienquyet [label="Tiên quyết"]; r_gom [label="Gồm"]; r_mo [label="Mở"]; r_tochuc [label="Tổ chức"];
+  r_phutrach [label="Phụ trách"]; r_lich [label="LỊCH HỌC\n(3 ngôi)", fillcolor="#fde68a"];
+  r_tiepnhan [label="Tiếp nhận"]; r_du [label="Dự"]; r_dexuat [label="Đề xuất"];
+  r_dangky [label="ĐĂNG KÝ", fillcolor="#fde68a"]; r_diemdanh [label="ĐIỂM DANH", fillcolor="#fde68a"];
+  r_dong [label="Đóng"]; r_lap [label="Lập"]; r_thu [label="CT PHIẾU THU", fillcolor="#fde68a"];
+  r_dungnv [label="Dùng"]; r_dunghv [label="Dùng "];
+  node [peripheries=2]; r_co [label="Có phòng"]; r_buoi [label="Có buổi"];
+  node [peripheries=1, shape=triangle, fillcolor="#dcfce7", color="#15803d", width=0.6, height=0.5]; isa [label="ISA"];
+
+  CHINHANH -- r_lamviec [label="(1,n)"]; r_lamviec -- NHANVIEN [label="(1,1)"];
+  CHINHANH -- r_quanlycn [label="(0,1)"]; r_quanlycn -- NHANVIEN [label="(0,1)"];
+  NHANVIEN -- r_quanlynv [headlabel="quản lý (0,n)", labeldistance=4]; r_quanlynv -- NHANVIEN [taillabel="bị QL (0,1)", labeldistance=4, len=2];
+  NHANVIEN -- isa; isa -- GIAOVIEN [label="d, partial"];
+  GIAOVIEN -- CHUNGCHI [label="(0,n)", style=dashed];
+  CHINHANH -- r_co [label="(1,n)"]; r_co -- PHONGHOC [label="(1,1)", penwidth=2];
+  CHUONGTRINH -- r_gom [label="(1,n)"]; r_gom -- KHOAHOC [label="(1,1)"];
+  KHOAHOC -- r_tienquyet [headlabel="là TQ (0,n)", labeldistance=4]; r_tienquyet -- KHOAHOC [taillabel="cần TQ (0,1)", labeldistance=4, len=2];
+  KHOAHOC -- r_mo [label="(0,n)"]; r_mo -- LOPHOC [label="(1,1)"];
+  CHINHANH -- r_tochuc [label="(0,n)"]; r_tochuc -- LOPHOC [label="(1,1)"];
+  GIAOVIEN -- r_phutrach [label="(0,n)"]; r_phutrach -- LOPHOC [label="(1,1)"];
+  LOPHOC -- r_lich [label="(1,n)"]; PHONGHOC -- r_lich [label="(0,n)"]; CAHOC -- r_lich [label="(0,n)"];
+  LOPHOC -- r_buoi [label="(0,n)"]; r_buoi -- BUOIHOC [label="(1,1)", penwidth=2];
+  CHINHANH -- r_tiepnhan [label="(0,n)"]; r_tiepnhan -- HOCVIEN [label="(1,1)"];
+  HOCVIEN -- r_du [label="(0,n)"]; r_du -- KIEMTRA_DAUVAO [label="(1,1)"];
+  KHOAHOC -- r_dexuat [label="(0,n)"]; r_dexuat -- KIEMTRA_DAUVAO [label="(0,1)"];
+  HOCVIEN -- r_dangky [label="(0,n)"]; r_dangky -- LOPHOC [label="(0,n)"];
+  r_dangky -- r_diemdanh [label="(0,n)", style=bold]; r_diemdanh -- BUOIHOC [label="(0,n)"];
+  HOCVIEN -- r_dong [label="(0,n)"]; r_dong -- PHIEUTHU [label="(1,1)"];
+  NHANVIEN -- r_lap [label="(0,n)"]; r_lap -- PHIEUTHU [label="(1,1)"];
+  PHIEUTHU -- r_thu [label="(1,n)"]; r_thu -- r_dangky [label="(0,n)", style=bold];
+  NHANVIEN -- r_dungnv [label="(0,1)"]; r_dungnv -- TAIKHOAN [label="(0,1)"];
+  HOCVIEN -- r_dunghv [label="(0,1)"]; r_dunghv -- TAIKHOAN [label="(0,1)"];
+}

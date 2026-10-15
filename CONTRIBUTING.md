@@ -11,16 +11,35 @@ Từ hai file này sinh ra:
 
 Khi đổi kế hoạch (thêm task, đổi hạn, đổi người), sửa `tasks.json` rồi chạy lại hai script trên.
 
+## Nhánh
+
+| Nhánh | Vai trò |
+|---|---|
+| `main` | Bản phát hành. Chỉ nhận merge từ `develop`, có CI chạy toàn bộ script SQL và kiểm tra ứng dụng, gắn tag `vX.Y.Z` + GitHub Release |
+| `develop` | Nhánh tích hợp. Mỗi task là một Pull Request vào đây |
+| `tNN-<mo-ta>` | Nhánh của một task, tạo từ `develop`, xoá sau khi merge |
+
 ## Quy trình một task
 
 1. Kéo thẻ trên Project sang **In Progress** (hoặc gắn label `dang-lam` vào issue).
-2. Tạo nhánh theo task:
+2. Tạo nhánh theo task từ `develop`:
    ```bash
+   git switch develop && git pull
    git switch -c t11-stored-procedure
    ```
 3. Làm việc, commit **dưới tên người phụ trách task** (xem mục dưới).
-4. Đẩy nhánh, mở Pull Request. Mô tả PR có dòng `Closes #<số issue>` và ảnh kết quả.
-5. Xem lại, merge vào `main`. Issue tự đóng, thẻ Project tự chuyển sang **Done**.
+4. Đẩy nhánh, mở Pull Request **vào `develop`**: tiêu đề `[T11] ...`, mô tả có dòng `Closes #<số issue>`; assignee là người phụ trách, reviewer là nhóm trưởng (@nhutruong-uit).
+5. Review xong thì **Merge commit** (không squash, để giữ đúng tác giả từng commit) và xoá nhánh.
+6. Vì `develop` không phải nhánh mặc định nên issue không tự đóng: tick checklist, đóng issue kèm link PR, chuyển thẻ Project sang **Done**.
+7. Khi đủ task cho một bản phát hành: PR `develop → main`, CI phải xanh, rồi tạo Release.
+
+### CI (`.github/workflows/ci.yml`)
+
+Chạy khi có PR / push vào `main` (hoặc bấm *Run workflow*): khởi động SQL Server 2025 bằng `docker compose`, dựng CSDL từ đầu bằng `database/run_all.sh`, chạy `database/tests/test_{seed,procedures,triggers,security}.sql` và `10_queries.sql`, rồi smoke test giao diện (`tests/test_app_smoke.py` – mở mọi trang với từng vai trò và sinh mọi báo cáo). Chạy thử trên máy:
+
+```bash
+cd app && pytest ../tests -q
+```
 
 ## Commit đúng tên thành viên
 
@@ -33,8 +52,8 @@ scripts/commit-as.sh giang -m "feat(app): form phiếu thu master-detail (#23)"
 ```
 
 Script đặt cả author và committer theo tên + email trong `team.json`.
-Email mặc định là email sinh viên `MSSV@gm.uit.edu.vn`. GitHub chỉ gắn commit vào tài khoản của bạn khi email đó đã được thêm vào
-**GitHub → Settings → Emails**. Nếu bạn dùng email khác, báo Như để cập nhật `team.json`.
+Email trong `team.json` là email *noreply* của GitHub (`<id>+<username>@users.noreply.github.com`), nên commit luôn được gắn đúng
+tài khoản GitHub của từng người mà không cần thêm email sinh viên vào **Settings → Emails**.
 
 ## Mẫu commit message
 

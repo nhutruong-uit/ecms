@@ -1,0 +1,78 @@
+# CI cho bản phát hành: dựng CSDL ECMS từ đầu trên SQL Server 2025 (Docker), chạy bộ kiểm thử SQL
+# và smoke test giao diện Streamlit. Chỉ chạy khi PR / push vào main (develop không cần CI – xem CONTRIBUTING.md).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database-and-app:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SA_PASSWORD: Ecms@12345
+      SQLCMD: docker exec -i ecms-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Ecms@12345 -C -b -I -f 65001
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tạo .env cho CI
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_SERVER=.*/DB_SERVER=127.0.0.1/' .env
+
+      - name: Khởi động SQL Server 2025 (docker compose)
+        run: docker compose up -d --wait mssql
+
+      - name: Dựng CSDL – run_all.sh (01 → 09)
+        run: SQLCMD_MODE=docker database/run_all.sh
+
+      - name: Kiểm thử dữ liệu mẫu
+        run: $SQLCMD -i /database/tests/test_seed.sql
+
+      - name: Kiểm thử stored procedure
+        run: $SQLCMD -i /database/tests/test_procedures.sql
+
+      - name: Kiểm thử trigger
+        run: $SQLCMD -i /database/tests/test_triggers.sql
+
+      - name: Kiểm thử phân quyền
+        run: $SQLCMD -i /database/tests/test_security.sql
+
+      - name: Chạy bộ truy vấn nghiệp vụ (10_queries.sql)
+        run: $SQLCMD -i /database/10_queries.sql -o /dev/null
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cài ODBC Driver 18 (nếu runner chưa có)
+        run: |
+          if odbcinst -q -d 2>/dev/null | grep -q "ODBC Driver 18 for SQL Server"; then
+            echo "ODBC Driver 18 đã có sẵn"
+          else
+            curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+            curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            sudo apt-get update -q
+            sudo ACCEPT_EULA=Y apt-get install -y -q msodbcsql18 unixodbc-dev
+          fi
+
+      - name: Cài thư viện Python
+        run: pip install -r requirements.txt pytest
+
+      - name: Smoke test giao diện (mọi trang × mọi vai trò, mọi báo cáo)
+        working-directory: app
+        run: pytest ../tests -q
+
+      - name: Log SQL Server khi lỗi
+        if: failure()
+        run: docker logs ecms-mssql | tail -100
