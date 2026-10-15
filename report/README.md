@@ -1,6 +1,14 @@
 # report/
 
-Mỗi chương một file Markdown, viết song song với task. Cuối dự án (T29) ghép thành `BaoCao_IE103_Nhom1.docx` theo mẫu UIT.
+Mỗi chương một file Markdown, viết song song với task. Cuối dự án (T29) ghép thành báo cáo Word / PDF theo mẫu báo cáo thực hành của nhóm (`template/mau-bao-cao-uit.docx`, tách từ Lab 04):
+
+```bash
+pip install -r scripts/requirements-docs.txt
+python scripts/build_report.py --pdf     # → BaoCao_IE103_Nhom1.docx/.pdf và HuongDanSuDung_ECMS.docx/.pdf
+```
+
+Mở file `.docx` bằng Word, chọn **Yes** khi được hỏi cập nhật trường để hiện Mục lục và Danh mục hình ảnh (có số trang).
+Nguồn hướng dẫn sử dụng: [`docs/user-guide/huong-dan-su-dung.md`](../docs/user-guide/huong-dan-su-dung.md).
 
 | File | Nội dung | Người viết |
 |---|---|---|
