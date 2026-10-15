@@ -42,7 +42,7 @@ Một chuỗi trung tâm tiếng Anh có nhiều chi nhánh, mở các chương 
 
 ## Công nghệ
 
-- **CSDL:** Microsoft SQL Server 2022 (Windows: SSMS · macOS: Docker)
+- **CSDL:** Microsoft SQL Server 2022 / 2025 (Windows: SSMS · macOS / Linux: Docker, SQL Server 2025)
 - **Ứng dụng web:** Python 3.11+, Streamlit, pyodbc (ODBC Driver 18), pandas, Plotly
 - **Báo cáo:** reportlab (PDF), openpyxl (Excel)
 - **NoSQL (Chương 5):** MongoDB
@@ -78,7 +78,7 @@ Hướng dẫn chi tiết: [docs/SETUP.md](docs/SETUP.md). Tóm tắt trên macO
 
 ```bash
 cp .env.example .env
-docker compose up -d                 # SQL Server 2022
+docker compose up -d                 # SQL Server 2025
 database/run_all.sh                  # dựng CSDL ECMS (01 → 09)
 pip install -r requirements.txt
 streamlit run app/main.py            # http://localhost:8501

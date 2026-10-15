@@ -299,7 +299,7 @@ table(s, L, T + Cm(0.2), Cm(17), [["Bước", "Kết quả"], ["Dựng CSDL 01 �
                                   ["31 truy vấn nghiệp vụ", "chạy hết, không lỗi"], ["Smoke test mọi trang × 5 vai trò + mọi báo cáo", "52 passed"]],
       [3, 2], 16, Cm(1.3))
 bullets(s, Cm(19.4), T, Cm(13.4), CH, [
-    "GitHub Actions: SQL Server 2022 (Docker) → run_all → test SQL → pytest",
+    "GitHub Actions: SQL Server 2025 (Docker) → run_all → test SQL → pytest",
     "Bắt buộc xanh trước khi merge develop → main",
     "Quy trình nhóm: 29 task = 29 issue = 29 PR vào develop, review bởi nhóm trưởng",
     "Phát hành v1.0.0"], 18)

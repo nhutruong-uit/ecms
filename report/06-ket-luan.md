@@ -43,7 +43,7 @@ Kiểm thử tích hợp chạy lại toàn bộ hệ thống từ **CSDL trốn
 | `pytest tests/` – mọi trang × 5 vai trò + mọi báo cáo PDF/Excel | 52 passed |
 | **Tổng thời gian** | ~35 giây |
 
-Cùng quy trình được tự động hoá bằng GitHub Actions (`.github/workflows/ci.yml`) trên SQL Server 2022 (Linux) và là điều kiện bắt buộc để merge `develop → main` cho bản phát hành **v1.0.0**.
+Cùng quy trình được tự động hoá bằng GitHub Actions (`.github/workflows/ci.yml`) trên SQL Server 2025 (Docker, Linux) và là điều kiện bắt buộc để merge `develop → main` cho bản phát hành **v1.0.0**.
 
 ## 6.2 Hạn chế
 

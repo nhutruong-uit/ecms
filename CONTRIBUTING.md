@@ -35,7 +35,7 @@ Khi đổi kế hoạch (thêm task, đổi hạn, đổi người), sửa `task
 
 ### CI (`.github/workflows/ci.yml`)
 
-Chạy khi có PR / push vào `main` (hoặc bấm *Run workflow*): khởi động SQL Server 2022 bằng `docker compose`, dựng CSDL từ đầu bằng `database/run_all.sh`, chạy `database/tests/test_{seed,procedures,triggers,security}.sql` và `10_queries.sql`, rồi smoke test giao diện (`tests/test_app_smoke.py` – mở mọi trang với từng vai trò và sinh mọi báo cáo). Chạy thử trên máy:
+Chạy khi có PR / push vào `main` (hoặc bấm *Run workflow*): khởi động SQL Server 2025 bằng `docker compose`, dựng CSDL từ đầu bằng `database/run_all.sh`, chạy `database/tests/test_{seed,procedures,triggers,security}.sql` và `10_queries.sql`, rồi smoke test giao diện (`tests/test_app_smoke.py` – mở mọi trang với từng vai trò và sinh mọi báo cáo). Chạy thử trên máy:
 
 ```bash
 cd app && pytest ../tests -q
