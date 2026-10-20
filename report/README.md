@@ -4,10 +4,18 @@ Mỗi chương một file Markdown, viết song song với task. Cuối dự án
 
 ```bash
 pip install -r scripts/requirements-docs.txt
-python scripts/build_report.py --pdf     # → BaoCao_IE103_Nhom1.docx/.pdf và HuongDanSuDung_ECMS.docx/.pdf
+python scripts/build_report.py           # → BaoCao_IE103_Nhom1.docx và HuongDanSuDung_ECMS.docx
+scripts/export_pdf.sh                    # macOS + Word: cập nhật Mục lục, số trang và xuất PDF giống hệt bản Word
 ```
 
-Mở file `.docx` bằng Word, chọn **Yes** khi được hỏi cập nhật trường để hiện Mục lục và Danh mục hình ảnh (có số trang).
+PDF nộp bài luôn xuất **bằng Microsoft Word** (`scripts/export_pdf.sh`): khổ A4, Times New Roman 13, mục lục và danh mục hình có
+số trang; file `.docx` cũng được thay bằng bản Word đã cập nhật nên mở ra không bị hỏi cập nhật trường. Lần đầu Word có thể
+xin quyền truy cập file: bấm **Select…** và chọn file trong `report/.build/` (không xoá thư mục này).
+Không có Word (Windows/Linux): `python scripts/build_report.py --pdf` in PDF bằng Chrome/Edge (mục lục không có số trang), hoặc
+mở `.docx` bằng Word, chọn **Yes** khi được hỏi cập nhật trường rồi lưu PDF.
+
+Cỡ chữ theo mẫu Lab 04: thân bài 13 pt, bảng 10–12 pt tuỳ số cột, khối mã Consolas 10,5 pt (mỗi dòng mã ≤ 76 ký tự để
+không bị Word tự xuống dòng), chú thích hình 13 pt nghiêng.
 Nguồn hướng dẫn sử dụng: [`docs/user-guide/huong-dan-su-dung.md`](../docs/user-guide/huong-dan-su-dung.md).
 
 | File | Nội dung | Người viết |

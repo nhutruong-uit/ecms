@@ -24,3 +24,6 @@ backups/*
 Thumbs.db
 .vscode/
 .idea/
+
+# Bản làm việc của Word khi xuất PDF (scripts/export_pdf.sh) – không xoá thư mục để giữ quyền truy cập đã cấp
+report/.build/

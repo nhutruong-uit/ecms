@@ -290,6 +290,28 @@ def table_fmt(tbl, widths):
         gc.set(qn("w:w"), str(w))
 
 
+def cot_rong(texts, weights, size) -> list[int]:
+    """Độ rộng cột (twips): mỗi cột đủ chỗ cho từ dài nhất của nó (không ngắt giữa từ như "5000 / 1"),
+    phần còn lại chia theo độ dài nội dung."""
+    def rong(w):                          # twips; Times New Roman: chữ hoa, số ≈ 0,72 em, chữ thường ≈ 0,5 em
+        return sum(0.72 if c.isupper() or c.isdigit() or c in "()_%" else 0.5 for c in w) * size * 20
+    # lề ô 2 × 100 twips + dư; hàng đầu (tiêu đề in đậm) rộng hơn khoảng 10%
+    toi_thieu = [int(min(max([rong(w) * (1.1 if k == 0 else 1) for k, t in enumerate(col) for w in t.split()]
+                             or [size * 10]) + 380, W_TRANG * 3 // 10))
+                 for col in texts]
+    if sum(toi_thieu) >= W_TRANG:         # quá nhiều cột: chia theo tỷ lệ độ rộng tối thiểu
+        return [int(W_TRANG * m / sum(toi_thieu)) for m in toi_thieu]
+    co_dinh: set[int] = set()             # cột bị giữ ở mức tối thiểu; phần còn lại chia theo tỷ lệ cho các cột khác
+    while True:
+        con_lai = W_TRANG - sum(toi_thieu[i] for i in co_dinh)
+        tong = sum(w for i, w in enumerate(weights) if i not in co_dinh)
+        widths = [toi_thieu[i] if i in co_dinh else int(con_lai * w / tong) for i, w in enumerate(weights)]
+        thieu = {i for i, (w, m) in enumerate(zip(widths, toi_thieu)) if w < m} - co_dinh
+        if not thieu:
+            return widths
+        co_dinh |= thieu
+
+
 def spacer(doc):
     p_fmt(doc.add_paragraph(), align="left", after=60, line=240)
 
@@ -362,10 +384,12 @@ class DocxWriter:
     def table(self, rows, aligns):
         ncol = max(len(r) for r in rows)
         size = 12 if ncol <= 4 else 11 if ncol <= 6 else 10
-        lens = [max((len("".join(c.content for c in (r[i] or []) if c.type in ("text", "code_inline")))
-                     for r in rows if i < len(r)), default=4) for i in range(ncol)]
-        weights = [min(max(n, 4), 42) + 3 for n in lens]
-        widths = [int(W_TRANG * w / sum(weights)) for w in weights]
+        texts = [["".join(c.content for c in (r[i] or []) if c.type in ("text", "code_inline")) if i < len(r) else ""
+                  for r in rows] for i in range(ncol)]
+        # trọng số theo độ dài trung bình (cột nhiều chữ được rộng hơn) cộng một phần độ dài lớn nhất
+        weights = [min(sum(len(t) for t in col[1:]) / max(len(col) - 1, 1), 150) + 0.3 * min(max(len(t) for t in col), 60) + 3
+                   for col in texts]
+        widths = cot_rong(texts, weights, size)
         tbl = self.doc.add_table(rows=len(rows), cols=ncol)
         table_fmt(tbl, widths)
         for ri, cells in enumerate(rows):
@@ -407,8 +431,10 @@ class DocxWriter:
     def new_list(self, ordered):
         if not ordered:
             return 2
-        self.num_id += 1
         numbering = self.doc.part.numbering_part.element
+        # numId lớn nhất đang có + 1: mỗi chương dùng một DocxWriter riêng, đếm từ 100 ở mỗi chương thì danh sách
+        # của các chương trùng numId và Word đánh số nối tiếp (17, 18… thay vì 1, 2…)
+        self.num_id = max([int(x.get(qn("w:numId"))) for x in numbering.findall(qn("w:num"))] + [100]) + 1
         n = el("w:num", w_numId=self.num_id)
         n.append(el("w:abstractNumId", w_val=1))
         o = el("w:lvlOverride", w_ilvl=0)
@@ -569,7 +595,10 @@ li { text-align: justify; margin-bottom: 4pt; } li p { text-indent: 0; margin: 0
 a { color: #2e75b6; text-decoration: none; }
 code { font: 12pt Consolas, Menlo, monospace; color: #1f3864; }
 table { border-collapse: collapse; width: 100%; margin: 0 0 3pt; font-size: 11.5pt; line-height: 1.05; }
-th, td { border: 0.5pt solid #bbb; padding: 3pt 5pt; vertical-align: middle; }
+th, td { border: 0.5pt solid #bbb; padding: 3pt 5pt; vertical-align: middle; overflow-wrap: anywhere; }
+/* Chrome thu nhỏ CẢ tài liệu khi một phần tử rộng hơn trang (tên dài như sp_TinhLuongGiaoVien_SetBased trong bảng
+   nhiều cột) → chữ còn ~8pt. Cho phép ngắt ở bất kỳ ký tự nào để nội dung luôn vừa khổ A4, giữ đúng cỡ 13pt. */
+td code, th code, pre.code { overflow-wrap: anywhere; word-break: break-word; }
 th { background: #1f3864; color: #fff; text-align: center; }
 tr { break-inside: avoid; } thead { display: table-header-group; }
 pre.code { background: #f7f7f7; border: 0.5pt solid #bfbfbf; padding: 5pt 7pt; font: 10.5pt/1.2 Consolas, Menlo, monospace;
