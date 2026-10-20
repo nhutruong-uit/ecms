@@ -1,6 +1,6 @@
 # Chương 5. Mô hình cơ sở dữ liệu tiên tiến
 
-Mô hình quan hệ là lựa chọn trung tâm của đồ án, nhưng không phải là mô hình duy nhất. Chương này tìm hiểu ba mô hình CSDL tiên tiến của môn học – hướng đối tượng, phân tán và phi quan hệ (NoSQL) – theo cùng một cách tiếp cận: trình bày đặc điểm của mô hình, chuyển chính dữ liệu ECMS sang mô hình đó, chạy thử và đo đạc, rồi so sánh với mô hình quan hệ. Mục cuối tổng hợp đánh giá cả bốn mô hình cho bài toán của trung tâm. Các thử nghiệm trong chương được chạy trên CSDL ECMS tại thời điểm thử nghiệm, sau khi đã phát sinh thêm một số giao dịch, nên một vài con số (số phiếu thu, tổng công nợ) có thể chênh lệch nhỏ so với dữ liệu mẫu ban đầu ở Chương 2 và Chương 3; mỗi phép so sánh trong chương đều được thực hiện trên cùng một trạng thái dữ liệu.
+Mô hình quan hệ là lựa chọn trung tâm của đồ án, nhưng không phải là mô hình duy nhất. Chương này tìm hiểu ba mô hình CSDL tiên tiến của môn học – hướng đối tượng, phân tán và phi quan hệ (NoSQL) – theo cùng một cách tiếp cận: trình bày đặc điểm của mô hình, chuyển chính dữ liệu ECMS sang mô hình đó, chạy thử và đo đạc, rồi so sánh với mô hình quan hệ. Mục cuối tổng hợp đánh giá cả bốn mô hình cho bài toán của trung tâm. Mọi thử nghiệm trong chương được chạy trên CSDL vừa dựng lại từ dữ liệu mẫu, nên số liệu khớp với Chương 2 và Chương 3.
 
 ## 5.1 Cơ sở dữ liệu hướng đối tượng
 
@@ -37,25 +37,30 @@ Nhóm chuyển toàn bộ lược đồ ECMS sang ngôn ngữ ODL, thu được 
 Trích lược đồ ODL của hai lớp `GiaoVien` và `HocVien` cho thấy ba điểm khác biệt rõ nhất so với lược đồ quan hệ: kế thừa thay cho bảng con, tập hợp thay cho bảng đa trị và phương thức có khai báo ngoại lệ thay cho procedure.
 
 ```text title="Lược đồ ODL – Lớp GiaoVien và HocVien"
-class GiaoVien extends NhanVien (extent cacGiaoVien) {     // chuyên biệt hoá → kế thừa
+// chuyên biệt hoá → kế thừa
+class GiaoVien extends NhanVien (extent cacGiaoVien) {
     attribute string        loaiGV;
     attribute string        trinhDo;
     attribute double        donGiaBuoi;
-    attribute set<ChungChi> chungChis;                      // đa trị → tập hợp, không cần bảng riêng
+    // đa trị → tập hợp, không cần bảng riêng
+    attribute set<ChungChi> chungChis;
     relationship Set<LopHoc> lopPhuTrach inverse LopHoc::giaoVien;
-    double tinhLuong(in string thang);                      // ghi đè cách tính lương của NhanVien
+    // ghi đè cách tính lương của NhanVien
+    double tinhLuong(in string thang);
 };
 
 class HocVien : Nguoi (extent cacHocVien key maHV) {
     attribute string  maHV;
     attribute string  email;
-    attribute DiaChi  diaChi;                               // phức hợp → struct
+    attribute DiaChi  diaChi;              // phức hợp → struct
     attribute string  hoTenPhuHuynh;
-    relationship ChiNhanh             chiNhanh   inverse ChiNhanh::hocViens;
-    relationship Set<DangKy>          dangKys    inverse DangKy::hocVien;
-    relationship Set<KiemTraDauVao>   kiemTras   inverse KiemTraDauVao::hocVien;
-    relationship Set<PhieuThu>        phieuThus  inverse PhieuThu::hocVien;
-    DangKy dangKy(in LopHoc lop, in float giamGia) raises (LopDay, ThieuTienQuyet);
+    relationship ChiNhanh           chiNhanh  inverse ChiNhanh::hocViens;
+    relationship Set<DangKy>        dangKys   inverse DangKy::hocVien;
+    relationship Set<KiemTraDauVao> kiemTras
+                                    inverse KiemTraDauVao::hocVien;
+    relationship Set<PhieuThu>      phieuThus inverse PhieuThu::hocVien;
+    DangKy dangKy(in LopHoc lop, in float giamGia)
+        raises (LopDay, ThieuTienQuyet);
     double congNo();
     list<BuoiHoc> lichHoc(in date tuan);
 };
@@ -75,16 +80,21 @@ class NhanVien(Nguoi):
         return self.luong_co_ban
 
 class GiaoVien(NhanVien):
-    def tinh_luong(self, thang: str) -> float:        # đa hình: ghi đè cách tính của NhanVien
-        so_buoi = self._s.rows("""SELECT COUNT(*) AS n FROM BUOIHOC b JOIN LOPHOC l ON l.MaLop = b.MaLop
-                                  WHERE l.MaGV = ? AND b.TrangThai = N'Đã dạy' AND FORMAT(b.NgayHoc, 'yyyy-MM') = ?""",
-                               self.ma_nv, thang)[0]["n"]
+    # đa hình: ghi đè cách tính của NhanVien
+    def tinh_luong(self, thang: str) -> float:
+        so_buoi = self._s.rows(
+            """SELECT COUNT(*) AS n
+               FROM BUOIHOC b JOIN LOPHOC l ON l.MaLop = b.MaLop
+               WHERE l.MaGV = ? AND b.TrangThai = N'Đã dạy'
+                 AND FORMAT(b.NgayHoc, 'yyyy-MM') = ?""",
+            self.ma_nv, thang)[0]["n"]
         return self.luong_co_ban + so_buoi * self.don_gia_buoi
 
 class KhoaHoc:
     def lo_trinh(self) -> list:
-        """Chuỗi khoá cần học trước – duyệt đối tượng thay cho CTE đệ quy (Q26)."""
-        return (self.tien_quyet.lo_trinh() if self.tien_quyet else []) + [self]
+        """Chuỗi khoá cần học trước – duyệt đối tượng thay CTE đệ quy."""
+        truoc = self.tien_quyet.lo_trinh() if self.tien_quyet else []
+        return truoc + [self]
 ```
 
 Kết quả chạy cho thấy đa hình và identity map hoạt động đúng: cùng lời gọi `tinh_luong`, nhân viên văn phòng nhận đúng lương cơ bản, còn giáo viên nhận lương cơ bản cộng tiền dạy; đối tượng giáo viên lấy qua quan hệ của lớp học chính là đối tượng lấy trực tiếp theo khoá.
@@ -92,21 +102,22 @@ Kết quả chạy cho thấy đa hình và identity map hoạt động đúng: 
 ```text title="Kết quả – Đa hình và identity map"
 NhanVien  Dương Mai Yến     27,000,000     ← lương cơ bản
 GiaoVien  Lê Thanh Yến      11,100,000     ← 7.500.000 + 8 buổi × 450.000
-lop.giao_vien is s.get(NhanVien, 'NV0015') → True ; isinstance(gv, GiaoVien) → True
+lop.giao_vien is s.get(NhanVien, 'NV0015')  → True
+isinstance(gv, GiaoVien)                    → True
 ```
 
 **So sánh với SQL.** Nhóm giải cùng ba bài toán bằng cách duyệt đối tượng và bằng một câu SQL, so sánh kết quả, thời gian và số câu SQL thực tế gửi xuống CSDL:
 
 | Bài toán | Cách làm | Kết quả | Thời gian | Số câu SQL |
 |---|---|---|--:|--:|
-| Lộ trình tiên quyết tới IELTS 6.5+ | Hướng đối tượng: `KhoaHoc('IE65').lo_trinh()` | IEF → IE55 → IE65 | 16,5 ms | 3 |
-| | SQL: CTE đệ quy (Q26) | IEF → IE55 → IE65 | 8,1 ms | 1 |
-| Số chỗ trống của các lớp đang học | Hướng đối tượng: `l.si_so_con_lai()` cho từng lớp | Giống nhau | 39,5 ms | 6 |
-| | SQL: `SiSoToiDa − SiSoHienTai` | Giống nhau | 5,4 ms | 1 |
-| Tổng công nợ toàn trung tâm | Hướng đối tượng: cộng `h.cong_no()` của mọi học viên | 271.743.000 đồng | 1.873,5 ms | **889** |
-| | SQL: `SUM` trên `vw_CongNoHocVien` | 271.743.000 đồng | 40,1 ms | 1 |
+| Lộ trình tiên quyết tới IELTS 6.5+ | Hướng đối tượng: `KhoaHoc('IE65').lo_trinh()` | IEF → IE55 → IE65 | 12,2 ms | 3 |
+| | SQL: CTE đệ quy (Q26) | IEF → IE55 → IE65 | 13,5 ms | 1 |
+| Số chỗ trống của các lớp đang học | Hướng đối tượng: `l.si_so_con_lai()` cho từng lớp | Giống nhau | 29,7 ms | 6 |
+| | SQL: `SiSoToiDa − SiSoHienTai` | Giống nhau | 4,1 ms | 1 |
+| Tổng công nợ toàn trung tâm | Hướng đối tượng: cộng `h.cong_no()` của mọi học viên | 283.218.000 đồng | 1.227,2 ms | **889** |
+| | SQL: `SUM` trên `vw_CongNoHocVien` | 283.218.000 đồng | 22,7 ms | 1 |
 
-**Nhận xét.** Cả hai cách cho cùng kết quả. Cách hướng đối tượng viết tự nhiên hơn – đọc như mô tả nghiệp vụ, không cần nhớ điều kiện kết nối – nhưng khi nạp lười thì gặp **vấn đề N+1 truy vấn**: tính tổng công nợ cần tới 889 câu SQL (một câu lấy danh sách học viên, mỗi học viên một câu lấy đăng ký, mỗi đăng ký một câu lấy số tiền đã thu) và chậm gấp khoảng 47 lần so với một câu `SUM` để hệ quản trị quan hệ tối ưu theo tập hợp. Các ORM thực tế như SQLAlchemy, Entity Framework giảm vấn đề này bằng nạp trước (eager loading), nhưng truy vấn thống kê trên toàn bộ dữ liệu vẫn là thế mạnh của SQL.
+**Nhận xét.** Cả hai cách cho cùng kết quả. Thời gian dao động giữa các lần chạy, còn số câu SQL thì ổn định nên là thước đo đáng tin hơn. Với bài toán nhỏ như lộ trình tiên quyết (ba khoá), hai cách nhanh tương đương. Cách hướng đối tượng viết tự nhiên hơn – đọc như mô tả nghiệp vụ, không cần nhớ điều kiện kết nối – nhưng khi nạp lười thì gặp **vấn đề N+1 truy vấn**: tính tổng công nợ cần tới 889 câu SQL (một câu lấy danh sách học viên, mỗi học viên một câu lấy đăng ký, mỗi đăng ký một câu lấy số tiền đã thu) và chậm gấp khoảng 54 lần so với một câu `SUM` để hệ quản trị quan hệ tối ưu theo tập hợp. Các ORM thực tế như SQLAlchemy, Entity Framework giảm vấn đề này bằng nạp trước (eager loading), nhưng truy vấn thống kê trên toàn bộ dữ liệu vẫn là thế mạnh của SQL.
 
 ### 5.1.4 So sánh mô hình quan hệ và hướng đối tượng cho ECMS
 
@@ -172,13 +183,17 @@ Các mảnh được cấp phát về bốn trạm như sau:
 Ba trạm chi nhánh được mô phỏng bằng ba CSDL trên cùng một máy chủ SQL Server; trong thực tế đây sẽ là ba máy chủ nối với nhau bằng linked server (script có sẵn mẫu cấu hình). Mỗi mảnh ngang có ràng buộc `CHECK (MaCN = 'CN0i')` trên cột phân mảnh và khoá chính có chứa `MaCN`. Trạm trung tâm định nghĩa các view **trùng tên với bảng gốc** để người dùng truy vấn như trên CSDL tập trung – đó chính là tính trong suốt vị trí:
 
 ```sql title="Mã lệnh – Lược đồ toàn cục tại trạm trung tâm"
-CREATE VIEW dbo.HOCVIEN AS                        -- trong suốt vị trí: hợp các mảnh ngang
+-- trong suốt vị trí: hợp các mảnh ngang
+CREATE VIEW dbo.HOCVIEN AS
     SELECT * FROM ECMS_CN01.dbo.HOCVIEN UNION ALL
     SELECT * FROM ECMS_CN02.dbo.HOCVIEN UNION ALL
     SELECT * FROM ECMS_CN03.dbo.HOCVIEN;
 
-CREATE VIEW dbo.NHANVIEN AS                       -- tái thiết mảnh dọc bằng phép kết
-    SELECT c.*, l.LuongCoBan FROM (… hợp các NHANVIEN_CHUNG_i …) c JOIN dbo.NHANVIEN_LUONG l ON l.MaNV = c.MaNV;
+-- tái thiết mảnh dọc bằng phép kết
+CREATE VIEW dbo.NHANVIEN AS
+    SELECT c.*, l.LuongCoBan
+    FROM (… hợp các NHANVIEN_CHUNG_i …) c
+    JOIN dbo.NHANVIEN_LUONG l ON l.MaNV = c.MaNV;
 ```
 
 Sau khi phân mảnh, số dòng ở mỗi trạm chi nhánh như sau:
@@ -253,13 +268,22 @@ Nhóm chọn MongoDB để thử nghiệm vì đây là mô hình có nhiều �
 Cấu trúc một tài liệu học viên (đã lược bớt):
 
 ```json title="Tài liệu MongoDB – Hồ sơ học viên"
-{ "_id": "HV0019", "ho_ten": { "ho": "Nguyễn Thành", "ten": "Khoa" }, "sdt": "0853337655", "chi_nhanh": "CN01",
-  "kiem_tra": [ { "ngay": "2025-01-…", "diem_tong": 1.4, "de_xuat": "IEF",
-                  "ky_nang": { "listening": { "diem": 1.2, "nhan_xet": "…" }, "speaking": { "diem": 1.0 }, … } } ],
-  "dang_ky": [ { "ma_dk": 18, "lop": "IEF-2501", "khoa_hoc": "IEF",
-                 "hoc_phi": { "goc": 5500000, "giam_gia": 0, "thanh_tien": 5500000, "da_thu": 5500000, "trang_thai": "Đã đóng" },
-                 "diem": { "gk": 7.25, "ck": 7.6, "tb": 7.45 }, "ket_qua": "Đạt",
-                 "diem_danh": [ { "buoi": 1, "ngay": "2025-02-10", "trang_thai": "Có mặt" }, … ] }, … ] }
+{
+  "_id": "HV0019",
+  "ho_ten": { "ho": "Nguyễn Thành", "ten": "Khoa" },
+  "sdt": "0853337655", "chi_nhanh": "CN01",
+  "kiem_tra": [
+    { "ngay": "2025-01-…", "diem_tong": 1.4, "de_xuat": "IEF",
+      "ky_nang": { "listening": { "diem": 1.2, "nhan_xet": "…" },
+                   "speaking":  { "diem": 1.0 }, … } } ],
+  "dang_ky": [
+    { "ma_dk": 18, "lop": "IEF-2501", "khoa_hoc": "IEF",
+      "hoc_phi": { "goc": 5500000, "giam_gia": 0, "thanh_tien": 5500000,
+                   "da_thu": 5500000, "trang_thai": "Đã đóng" },
+      "diem": { "gk": 7.25, "ck": 7.6, "tb": 7.45 }, "ket_qua": "Đạt",
+      "diem_danh": [ { "buoi": 1, "ngay": "2025-02-10",
+                       "trang_thai": "Có mặt" }, … ] }, … ]
+}
 ```
 
 ### 5.3.4 Chuyển dữ liệu từ SQL Server sang MongoDB
@@ -271,13 +295,13 @@ Chương trình chuyển đổi đọc dữ liệu từ SQL Server bằng pyodbc
 | `khoa_hoc` | KHOAHOC | 12 = 12 |
 | `lop_hoc` | LOPHOC | 25 = 25 |
 | `hoc_vien` | HOCVIEN | 349 = 349 |
-| `phieu_thu` | PHIEUTHU | 502 = 502 |
+| `phieu_thu` | PHIEUTHU | 501 = 501 |
 | `hoc_vien.dang_ky[]` | DANGKY | 539 = 539 |
 | `hoc_vien.dang_ky[].diem_danh[]` | DIEMDANH | 10.063 = 10.063 |
 | `hoc_vien.kiem_tra[]` | KIEMTRA_DAUVAO | 357 = 357 |
-| `phieu_thu.chi_tiet[]` | CT_PHIEUTHU | 510 = 510 |
+| `phieu_thu.chi_tiet[]` | CT_PHIEUTHU | 508 = 508 |
 
-Toàn bộ 22 bảng quan hệ được thu gọn thành **4 collection** với dung lượng khoảng 1,1 MB, quá trình chuyển mất 0,7 giây. Số lượng ở mọi cấp đều khớp, chứng tỏ không mất dữ liệu khi chuyển.
+Toàn bộ 22 bảng quan hệ được thu gọn thành **4 collection** với dung lượng khoảng 1,1 MB, quá trình chuyển mất 0,5 giây. Số lượng ở mọi cấp đều khớp, chứng tỏ không mất dữ liệu khi chuyển.
 
 ### 5.3.5 So sánh truy vấn tương đương
 
@@ -285,14 +309,14 @@ Nhóm viết sáu cặp truy vấn trả lời cùng một câu hỏi trên hai 
 
 | Câu | Câu hỏi | Cách viết trên SQL Server | Cách viết trên MongoDB | Số dòng | SQL (ms) | MongoDB (ms) | Kết quả khớp |
 |:-:|---|---|---|--:|--:|--:|:-:|
-| 1 | Hồ sơ học viên kèm lớp, điểm, số buổi vắng | Kết nối 3 bảng và truy vấn con | `find_one` theo `_id` trên dữ liệu nhúng | 6 | 4,53 | 1,47 | Có |
-| 2 | Doanh thu chi nhánh theo tháng năm 2026 | Kết nối và `GROUP BY` | `$match` và `$group` | 18 | 3,70 | 1,92 | Có |
-| 3 | Bài kiểm tra có điểm Speaking dưới 3 | XQuery `.exist()` trên cột XML | Lọc theo trường lồng `kiem_tra.ky_nang.speaking.diem` | 160 | 18,77 | 2,93 | Có |
-| 4 | Mười học viên có tỷ lệ vắng cao nhất | Kết nối, `GROUP BY`, `ORDER BY` | `$unwind`, `$filter`, `$sort` | 10 | 4,30 | 2,46 | Có |
-| 5 | Chuỗi khoá tiên quyết | CTE đệ quy | `$graphLookup` | 4 | 1,58 | 1,49 | Có |
-| 6 | Lớp đang mở còn chỗ kèm tên khoá | Kết nối | `$lookup` | 8 | 1,31 | 1,48 | Có |
+| 1 | Hồ sơ học viên kèm lớp, điểm, số buổi vắng | Kết nối 3 bảng và truy vấn con | `find_one` theo `_id` trên dữ liệu nhúng | 6 | 3,65 | 0,77 | Có |
+| 2 | Doanh thu chi nhánh theo tháng năm 2026 | Kết nối và `GROUP BY` | `$match` và `$group` | 18 | 2,92 | 1,53 | Có |
+| 3 | Bài kiểm tra có điểm Speaking dưới 3 | XQuery `.exist()` trên cột XML | Lọc theo trường lồng `kiem_tra.ky_nang.speaking.diem` | 160 | 17,83 | 2,31 | Có |
+| 4 | Mười học viên có tỷ lệ vắng cao nhất | Kết nối, `GROUP BY`, `ORDER BY` | `$unwind`, `$filter`, `$sort` | 10 | 3,94 | 2,13 | Có |
+| 5 | Chuỗi khoá tiên quyết | CTE đệ quy | `$graphLookup` | 4 | 1,07 | 1,21 | Có |
+| 6 | Lớp đang mở còn chỗ kèm tên khoá | Kết nối | `$lookup` | 8 | 0,97 | 1,27 | Có |
 
-**Nhận xét.** MongoDB nhanh hơn rõ rệt ở các truy vấn đọc theo **đơn vị đã nhúng** như hồ sơ học viên và kết quả kiểm tra – câu 3 nhanh hơn khoảng 6 lần so với XQuery – vì không phải kết nối bảng hay phân tích XML. Với truy vấn cần **kết nối nhiều tập dữ liệu** (câu 5, câu 6), hai hệ tương đương nhau và `$lookup` thậm chí chậm hơn phép kết nối của SQL. Cái giá của việc nhúng là cập nhật phức tạp hơn: sửa một ô điểm danh phải dùng `arrayFilters` trên mảng lồng hai cấp; thông tin lớp, khoá học bị lặp lại trong nhiều tài liệu; và không có khoá ngoại, CHECK hay trigger để giữ nhất quán – sĩ số, tổng tiền phiếu thu phải do ứng dụng tự tính.
+**Nhận xét.** MongoDB nhanh hơn rõ rệt ở các truy vấn đọc theo **đơn vị đã nhúng** như hồ sơ học viên và kết quả kiểm tra – câu 3 nhanh hơn khoảng 8 lần so với XQuery – vì không phải kết nối bảng hay phân tích XML. Ngược lại, với truy vấn cần **kết nối nhiều tập dữ liệu** (câu 5, câu 6), MongoDB lại chậm hơn SQL Server một chút, vì phải dùng `$graphLookup` và `$lookup` để làm thay việc của phép kết nối – thế mạnh vốn có của hệ quản trị quan hệ. Cái giá của việc nhúng là cập nhật phức tạp hơn: sửa một ô điểm danh phải dùng `arrayFilters` trên mảng lồng hai cấp; thông tin lớp, khoá học bị lặp lại trong nhiều tài liệu; và không có khoá ngoại, CHECK hay trigger để giữ nhất quán – sĩ số, tổng tiền phiếu thu phải do ứng dụng tự tính.
 
 ### 5.3.6 Đánh giá các hệ NoSQL cho ECMS
 
@@ -316,7 +340,7 @@ Bảng dưới đây tổng hợp đánh giá cả bốn mô hình đã tìm hi�
 | Thay đổi lược đồ | ALTER TABLE | Sửa lớp | Phải sửa ở mọi trạm | Linh hoạt nhất |
 | Mở rộng quy mô | Theo chiều dọc (máy mạnh hơn) | Theo chiều dọc | Theo chiều ngang, theo chi nhánh | Theo chiều ngang (sharding) |
 | Bảo mật, kiểm toán, sao lưu | Đầy đủ | Phụ thuộc sản phẩm | Phải thực hiện ở mọi trạm | Có, nhưng kém chi tiết hơn |
-| Số liệu thử nghiệm | – | Tổng công nợ: 889 câu SQL, 1.873 ms khi nạp lười, so với 1 câu, 40 ms | Truy vấn toàn cục khớp hoàn toàn; lọc theo chi nhánh chỉ đọc một trạm | Hồ sơ học viên 1,47 ms so với 4,53 ms; lọc kết quả kiểm tra 2,93 ms so với 18,77 ms |
+| Số liệu thử nghiệm | – | Tổng công nợ: 889 câu SQL, 1.227 ms khi nạp lười, so với 1 câu, 23 ms | Truy vấn toàn cục khớp hoàn toàn; lọc theo chi nhánh chỉ đọc một trạm | Hồ sơ học viên 0,77 ms so với 3,65 ms; lọc kết quả kiểm tra 2,31 ms so với 17,83 ms |
 
 **Kết luận.** Với quy mô hiện tại – ba chi nhánh, vài trăm học viên – và yêu cầu chính là *giao dịch đúng* (ghi danh, thu phí) cùng *báo cáo* (doanh thu, công nợ, chuyên cần), **CSDL quan hệ tập trung** là lựa chọn phù hợp cho ECMS và cũng là phần nhóm đã cài đặt đầy đủ. Các mô hình khác được bổ sung có chọn lọc khi có nhu cầu:
 

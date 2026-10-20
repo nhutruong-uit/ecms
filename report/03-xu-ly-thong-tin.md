@@ -49,9 +49,12 @@ Dưới đây phân tích bốn truy vấn tiêu biểu cho các kỹ thuật kh
 ```sql title="Mã lệnh – Q24: Học viên đã học mọi khoá của một chương trình"
 SELECT h.MaHV, h.HoTen, ct.TenCT
 FROM HOCVIEN h CROSS JOIN CHUONGTRINH ct
-WHERE NOT EXISTS (SELECT 1 FROM KHOAHOC k WHERE k.MaCT = ct.MaCT
-        AND NOT EXISTS (SELECT 1 FROM DANGKY d JOIN LOPHOC l ON l.MaLop = d.MaLop
-                        WHERE d.MaHV = h.MaHV AND l.MaKH = k.MaKH));
+WHERE NOT EXISTS (
+        SELECT 1 FROM KHOAHOC k
+        WHERE k.MaCT = ct.MaCT
+          AND NOT EXISTS (SELECT 1
+                          FROM DANGKY d JOIN LOPHOC l ON l.MaLop = d.MaLop
+                          WHERE d.MaHV = h.MaHV AND l.MaKH = k.MaKH));
 ```
 
 Để kiểm chứng, nhóm viết thêm cách thứ hai (Q24b) bằng cách đếm số khoá đã học của mỗi học viên trong chương trình rồi so với tổng số khoá của chương trình. Hai cách viết độc lập cho cùng **36** cặp học viên – chương trình, xác nhận kết quả đúng.
@@ -89,10 +92,10 @@ WHERE NOT EXISTS (SELECT 1 FROM KHOAHOC k WHERE k.MaCT = ct.MaCT
 
 | Truy vấn | Không có chỉ mục | Có chỉ mục | Mức giảm |
 |---|---|---|--:|
-| P1 – chuyên cần của một đăng ký (`WHERE MaDK = …`) | Quét toàn bộ, 6.023 trang, CPU 62 ms | Tìm trực tiếp trên `IX_DD_MaDK`, 3 trang, CPU 0 ms | 99,9% |
-| P2 – thống kê một lớp (`WHERE MaLop = … GROUP BY`) | Quét toàn bộ, 6.023 trang, CPU 194 ms | Tìm trực tiếp trên `IX_DD_MaLop`, 150 trang, CPU 13 ms | 97,5% |
-| P3 – phiếu thu tháng 3/2026 viết `YEAR(NgayThu) = 2026 AND MONTH(NgayThu) = 3` | Quét chỉ mục, 5 trang | – | |
-| P3' – cùng điều kiện viết `NgayThu >= '2026-03-01' AND NgayThu < '2026-04-01'` | – | Tìm trực tiếp trên `IX_PHIEUTHU_NgayThu`, 2 trang | 60% |
+| P1 – chuyên cần của một đăng ký (`WHERE MaDK = …`) | Quét toàn bộ, 6.022 trang, CPU 62 ms | Tìm trực tiếp trên `IX_DD_MaDK`, 3 trang, CPU 0 ms | 99,9% |
+| P2 – thống kê một lớp (`WHERE MaLop = … GROUP BY`) | Quét toàn bộ, 6.022 trang, CPU 194 ms | Tìm trực tiếp trên `IX_DD_MaLop`, 150 trang, CPU 13 ms | 97,5% |
+| P3 – phiếu thu tháng 3/2026 viết `YEAR(NgayThu) = 2026 AND MONTH(NgayThu) = 3` | Quét chỉ mục, 4 trang | – | |
+| P3' – cùng điều kiện viết `NgayThu >= '2026-03-01' AND NgayThu < '2026-04-01'` | – | Tìm trực tiếp trên `IX_PHIEUTHU_NgayThu`, 2 trang | 50% |
 
 **Nhận xét.**
 
@@ -128,7 +131,7 @@ Lược đồ còn giúp truy vấn: vì SQL Server biết `@Diem` là kiểu s�
 | Câu | Câu hỏi | Phương thức, kỹ thuật |
 |:-:|---|---|
 | X01 | Điểm từng kỹ năng của các bài kiểm tra gần nhất | `.value()` với vị từ `[@Ten="Listening"]` |
-| X02 | Bài có điểm Speaking thấp hơn điểm tổng từ 0,7 trở lên (26 bài) | `.exist()` kết hợp `sql:column()` |
+| X02 | Bài có điểm Speaking thấp hơn điểm tổng từ 0,7 trở lên (25 bài) | `.exist()` kết hợp `sql:column()` |
 | X03 | Tách bốn kỹ năng thành bốn dòng | `.nodes()` với `CROSS APPLY` |
 | X04 | Điểm trung bình từng kỹ năng theo hình thức thi | `.nodes()` kết hợp `GROUP BY` |
 | X05 | Trích các kỹ năng đạt từ 7 điểm trở lên | `.query()` |
@@ -153,7 +156,8 @@ SELECT MaKT, KetQuaChiTiet.query('
     for $k in /KetQua/KyNang
     where $k/@Diem = $min
     order by $k/@Ten
-    return <YeuNhat KyNang="{data($k/@Ten)}" Diem="{data($k/@Diem)}"/>') AS KyNangYeu
+    return <YeuNhat KyNang="{data($k/@Ten)}"
+                    Diem="{data($k/@Diem)}"/>') AS KyNangYeu
 FROM KIEMTRA_DAUVAO;
 ```
 
@@ -211,7 +215,8 @@ Vì cần cả hai, ECMS chạy ở **chế độ hỗn hợp** (Mixed mode). Sc
 **Tài khoản ứng dụng và băm mật khẩu.** Người dùng web không có login SQL Server riêng: họ đăng nhập bằng bảng TAIKHOAN, còn kết nối tới CSDL luôn dùng login `ecms_app`. Mật khẩu không bao giờ được lưu ở dạng rõ mà được băm bằng SHA2-256 sau khi trộn với một chuỗi ngẫu nhiên (salt) 16 byte riêng cho từng tài khoản. Nhờ salt, hai người đặt cùng mật khẩu vẫn có giá trị băm khác nhau, và kẻ tấn công không thể dùng bảng băm tính sẵn.
 
 ```sql title="Mã lệnh – Hàm băm mật khẩu có salt"
-CREATE OR ALTER FUNCTION dbo.fn_BamMatKhau (@MatKhau NVARCHAR(100), @Salt VARBINARY(16))
+CREATE OR ALTER FUNCTION dbo.fn_BamMatKhau
+    (@MatKhau NVARCHAR(100), @Salt VARBINARY(16))
 RETURNS VARBINARY(32)
 WITH SCHEMABINDING
 AS
@@ -241,48 +246,42 @@ Các procedure quản lý tài khoản được thiết kế như sau:
 
 ```sql title="Mã lệnh – Sinh lệnh cấp quyền cho r_App theo loại đối tượng"
 DECLARE @sql NVARCHAR(MAX) = N'';
+-- Viết gọn: script gốc lặp nguyên biểu thức
+--   QUOTENAME(s.name) + N'.' + QUOTENAME(o.name)
+-- trong từng nhánh WHEN; ở đây gọi chung là <ten>
 SELECT @sql += CASE o.type
-    WHEN 'P'  THEN N'GRANT EXECUTE ON ' + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
-    WHEN 'FN' THEN N'GRANT EXECUTE ON ' + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
-    WHEN 'V'  THEN N'GRANT SELECT ON '  + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
-    WHEN 'IF' THEN N'GRANT SELECT ON '  + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
-    WHEN 'TF' THEN N'GRANT SELECT ON '  + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
-    WHEN 'U'  THEN N'DENY SELECT, INSERT, UPDATE, DELETE ON ' + QUOTENAME(s.name) + N'.' + QUOTENAME(o.name) + N' TO r_App;'
+    WHEN 'P'  THEN N'GRANT EXECUTE ON ' + <ten> + N' TO r_App;' -- procedure
+    WHEN 'FN' THEN N'GRANT EXECUTE ON ' + <ten> + N' TO r_App;' -- hàm
+    WHEN 'V'  THEN N'GRANT SELECT ON '  + <ten> + N' TO r_App;' -- view
+    WHEN 'IF' THEN N'GRANT SELECT ON '  + <ten> + N' TO r_App;' -- hàm bảng
+    WHEN 'TF' THEN N'GRANT SELECT ON '  + <ten> + N' TO r_App;' -- hàm bảng
+    WHEN 'U'  THEN N'DENY SELECT, INSERT, UPDATE, DELETE ON '    -- bảng
+                   + <ten> + N' TO r_App;'
 END
 FROM sys.objects o JOIN sys.schemas s ON s.schema_id = o.schema_id
-WHERE o.is_ms_shipped = 0 AND o.type IN ('P', 'FN', 'V', 'IF', 'TF', 'U') AND s.name = 'dbo';
+WHERE o.is_ms_shipped = 0 AND s.name = 'dbo'
+  AND o.type IN ('P', 'FN', 'V', 'IF', 'TF', 'U');
 EXEC sp_executesql @sql;
 ```
 
 Thiết kế này có ý nghĩa bảo mật quan trọng: kể cả khi ứng dụng bị tấn công chèn mã SQL, kẻ tấn công cũng không thể đọc bảng TAIKHOAN hay sửa trực tiếp một phiếu thu, vì login của ứng dụng không có bất kỳ quyền nào trên bảng.
 
-**Ma trận phân quyền.** Bảng dưới đây tóm tắt quyền của từng role trên các đối tượng chính. Ký hiệu: G là cấp quyền (GRANT), D là cấm (DENY), G* là cấp quyền kèm quyền cấp tiếp (WITH GRANT OPTION), dấu gạch là không cấp.
+**Ma trận phân quyền.** Bảng dưới đây tóm tắt quyền của từng role trên các đối tượng chính, chia thành hai nhóm: quyền được cấp (GRANT) và quyền bị cấm tường minh (DENY). Những gì không được liệt kê là không được cấp.
 
-| Đối tượng | r_QuanLy | r_GiaoVu | r_KeToan | r_GiaoVien | r_HocVien | r_App |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| NHANVIEN (có cột lương) | G SELECT, UPDATE | D SELECT | G SELECT | D SELECT | – | D |
-| HOCVIEN | G SELECT | G SELECT, INSERT, UPDATE | – | – | – | D |
-| DANGKY | G SELECT | – | G SELECT mức cột (không gồm điểm), D UPDATE | – | – | D |
-| PHIEUTHU, CT_PHIEUTHU | G SELECT, D INSERT/UPDATE/DELETE | D mọi thao tác | G SELECT, D UPDATE/DELETE | D SELECT | – | D |
-| TAIKHOAN | G SELECT, D SELECT trên cột băm và salt | – | – | – | – | D |
-| Các bảng khác | G SELECT toàn schema | G SELECT KHOAHOC, CHUONGTRINH; G SELECT, INSERT KIEMTRA_DAUVAO | G SELECT BANGLUONG | – | G SELECT KHOAHOC | D |
-| vw_NhanVien_CongKhai | G | G | – | – | – | G |
-| vw_HocVien_ChiNhanh | G | G | G | – | – | G |
-| vw_CongNoHocVien | G | G | G | D | – | G |
-| vw_SiSoLop | G* | G | – | – | – | G |
-| vw_BangDiem, vw_LichDayGiaoVien | G | – | – | G | – | G |
-| fn_LichHocHocVien | G | – | – | – | G | G |
-| Procedure ghi danh, chuyển lớp, xếp lịch, sinh buổi học, tìm kiếm | – | G EXECUTE | – | – | – | G |
-| sp_ThuHocPhi | – | – | G EXECUTE | – | – | G |
-| sp_ThongKeDoanhThu, sp_TinhLuongGiaoVien | G EXECUTE | – | G EXECUTE | – | – | G |
-| Procedure điểm danh, nhập điểm, cảnh báo chuyên cần | G EXECUTE (cảnh báo) | – | – | G EXECUTE | – | G |
-| Procedure đăng nhập, đổi mật khẩu, quản lý tài khoản | – | – | – | – | – | G |
+| Role | Được cấp (GRANT) | Bị cấm (DENY) |
+|---|---|---|
+| `r_QuanLy` | SELECT toàn bộ schema; UPDATE trên NHANVIEN (điều chỉnh lương); EXECUTE `sp_ThongKeDoanhThu`, `sp_TinhLuongGiaoVien`, `sp_CanhBaoChuyenCan`. Riêng user `u_quanly` được SELECT `vw_SiSoLop` kèm quyền cấp tiếp (WITH GRANT OPTION) | SELECT hai cột `MatKhauHash`, `Salt` của TAIKHOAN; INSERT, UPDATE, DELETE trên PHIEUTHU và CT_PHIEUTHU |
+| `r_GiaoVu` | SELECT, INSERT, UPDATE trên HOCVIEN; SELECT, INSERT trên KIEMTRA_DAUVAO; SELECT trên KHOAHOC, CHUONGTRINH; SELECT các view `vw_HocVien_ChiNhanh`, `vw_NhanVien_CongKhai`, `vw_DangKyChiTiet`, `vw_SiSoLop`, `vw_LopHoc_DangMo`, `vw_CongNoHocVien` và hàm `fn_GoiYKhoaHoc`; EXECUTE `sp_DangKyHoc`, `sp_ChuyenLop`, `sp_XepLichLop`, `sp_SinhBuoiHoc`, `sp_TimKiemHocVien` | SELECT trên NHANVIEN (có cột lương); SELECT, INSERT, UPDATE, DELETE trên PHIEUTHU |
+| `r_KeToan` | SELECT trên NHANVIEN, BANGLUONG, PHIEUTHU, CT_PHIEUTHU; SELECT các cột học phí của DANGKY (mức cột, không gồm điểm); SELECT `vw_CongNoHocVien`, `vw_DoanhThuThang`, `vw_HocVien_ChiNhanh`; EXECUTE `sp_ThuHocPhi`, `sp_ThongKeDoanhThu`, `sp_TinhLuongGiaoVien` | UPDATE trên DANGKY; UPDATE, DELETE trên PHIEUTHU (phiếu đã lập không sửa, không xoá) |
+| `r_GiaoVien` | SELECT `vw_LichDayGiaoVien`, `vw_BangDiem` và các hàm `fn_LopCuaGiaoVien`, `fn_BangDiemLop`; EXECUTE `sp_DiemDanhBuoi`, `sp_NhapDiem`, `sp_CanhBaoChuyenCan` | SELECT trên NHANVIEN, PHIEUTHU và `vw_CongNoHocVien` |
+| `r_HocVien` | SELECT trên KHOAHOC và các hàm `fn_LichHocHocVien`, `fn_GoiYKhoaHoc` | – (lệnh DENY toàn schema được thu hồi bằng REVOKE để minh hoạ) |
+| `r_App` (ứng dụng web) | EXECUTE mọi procedure và hàm vô hướng; SELECT mọi view và hàm trả về bảng | SELECT, INSERT, UPDATE, DELETE trên **mọi bảng** |
 
 **GRANT, REVOKE, DENY và WITH GRANT OPTION.** Script minh hoạ đủ bốn câu lệnh phân quyền:
 
 - `GRANT` cấp quyền; `DENY` cấm tường minh và **luôn thắng** mọi GRANT, kể cả GRANT nhận qua role khác hay ở mức schema. Ví dụ `DENY SELECT ON TAIKHOAN (MatKhauHash, Salt)` vẫn chặn quản lý xem giá trị băm dù r_QuanLy đã được cấp quyền đọc toàn schema.
 - `REVOKE` gỡ một GRANT hoặc một DENY đã có, đưa về trạng thái "không được cấp". Script minh hoạ bằng cách cấm r_HocVien đọc toàn schema rồi thu hồi lệnh cấm đó; học viên chỉ còn các quyền được cấp riêng.
-- `WITH GRANT OPTION`: u_quanly được cấp quyền đọc `vw_SiSoLop` kèm quyền cấp tiếp, nên có thể tự cấp cho giáo viên và tự thu hồi; giáo vụ không có quyền cấp tiếp nên không làm được.
+- `WITH GRANT OPTION`: user u_quanly được cấp quyền đọc `vw_SiSoLop` kèm quyền cấp tiếp, nên có thể tự cấp cho giáo viên và tự thu hồi; giáo vụ không có quyền cấp tiếp nên không làm được.
 - Quyền **mức cột**: kế toán chỉ được đọc các cột học phí của DANGKY, không xem được điểm.
 
 **Kiểm thử.** Bộ kiểm thử `test_security.sql` dùng lệnh `EXECUTE AS USER` để lần lượt đóng vai từng user và thử các thao tác được phép lẫn không được phép. Trích kết quả tiêu biểu:
@@ -327,9 +326,10 @@ Kết quả **36/36 ca đạt**. Nhóm cũng kết nối thật bằng login `ec
 ```sql title="Mã lệnh – View lọc học viên theo chi nhánh của phiên"
 CREATE OR ALTER VIEW dbo.vw_HocVien_ChiNhanh
 AS
-SELECT h.MaHV, h.HoHV, h.TenHV, h.HoTen, h.NgaySinh, h.Tuoi, h.GioiTinh, h.SoDienThoai, h.Email,
-       h.SoNha, h.PhuongXa, h.QuanHuyen, h.TinhTP,
-       CONCAT_WS(N', ', h.SoNha, h.PhuongXa, h.QuanHuyen, h.TinhTP) AS DiaChi,
+SELECT h.MaHV, h.HoHV, h.TenHV, h.HoTen, h.NgaySinh, h.Tuoi, h.GioiTinh,
+       h.SoDienThoai, h.Email, h.SoNha, h.PhuongXa, h.QuanHuyen, h.TinhTP,
+       CONCAT_WS(N', ', h.SoNha, h.PhuongXa, h.QuanHuyen, h.TinhTP)
+           AS DiaChi,
        h.HoTenPhuHuynh, h.NgayTao, h.MaCN, cn.TenCN, h.TrangThai
 FROM dbo.HOCVIEN h
 JOIN dbo.CHINHANH cn ON cn.MaCN = h.MaCN
@@ -347,9 +347,11 @@ Kiểm thử với ba ngữ cảnh phiên khác nhau, cùng chạy câu `SELECT 
 **WITH CHECK OPTION.** Tuỳ chọn này chặn việc sửa dữ liệu qua view làm cho dòng không còn thoả điều kiện của view. Ví dụ, cập nhật trạng thái một lớp thành "Đã kết thúc" qua view `vw_LopHoc_DangMo` (chỉ chứa lớp đang mở) bị từ chối:
 
 ```sql title="Kiểm thử – Sửa dữ liệu qua view có WITH CHECK OPTION"
-UPDATE vw_LopHoc_DangMo SET TrangThai = N'Đã kết thúc' WHERE MaLop = 'GT3-2601';
--- Msg 550: The attempted insert or update failed because the target view either specifies
--- WITH CHECK OPTION ... did not qualify under the CHECK OPTION constraint.
+UPDATE vw_LopHoc_DangMo SET TrangThai = N'Đã kết thúc'
+WHERE MaLop = 'GT3-2601';
+-- Msg 550: The attempted insert or update failed because the target view
+-- either specifies WITH CHECK OPTION ... did not qualify under the
+-- CHECK OPTION constraint.
 ```
 
 **Kết quả của các view báo cáo.** View `vw_CongNoHocVien` liệt kê 67 đăng ký còn nợ với tổng số tiền **283.218.000 đồng**, trong đó 44 đăng ký đã quá hạn. Trích ba dòng:
@@ -372,10 +374,10 @@ View `vw_SiSoLop` trên các lớp chưa kết thúc (trích):
 
 | Cách truy vấn | Số trang đọc | Ghi chú |
 |---|--:|---|
-| Gộp trực tiếp từ 4 bảng gốc | 16 (DANGKY 5, CT_PHIEUTHU 4, PHIEUTHU 5, LOPHOC 2) và bảng tạm | Phải kết nối và gộp nhóm mỗi lần chạy |
+| Gộp trực tiếp từ 4 bảng gốc | 14 (DANGKY 4, CT_PHIEUTHU 4, PHIEUTHU 4, LOPHOC 2) và bảng tạm | Phải kết nối và gộp nhóm mỗi lần chạy |
 | Đọc từ `vw_DoanhThuThang WITH (NOEXPAND)` | 2 | Kết quả đã gộp sẵn theo tháng trong chỉ mục của view |
 
-**Nhận xét.** Khoảng cách giữa hai cách sẽ tăng theo kích thước dữ liệu, vì indexed view chỉ lưu khoảng 3 chi nhánh × 24 tháng = 72 dòng dù có hàng trăm nghìn phiếu thu. Cái giá phải trả là mỗi lần thêm hoặc sửa chi tiết phiếu thu, SQL Server phải cập nhật thêm chỉ mục của view; vì vậy indexed view chỉ phù hợp với dữ liệu *đọc nhiều, ghi ít* như doanh thu. Indexed view cũng có nhiều điều kiện khắt khe: phải có `SCHEMABINDING`, tên đối tượng hai phần `dbo.X`, không dùng kết nối ngoài, phải có `COUNT_BIG(*)` khi gộp nhóm, và mọi phiên ghi vào bảng gốc phải bật `QUOTED_IDENTIFIER`, `ANSI_NULLS`.
+**Nhận xét.** Khoảng cách giữa hai cách sẽ tăng theo kích thước dữ liệu, vì indexed view chỉ lưu một dòng cho mỗi cặp chi nhánh – tháng có doanh thu (33 dòng trên dữ liệu mẫu, tối đa 3 chi nhánh × 24 tháng = 72 dòng) dù số phiếu thu có tăng lên hàng trăm nghìn. Cái giá phải trả là mỗi lần thêm hoặc sửa chi tiết phiếu thu, SQL Server phải cập nhật thêm chỉ mục của view; vì vậy indexed view chỉ phù hợp với dữ liệu *đọc nhiều, ghi ít* như doanh thu. Indexed view cũng có nhiều điều kiện khắt khe: phải có `SCHEMABINDING`, tên đối tượng hai phần `dbo.X`, không dùng kết nối ngoài, phải có `COUNT_BIG(*)` khi gộp nhóm, và mọi phiên ghi vào bảng gốc phải bật `QUOTED_IDENTIFIER`, `ANSI_NULLS`.
 
 ### 3.2.4 Sao lưu và phục hồi
 
@@ -401,9 +403,12 @@ Script `11_backup_restore.sql` tạo procedure dùng chung `sp_SaoLuuECMS` nhậ
 | 6. Chép các dòng bị xoá từ `ECMS_KhoiPhuc` về ECMS | 18:56:30.439 | **364** | 503 |
 
 ```sql title="Mã lệnh – Phục hồi về thời điểm T0 ra một CSDL mới"
-RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_full.bak' WITH MOVE ..., NORECOVERY, REPLACE;
-RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_diff.bak' WITH NORECOVERY;
-RESTORE LOG      ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_log.trn'  WITH STOPAT = @T0, RECOVERY;
+RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_full.bak'
+    WITH MOVE ..., NORECOVERY, REPLACE;
+RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_diff.bak'
+    WITH NORECOVERY;
+RESTORE LOG ECMS_KhoiPhuc FROM DISK = '.../ECMS_demo_log.trn'
+    WITH STOPAT = @T0, RECOVERY;
 ```
 
 **Kết quả.** Bản phục hồi có đủ 503 phiếu thu – tức là giữ được cả hai phiếu lập sau lần sao lưu Full, một phiếu nằm trong bản vi sai và một phiếu chỉ có trong nhật ký – và đủ 364 dòng điểm danh đã bị xoá. Nhóm chọn phục hồi *song song* ra một CSDL mới thay vì ghi đè lên ECMS: ứng dụng không phải dừng, các giao dịch hợp lệ xảy ra sau sự cố không bị mất, chỉ những dòng bị xoá được chép lại. Phục hồi ghi đè chỉ nên dùng khi toàn bộ CSDL bị hỏng, và khi đó phải sao lưu phần nhật ký cuối (tail-log) trước.
@@ -521,19 +526,25 @@ BEGIN
     DECLARE @tc INT = @@TRANCOUNT;
     IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_DangKyHoc;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM dbo.HOCVIEN WHERE MaHV = @MaHV AND TrangThai = 1)
+        IF NOT EXISTS (SELECT 1 FROM dbo.HOCVIEN
+                       WHERE MaHV = @MaHV AND TrangThai = 1)
             THROW 50001, N'Học viên không tồn tại hoặc đã ngừng học.', 1;
 
-        DECLARE @MaKH VARCHAR(6), @TrangThaiLop NVARCHAR(20), @ToiDa TINYINT, @HienTai TINYINT;
-        -- Khoá dòng lớp tới hết giao dịch: hai giáo vụ ghi danh cùng lúc phải chờ nhau
-        SELECT @MaKH = MaKH, @TrangThaiLop = TrangThai, @ToiDa = SiSoToiDa, @HienTai = SiSoHienTai
+        DECLARE @MaKH VARCHAR(6), @TrangThaiLop NVARCHAR(20),
+                @ToiDa TINYINT, @HienTai TINYINT;
+        -- Khoá dòng lớp tới hết giao dịch:
+        -- hai giáo vụ ghi danh cùng lúc phải chờ nhau
+        SELECT @MaKH = MaKH, @TrangThaiLop = TrangThai,
+               @ToiDa = SiSoToiDa, @HienTai = SiSoHienTai
         FROM dbo.LOPHOC WITH (UPDLOCK, HOLDLOCK) WHERE MaLop = @MaLop;
 
         IF @MaKH IS NULL
             THROW 50002, N'Lớp học không tồn tại.', 1;
         IF @TrangThaiLop NOT IN (N'Sắp mở', N'Đang học')
-            THROW 50002, N'Lớp đã kết thúc hoặc đã huỷ, không nhận ghi danh.', 1;
-        IF EXISTS (SELECT 1 FROM dbo.DANGKY WHERE MaHV = @MaHV AND MaLop = @MaLop)
+            THROW 50002,
+                N'Lớp đã kết thúc hoặc đã huỷ, không nhận ghi danh.', 1;
+        IF EXISTS (SELECT 1 FROM dbo.DANGKY
+                   WHERE MaHV = @MaHV AND MaLop = @MaLop)
             THROW 50003, N'Học viên đã đăng ký lớp này.', 1;
         IF @HienTai >= @ToiDa
             THROW 50004, N'Lớp đã đủ sĩ số.', 1;
@@ -541,25 +552,34 @@ BEGIN
             THROW 50006, N'Giảm giá phải từ 0 đến 50%.', 1;
 
         DECLARE @TienQuyet VARCHAR(6), @DiemCan DECIMAL(3,1);
-        SELECT @TienQuyet = MaKHTienQuyet, @DiemCan = DiemDauVaoTu FROM dbo.KHOAHOC WHERE MaKH = @MaKH;
+        SELECT @TienQuyet = MaKHTienQuyet, @DiemCan = DiemDauVaoTu
+        FROM dbo.KHOAHOC WHERE MaKH = @MaKH;
         IF @TienQuyet IS NOT NULL
-           AND NOT EXISTS (SELECT 1 FROM dbo.DANGKY d JOIN dbo.LOPHOC l ON l.MaLop = d.MaLop
-                           WHERE d.MaHV = @MaHV AND l.MaKH = @TienQuyet AND d.KetQua = N'Đạt')
-           AND NOT EXISTS (SELECT 1 FROM dbo.KIEMTRA_DAUVAO WHERE MaHV = @MaHV AND DiemTong >= @DiemCan)
+           AND NOT EXISTS (SELECT 1
+                           FROM dbo.DANGKY d
+                           JOIN dbo.LOPHOC l ON l.MaLop = d.MaLop
+                           WHERE d.MaHV = @MaHV AND l.MaKH = @TienQuyet
+                             AND d.KetQua = N'Đạt')
+           AND NOT EXISTS (SELECT 1 FROM dbo.KIEMTRA_DAUVAO
+                           WHERE MaHV = @MaHV AND DiemTong >= @DiemCan)
         BEGIN
-            DECLARE @msg NVARCHAR(300) = CONCAT(N'Chưa đủ điều kiện: cần Đạt khoá ', @TienQuyet,
+            DECLARE @msg NVARCHAR(300) = CONCAT(
+                N'Chưa đủ điều kiện: cần Đạt khoá ', @TienQuyet,
                 N' hoặc điểm kiểm tra đầu vào từ ', @DiemCan, N' trở lên.');
             THROW 50005, @msg, 1;
         END
 
         INSERT dbo.DANGKY (MaHV, MaLop, HocPhi, GiamGia)
-        SELECT @MaHV, @MaLop, HocPhi, @GiamGia FROM dbo.KHOAHOC WHERE MaKH = @MaKH;
-        SET @MaDK = SCOPE_IDENTITY();      -- sĩ số do trigger trg_DangKy_SiSo cập nhật
+        SELECT @MaHV, @MaLop, HocPhi, @GiamGia
+        FROM dbo.KHOAHOC WHERE MaKH = @MaKH;
+        -- sĩ số do trigger trg_DangKy_SiSo cập nhật
+        SET @MaDK = SCOPE_IDENTITY();
 
         IF @tc = 0 COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        IF XACT_STATE() = -1 OR (XACT_STATE() = 1 AND @tc = 0) ROLLBACK TRANSACTION;
+        IF XACT_STATE() = -1 OR (XACT_STATE() = 1 AND @tc = 0)
+            ROLLBACK TRANSACTION;
         ELSE IF XACT_STATE() = 1 ROLLBACK TRANSACTION sp_DangKyHoc;
         THROW;
     END CATCH
@@ -630,10 +650,12 @@ RETURNS DECIMAL(5,2)
 AS
 BEGIN
     DECLARE @CoMat INT, @Tong INT;
-    SELECT @CoMat = SUM(CASE WHEN TrangThai IN (N'Có mặt', N'Muộn') THEN 1 ELSE 0 END),
+    SELECT @CoMat = SUM(CASE WHEN TrangThai IN (N'Có mặt', N'Muộn')
+                             THEN 1 ELSE 0 END),
            @Tong  = SUM(CASE WHEN TrangThai <> N'Có phép' THEN 1 ELSE 0 END)
     FROM dbo.DIEMDANH WHERE MaDK = @MaDK;
-    RETURN CASE WHEN ISNULL(@Tong, 0) = 0 THEN NULL ELSE CAST(100.0 * @CoMat / @Tong AS DECIMAL(5,2)) END;
+    RETURN CASE WHEN ISNULL(@Tong, 0) = 0 THEN NULL
+                ELSE CAST(100.0 * @CoMat / @Tong AS DECIMAL(5,2)) END;
 END
 ```
 
@@ -691,8 +713,10 @@ Hàm bảng nhiều câu lệnh `fn_BangDiemLop` cần nhiều bước xử lý:
 ALTER TABLE NHANVIEN ADD CONSTRAINT CK_NHANVIEN_TuoiLaoDong
     CHECK (dbo.fn_TinhTuoi(NgaySinh, NgayVaoLam) BETWEEN 18 AND 65);
 
-INSERT NHANVIEN (..., NgaySinh, ..., NgayVaoLam) VALUES (..., '1950-01-01', ..., '2026-01-01');
--- Msg 547: The INSERT statement conflicted with the CHECK constraint "CK_NHANVIEN_TuoiLaoDong".
+INSERT NHANVIEN (..., NgaySinh, ..., NgayVaoLam)
+VALUES (..., '1950-01-01', ..., '2026-01-01');
+-- Msg 547: The INSERT statement conflicted with the CHECK constraint
+-- "CK_NHANVIEN_TuoiLaoDong".
 ```
 
 Khi chạy lại script, ràng buộc này phải được xoá trước rồi tạo lại, vì SQL Server không cho sửa một hàm đang được ràng buộc CHECK tham chiếu.
@@ -744,12 +768,15 @@ AFTER INSERT, UPDATE, DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM inserted) AND NOT EXISTS (SELECT 1 FROM deleted) RETURN;
+    IF NOT EXISTS (SELECT 1 FROM inserted)
+       AND NOT EXISTS (SELECT 1 FROM deleted) RETURN;
     UPDATE l
     SET SiSoHienTai = (SELECT COUNT(*) FROM dbo.DANGKY d
-                       WHERE d.MaLop = l.MaLop AND d.TrangThai IN (N'Đang học', N'Hoàn thành'))
+                       WHERE d.MaLop = l.MaLop
+                         AND d.TrangThai IN (N'Đang học', N'Hoàn thành'))
     FROM dbo.LOPHOC l
-    WHERE l.MaLop IN (SELECT MaLop FROM inserted UNION SELECT MaLop FROM deleted);
+    WHERE l.MaLop IN (SELECT MaLop FROM inserted
+                      UNION SELECT MaLop FROM deleted);
 END
 ```
 
@@ -760,7 +787,10 @@ Cách viết sai phổ biến là gán `@MaLop = (SELECT MaLop FROM inserted)`: 
 **Nhật ký kiểm toán.** Mỗi dòng nhật ký lưu dữ liệu cũ và mới dạng JSON (tạo bằng `FOR JSON PATH, WITHOUT_ARRAY_WRAPPER`), login SQL Server thực hiện và tài khoản ứng dụng thực hiện. Thông tin thứ hai là cần thiết vì mọi người dùng web đều kết nối bằng cùng một login `ecms_app`; ứng dụng đặt tên tài khoản vào `SESSION_CONTEXT(N'app_user')` khi đăng nhập để trigger đọc lại. Ví dụ một dòng nhật ký khi tăng lương:
 
 ```text title="Ví dụ – Một dòng nhật ký thay đổi lương"
-NHANVIEN  {"LuongCoBan":11500000} → {"LuongCoBan":12650000,"PhanTramThayDoi":10.00}  bởi sa / kiemthu
+Bảng       NHANVIEN
+Dữ liệu cũ {"LuongCoBan":11500000}
+Dữ liệu mới {"LuongCoBan":12650000,"PhanTramThayDoi":10.00}
+Người thực hiện  sa (login SQL) / kiemthu (tài khoản ứng dụng)
 ```
 
 **Kiểm thử.** Bộ kiểm thử `test_triggers.sql` thao tác **trực tiếp lên bảng**, bỏ qua procedure, để chứng minh CSDL tự bảo vệ được mình. Lỗi xảy ra trong trigger luôn làm giao dịch không thể xác nhận được nữa, vì vậy mỗi ca chạy trong một giao dịch riêng rồi huỷ.
@@ -803,23 +833,27 @@ Nguyên tắc nhóm áp dụng: dùng CHECK, khoá ngoại, UNIQUE trước; ch�
 | `sp_SinhBuoiHoc` | Các dòng lịch học trùng thứ của ngày đang xét | `LOCAL FAST_FORWARD` | Duyệt từng ngày từ ngày khai giảng, bỏ qua ngày lễ, sinh buổi học tới đủ số buổi của khoá, cập nhật ngày kết thúc lớp; không cho sinh lại khi lớp đã điểm danh |
 | `sp_TinhLuongGiaoVien` | Các giáo viên đang làm việc | `LOCAL STATIC READ_ONLY` | Đếm số buổi đã dạy trong tháng nhân đơn giá, cộng lương cơ bản, ghi hoặc cập nhật bảng lương |
 | `sp_CanhBaoChuyenCan` | Các đăng ký đang học | `LOCAL FAST_FORWARD` | Tính tỷ lệ vắng; vượt ngưỡng thì ghi cảnh báo, trên 30% là mức Nghiêm trọng |
-| `sp_TinhLuongGiaoVien_SetBased`, `sp_CanhBaoChuyenCan_SetBased` | – | – | Cùng kết quả bằng một câu `MERGE` hoặc `INSERT … SELECT … GROUP BY` |
+| Hai bản đối chứng `…_SetBased` của hai procedure trên | – | – | Cùng kết quả bằng một câu `MERGE` hoặc `INSERT … SELECT … GROUP BY`, dùng để so sánh tốc độ |
 
 **Vòng đời của cursor.** Đoạn mã trích từ `sp_SinhBuoiHoc` thể hiện đủ năm giai đoạn: khai báo, mở, đọc, đóng và giải phóng.
 
 ```sql title="Mã lệnh – Vòng đời cursor trong sp_SinhBuoiHoc"
-DECLARE cur_Lich CURSOR LOCAL FAST_FORWARD FOR            -- 1. DECLARE: định nghĩa câu SELECT
-    SELECT MaCa, MaPhong FROM dbo.LICHHOC WHERE MaLop = @MaLop AND Thu = @Thu ORDER BY MaCa;
-OPEN cur_Lich;                                             -- 2. OPEN: thực thi, tạo tập kết quả
-FETCH NEXT FROM cur_Lich INTO @MaCa, @MaPhong;             -- 3. FETCH: lấy từng dòng vào biến
-WHILE @@FETCH_STATUS = 0 AND @STT < @SoBuoi                --    0: đọc được; -1: hết dòng; -2: dòng đã bị xoá
+-- 1. DECLARE: định nghĩa câu SELECT
+DECLARE cur_Lich CURSOR LOCAL FAST_FORWARD FOR
+    SELECT MaCa, MaPhong FROM dbo.LICHHOC
+    WHERE MaLop = @MaLop AND Thu = @Thu ORDER BY MaCa;
+OPEN cur_Lich;                                  -- 2. OPEN: tạo tập kết quả
+FETCH NEXT FROM cur_Lich INTO @MaCa, @MaPhong;  -- 3. FETCH: đọc từng dòng
+-- @@FETCH_STATUS: 0 đọc được; -1 hết dòng; -2 dòng đã bị xoá
+WHILE @@FETCH_STATUS = 0 AND @STT < @SoBuoi
 BEGIN
     SET @STT += 1;
-    INSERT dbo.BUOIHOC (...) VALUES (@MaLop, @STT, @Ngay, @MaCa, @MaPhong, ...);
+    INSERT dbo.BUOIHOC (...)
+    VALUES (@MaLop, @STT, @Ngay, @MaCa, @MaPhong, ...);
     FETCH NEXT FROM cur_Lich INTO @MaCa, @MaPhong;
 END
-CLOSE cur_Lich;                                            -- 4. CLOSE: giải phóng tập kết quả và khoá
-DEALLOCATE cur_Lich;                                       -- 5. DEALLOCATE: huỷ định nghĩa cursor
+CLOSE cur_Lich;        -- 4. CLOSE: giải phóng tập kết quả và khoá
+DEALLOCATE cur_Lich;   -- 5. DEALLOCATE: huỷ định nghĩa cursor
 ```
 
 Từ khoá `LOCAL` giới hạn cursor trong phạm vi procedure để không trùng tên với phiên khác; khối CATCH kiểm tra `CURSOR_STATUS` để giải phóng cursor khi lỗi xảy ra giữa chừng. Thiếu lệnh FETCH ở cuối thân vòng lặp sẽ tạo vòng lặp vô hạn – lỗi phổ biến nhất khi viết cursor.

@@ -601,11 +601,14 @@ Cùng dữ liệu đó được biểu diễn dưới dạng XML như sau:
       <GiaoVien MaGV="NV0004" HoTen="Trần Thị Mai" SDT="0912000111"/>
       <Lich Thu="2" Ca="5" Phong="P101"/>
       <Lich Thu="4" Ca="5" Phong="P101"/>
-      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567" DaDong="6500000"/>
-      <HocVien MaHV="HV0002" HoTen="Lê Thị Bình" SDT="0987654321" DaDong="3000000"/>
+      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567"
+               DaDong="6500000"/>
+      <HocVien MaHV="HV0002" HoTen="Lê Thị Bình" SDT="0987654321"
+               DaDong="3000000"/>
     </Lop>
     <Lop MaLop="TC650-02" KhoaHoc="TOEIC 650" HocPhi="5000000">
-      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567" DaDong="5000000"/>
+      <HocVien MaHV="HV0001" HoTen="Nguyễn Văn An" SDT="0901234567"
+               DaDong="5000000"/>
     </Lop>
   </ChiNhanh>
 </TrungTam>
@@ -641,7 +644,8 @@ USE master;
 GO
 IF DB_ID(N'ECMS') IS NOT NULL
 BEGIN
-    ALTER DATABASE ECMS SET SINGLE_USER WITH ROLLBACK IMMEDIATE;  -- ngắt mọi kết nối đang mở
+    -- ngắt mọi kết nối đang mở
+    ALTER DATABASE ECMS SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE ECMS;
 END
 GO
@@ -653,32 +657,44 @@ Bảng DANGKY là ví dụ tiêu biểu vì tập trung gần đủ các loại 
 
 ```sql title="Mã lệnh – Tạo bảng DANGKY"
 CREATE TABLE DANGKY (
-    MaDK          INT IDENTITY(1,1) NOT NULL,
-    MaHV          CHAR(6)        NOT NULL,
-    MaLop         VARCHAR(10)    NOT NULL,
-    NgayDK        DATE           NOT NULL CONSTRAINT DF_DANGKY_NgayDK DEFAULT CAST(GETDATE() AS DATE),
-    HocPhi        DECIMAL(12,0)  NOT NULL,
-    GiamGia       DECIMAL(5,2)   NOT NULL CONSTRAINT DF_DANGKY_GiamGia DEFAULT 0,
-    ThanhTien AS CAST(ROUND(HocPhi * (100 - GiamGia) / 100, -3) AS DECIMAL(12,0)) PERSISTED,
+    MaDK        INT IDENTITY(1,1) NOT NULL,
+    MaHV        CHAR(6)        NOT NULL,
+    MaLop       VARCHAR(10)    NOT NULL,
+    NgayDK      DATE           NOT NULL
+                CONSTRAINT DF_DANGKY_NgayDK DEFAULT CAST(GETDATE() AS DATE),
+    HocPhi      DECIMAL(12,0)  NOT NULL,
+    GiamGia     DECIMAL(5,2)   NOT NULL
+                CONSTRAINT DF_DANGKY_GiamGia DEFAULT 0,
+    ThanhTien AS CAST(ROUND(HocPhi * (100 - GiamGia) / 100, -3)
+                      AS DECIMAL(12,0)) PERSISTED,
     HanDongHP AS DATEADD(DAY, 14, NgayDK) PERSISTED,
-    TrangThaiHP   NVARCHAR(20)   NOT NULL CONSTRAINT DF_DANGKY_TrangThaiHP DEFAULT N'Chưa đóng',
-    DiemGK        DECIMAL(4,2)   NULL,
-    DiemCK        DECIMAL(4,2)   NULL,
-    DiemTB AS CAST(ROUND(DiemGK * 0.4 + DiemCK * 0.6, 2) AS DECIMAL(4,2)) PERSISTED,
-    KetQua        NVARCHAR(10)   NULL,
-    TrangThai     NVARCHAR(20)   NOT NULL CONSTRAINT DF_DANGKY_TrangThai DEFAULT N'Đang học',
+    TrangThaiHP NVARCHAR(20)   NOT NULL
+                CONSTRAINT DF_DANGKY_TrangThaiHP DEFAULT N'Chưa đóng',
+    DiemGK      DECIMAL(4,2)   NULL,
+    DiemCK      DECIMAL(4,2)   NULL,
+    DiemTB AS CAST(ROUND(DiemGK * 0.4 + DiemCK * 0.6, 2)
+                   AS DECIMAL(4,2)) PERSISTED,
+    KetQua      NVARCHAR(10)   NULL,
+    TrangThai   NVARCHAR(20)   NOT NULL
+                CONSTRAINT DF_DANGKY_TrangThai DEFAULT N'Đang học',
     CONSTRAINT PK_DANGKY PRIMARY KEY (MaDK),
     CONSTRAINT UQ_DANGKY_HV_Lop UNIQUE (MaHV, MaLop),
-    CONSTRAINT UQ_DANGKY_DK_Lop UNIQUE (MaDK, MaLop),       -- để DIEMDANH tham chiếu (MaDK, MaLop)
-    CONSTRAINT FK_DANGKY_HOCVIEN FOREIGN KEY (MaHV) REFERENCES HOCVIEN (MaHV),
-    CONSTRAINT FK_DANGKY_LOPHOC FOREIGN KEY (MaLop) REFERENCES LOPHOC (MaLop),
+    -- để DIEMDANH tham chiếu (MaDK, MaLop)
+    CONSTRAINT UQ_DANGKY_DK_Lop UNIQUE (MaDK, MaLop),
+    CONSTRAINT FK_DANGKY_HOCVIEN
+        FOREIGN KEY (MaHV) REFERENCES HOCVIEN (MaHV),
+    CONSTRAINT FK_DANGKY_LOPHOC
+        FOREIGN KEY (MaLop) REFERENCES LOPHOC (MaLop),
     CONSTRAINT CK_DANGKY_HocPhi CHECK (HocPhi > 0),
     CONSTRAINT CK_DANGKY_GiamGia CHECK (GiamGia BETWEEN 0 AND 50),
     CONSTRAINT CK_DANGKY_DiemGK CHECK (DiemGK BETWEEN 0 AND 10),
     CONSTRAINT CK_DANGKY_DiemCK CHECK (DiemCK BETWEEN 0 AND 10),
-    CONSTRAINT CK_DANGKY_TrangThaiHP CHECK (TrangThaiHP IN (N'Chưa đóng', N'Đóng một phần', N'Đã đóng')),
+    CONSTRAINT CK_DANGKY_TrangThaiHP
+        CHECK (TrangThaiHP IN (N'Chưa đóng', N'Đóng một phần', N'Đã đóng')),
     CONSTRAINT CK_DANGKY_KetQua CHECK (KetQua IN (N'Đạt', N'Không đạt')),
-    CONSTRAINT CK_DANGKY_TrangThai CHECK (TrangThai IN (N'Đang học', N'Hoàn thành', N'Bảo lưu', N'Đã chuyển lớp', N'Huỷ'))
+    CONSTRAINT CK_DANGKY_TrangThai
+        CHECK (TrangThai IN (N'Đang học', N'Hoàn thành', N'Bảo lưu',
+                             N'Đã chuyển lớp', N'Huỷ'))
 );
 ```
 
@@ -690,7 +706,7 @@ Tổng hợp các thành phần được tạo bởi script:
 | Khoá chính | 22 | Khoá phức hợp của thực thể yếu `PK_BUOIHOC (MaLop, STT)` |
 | Khoá ngoại | 32 | Khoá ngoại phức hợp `FK_LICHHOC_LOPHOC (MaLop, MaCN)`, `FK_DIEMDANH_DANGKY (MaDK, MaLop)` |
 | UNIQUE | 13 ràng buộc và 4 chỉ mục duy nhất có lọc | `UQ_DANGKY_HV_Lop`; `UX_CHINHANH_QuanLy … WHERE MaNVQuanLy IS NOT NULL` cho quan hệ 1 – 1 cho phép NULL |
-| CHECK | 51 | `CK_LOPHOC_SiSo (SiSoHienTai <= SiSoToiDa)`, `CK_TAIKHOAN_ChuSoHuu` |
+| CHECK | 51 | `CK_LOPHOC_SiSo (SiSoHienTai <= SiSoToiDa)`, `CK_TAIKHOAN_ChuSoHuu`; ràng buộc thứ 52 `CK_NHANVIEN_TuoiLaoDong` gọi hàm nên được tạo sau, cùng các function (mục 3.3.2) |
 | DEFAULT | 29 | `NgayDK DEFAULT GETDATE()`, `NguoiThucHien DEFAULT SUSER_SNAME()` |
 | Cột tính toán | 8 | `ThanhTien`, `DiemTB`, `HanDongHP`, `SoPhieu`, `TongLuong` (lưu sẵn); `Tuoi`, `HoTen` |
 | Cột XML | 1 | `KIEMTRA_DAUVAO.KetQuaChiTiet`, gắn XML Schema ở mục 3.1.3 |
@@ -717,10 +733,14 @@ SQL Server không cho phép nhiều đường xoá lan truyền cùng đi tới 
 Các thuộc tính suy diễn được cài đặt bằng cột tính toán. Cột có từ khoá `PERSISTED` được lưu vật lý và tự cập nhật khi cột nguồn thay đổi, nhờ đó có thể đánh chỉ mục. Riêng cột `Tuoi` dùng hàm `GETDATE()` – một hàm không tất định – nên không thể lưu sẵn mà chỉ được tính khi đọc.
 
 ```sql title="Mã lệnh – Các cột tính toán tiêu biểu"
-ThanhTien AS CAST(ROUND(HocPhi * (100 - GiamGia) / 100, -3) AS DECIMAL(12,0)) PERSISTED,
-DiemTB    AS CAST(ROUND(DiemGK * 0.4 + DiemCK * 0.6, 2) AS DECIMAL(4,2)) PERSISTED,
+ThanhTien AS CAST(ROUND(HocPhi * (100 - GiamGia) / 100, -3)
+                  AS DECIMAL(12,0)) PERSISTED,
+DiemTB    AS CAST(ROUND(DiemGK * 0.4 + DiemCK * 0.6, 2)
+                  AS DECIMAL(4,2)) PERSISTED,
 HanDongHP AS DATEADD(DAY, 14, NgayDK) PERSISTED,
-Tuoi      AS (DATEDIFF(YEAR, NgaySinh, GETDATE()) - CASE WHEN ... THEN 1 ELSE 0 END)   -- không lưu sẵn được
+-- không lưu sẵn được vì GETDATE() không tất định
+Tuoi      AS (DATEDIFF(YEAR, NgaySinh, GETDATE())
+              - CASE WHEN ... THEN 1 ELSE 0 END)
 ```
 
 SQL Server tự tạo chỉ mục phân cụm cho khoá chính và chỉ mục cho ràng buộc UNIQUE, nhưng **không** tự tạo chỉ mục cho khoá ngoại. Nhóm bổ sung 18 chỉ mục không phân cụm theo hai nhóm mục đích:
@@ -828,4 +848,4 @@ Ngoài ra, thư mục `data/import/` chứa ba tệp CSV phục vụ phần nh�
 
 ## 2.9 Tiểu kết chương
 
-Chương 2 đã xây dựng mô hình dữ liệu của ECMS qua đủ ba mức: mức khái niệm với ERD gồm 14 thực thể, 22 mối kết hợp và sơ đồ lớp UML; mức logic với 22 lược đồ quan hệ được kiểm tra dạng chuẩn, 18 ràng buộc toàn vẹn và bảng tầm ảnh hưởng; mức vật lý với script cài đặt trên SQL Server gồm 32 khoá ngoại, 51 ràng buộc CHECK, 8 cột tính toán và 22 chỉ mục bổ sung. Các điểm chưa chuẩn hoá hoàn toàn đều được phân tích và giữ lại có chủ đích kèm cơ chế bảo đảm nhất quán. Bộ dữ liệu mẫu sinh theo nghiệp vụ, có sẵn các trường hợp biên và đã được kiểm tra nhất quán, là nền tảng cho phần xử lý thông tin ở Chương 3.
+Chương 2 đã xây dựng mô hình dữ liệu của ECMS qua đủ ba mức: mức khái niệm với ERD gồm 14 thực thể, 22 mối kết hợp và sơ đồ lớp UML; mức logic với 22 lược đồ quan hệ được kiểm tra dạng chuẩn, 18 ràng buộc toàn vẹn và bảng tầm ảnh hưởng; mức vật lý với script cài đặt trên SQL Server gồm 32 khoá ngoại, 52 ràng buộc CHECK, 8 cột tính toán và 22 chỉ mục bổ sung. Các điểm chưa chuẩn hoá hoàn toàn đều được phân tích và giữ lại có chủ đích kèm cơ chế bảo đảm nhất quán. Bộ dữ liệu mẫu sinh theo nghiệp vụ, có sẵn các trường hợp biên và đã được kiểm tra nhất quán, là nền tảng cho phần xử lý thông tin ở Chương 3.

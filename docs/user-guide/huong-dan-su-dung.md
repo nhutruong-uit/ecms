@@ -119,11 +119,12 @@ Trên máy Mac dùng chip Apple Silicon, cần bật **Settings → General → 
 Chạy script dựng CSDL tương ứng với hệ điều hành:
 
 ```bash
-database/run_all.sh                                          # macOS, Linux hoặc Git Bash
+database/run_all.sh          # macOS, Linux hoặc Git Bash
 ```
 
 ```powershell
-.\database\run_all.ps1 -SqlLogin sa -Password "Ecms@12345"   # Windows PowerShell
+# Windows PowerShell
+.\database\run_all.ps1 -SqlLogin sa -Password "Ecms@12345"
 ```
 
 Script lần lượt tạo 22 bảng, nạp dữ liệu mẫu, tạo function, view, procedure, trigger, phân quyền và XML Schema. Toàn bộ mất khoảng 10 – 20 giây.
@@ -191,7 +192,7 @@ Hầu hết các trang dùng chung một cách thao tác:
 4. Nút xoá luôn ghi rõ đối tượng sẽ bị xoá, ví dụ **Xoá chi nhánh CN02**. Dữ liệu đang được sử dụng ở nơi khác (chi nhánh còn lớp, lớp còn học viên…) sẽ bị từ chối xoá kèm thông báo lý do.
 5. Sau khi lưu, khung xanh báo thành công hoặc khung đỏ báo lỗi nghiệp vụ xuất hiện ngay trên trang.
 
-Nút **Lưu** bị làm mờ khi chưa có thay đổi nào – đây là cách hệ thống tránh lưu thừa, không phải lỗi.
+Một số ô và nút bị làm mờ có chủ đích để tránh thao tác sai, không phải lỗi: ô mã (chi nhánh, khoá học…) không sửa được khi đang sửa một bản ghi có sẵn; khoá học và chi nhánh của lớp đã có học viên không đổi được; tài khoản cấp chi nhánh không chọn được chi nhánh khác.
 
 ![Kiểm tra dữ liệu tại ô nhập](../../report/images/ch4/04_kiem_tra_nhap_lieu.jpg)
 
@@ -560,7 +561,8 @@ Lịch sao lưu khuyến nghị:
 Nếu SQL Server có SQL Server Agent, dùng các job được tạo bởi script `database/11_backup_restore.sql`. Nếu không có Agent (bản Express hoặc Docker), đặt lịch chạy định kỳ (cron trên macOS, Linux; Task Scheduler trên Windows) cho lệnh:
 
 ```bash
-scripts/backup.sh FULL      # hoặc DIFF, LOG – tệp sao lưu được lưu trong thư mục backups/
+# hoặc DIFF, LOG – tệp sao lưu được lưu trong thư mục backups/
+scripts/backup.sh FULL
 ```
 
 **Phục hồi đến một thời điểm:** làm theo phần phục hồi trong `database/11_backup_restore.sql` – khôi phục bản FULL, sau đó bản DIFF gần nhất, rồi lần lượt các bản LOG với tuỳ chọn dừng tại thời điểm cần phục hồi.
@@ -570,8 +572,10 @@ scripts/backup.sh FULL      # hoặc DIFF, LOG – tệp sao lưu được lưu 
 ## 7.2 Nhập và xuất dữ liệu
 
 ```bash
-python3 scripts/import_export.py import data/import/hocvien_online.csv   # kiểm tra và nạp danh sách đăng ký trực tuyến
-python3 scripts/import_export.py export --format csv xlsx json xml        # xuất dữ liệu ra thư mục data/export/
+# kiểm tra và nạp danh sách đăng ký trực tuyến
+python3 scripts/import_export.py import data/import/hocvien_online.csv
+# xuất dữ liệu ra thư mục data/export/
+python3 scripts/import_export.py export --format csv xlsx json xml
 ```
 
 Lệnh `import` kiểm tra từng dòng (ngày sinh, số điện thoại, email, chi nhánh, khoá học, dòng trùng), nạp các dòng hợp lệ và in danh sách dòng lỗi kèm lý do để gửi trả bộ phận cung cấp dữ liệu.
@@ -581,8 +585,9 @@ Lệnh `import` kiểm tra từng dòng (ngày sinh, số điện thoại, email
 Sau mỗi lần cập nhật mã nguồn hoặc script CSDL, chạy lại bộ kiểm thử để bảo đảm hệ thống vẫn hoạt động đúng:
 
 ```bash
-database/run_all.sh                 # dựng lại CSDL từ đầu
-cd app && pytest ../tests -q        # mở mọi trang với từng vai trò và sinh mọi báo cáo
+database/run_all.sh      # dựng lại CSDL từ đầu
+# mở mọi trang với từng vai trò và sinh mọi báo cáo
+cd app && pytest ../tests -q
 ```
 
 Các bộ kiểm thử SQL trong thư mục `database/tests/` (dữ liệu mẫu, procedure, trigger, phân quyền) chạy được bằng `sqlcmd -i`; mỗi bộ báo lỗi nếu có ca kiểm thử không đạt.
@@ -631,8 +636,8 @@ Liên hệ Quản lý. Quản lý vào **Hệ thống → Tài khoản**, chọn
 **Vì sao tôi không thấy học viên hoặc lớp của chi nhánh khác?**
 Mỗi tài khoản chỉ xem được dữ liệu trong phạm vi chi nhánh của mình. Chỉ Quản lý cấp trung tâm xem được toàn bộ.
 
-**Vì sao nút Lưu bị mờ?**
-Nút **Lưu** chỉ được bật khi có thay đổi so với dữ liệu hiện tại. Hãy kiểm tra lại đã sửa ô nào chưa.
+**Vì sao một số ô hoặc nút bị mờ, không bấm được?**
+Hệ thống khoá các điều khiển không được dùng trong tình huống hiện tại. Ví dụ: ô mã không sửa được khi đang sửa bản ghi có sẵn; nút **Lưu điểm** chỉ bật khi đã sửa ít nhất một điểm; nút **Lập phiếu thu** chỉ bật khi đã chọn ít nhất một khoản và không có dòng nào nhập sai; nút **◀ Trang trước** mờ ở trang đầu tiên.
 
 **Có xoá được một phiếu thu đã lập không?**
 Không. Phiếu thu là chứng từ tài chính nên không được sửa hay xoá; mọi thao tác trên phiếu thu đều được ghi vào nhật ký.
