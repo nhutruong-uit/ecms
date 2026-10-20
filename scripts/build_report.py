@@ -10,6 +10,7 @@ style, header / footer "Trang X/Y"). Nội dung sinh theo đúng quy ước củ
   • Tiêu đề cấp 1 "CHƯƠNG n: …" / "PHẦN n: …" sang trang mới; cấp 2–3 đánh số "1.1." / "1.1.1.".
   • Đoạn văn canh đều, thụt đầu dòng 0,5 cm, giãn dòng 1,15; gạch đầu dòng "•", danh sách số "1.".
   • Bảng: hàng tiêu đề nền xanh đậm chữ trắng, viền xám; khối mã: hộp nền xám, Consolas 10,5, tô màu cú pháp kiểu SSMS.
+    Khối mã có dòng tiêu đề như mẫu ("Mã lệnh – …", "Kiểm thử – …") khi viết ```sql title="Mã lệnh – sp_DangKyHoc"```.
   • Hình: căn giữa, chú thích "Hình x.y. …" in nghiêng màu xám ngay dưới (lấy từ dòng "*Hình x.y – …*" trong Markdown).
   • Mục lục và Danh mục hình ảnh là trường TOC – Word hỏi cập nhật khi mở file, chọn Yes (hoặc Ctrl+A rồi F9).
 Bản PDF dựng từ cùng nội dung qua HTML + CSS in ấn (mục lục là liên kết, không kèm số trang).
@@ -141,6 +142,13 @@ def chu_thich(raw: str) -> str:
     if t.startswith("*") and t.endswith("*"):
         t = t[1:-1]
     return re.sub(r"^(Hình|Bảng) (\d+\.\d+)\s*[–:.-]\s*", r"\1 \2. ", t)
+
+
+def fence_info(info: str) -> "tuple[str, str | None]":
+    """'sql title="Mã lệnh – sp_DangKyHoc"' → ('sql', 'Mã lệnh – sp_DangKyHoc'): dòng tiêu đề của khối mã như mẫu Lab 04."""
+    info = (info or "").strip()
+    m = re.search(r'title="([^"]+)"', info)
+    return ("" if info.startswith("title=") else info.split(" ")[0]), (m[1] if m else None)
 
 
 def link_url(src: Path, href: str) -> str:
@@ -375,10 +383,18 @@ class DocxWriter:
                     self.inline(p, cells[ci], bold=(ri == 0), size=size, color="ffffff" if ri == 0 else None)
         spacer(self.doc)
 
-    def code(self, text, lang):
-        tbl = self.doc.add_table(rows=1, cols=1)
+    def code(self, text, info):
+        lang, title = fence_info(info)
+        tbl = self.doc.add_table(rows=2 if title else 1, cols=1)
         table_fmt(tbl, [W_TRANG])
-        cell = tbl.cell(0, 0)
+        if title:
+            head = tbl.cell(0, 0)
+            cell_fmt(head, fill="e7ecf5", border="bfbfbf", mar=(40, 140), width=W_TRANG)
+            p = head.paragraphs[0]
+            p_fmt(p, align="left", after=0, line=240, keep_next=True)
+            run_fmt(p.add_run(title), size=11, bold=True, color=NAVY)
+            tbl.rows[0]._tr.get_or_add_trPr().append(el("w:cantSplit", w_val=1))
+        cell = tbl.cell(1 if title else 0, 0)
         cell_fmt(cell, fill="f7f7f7", border="bfbfbf", mar=(100, 140), width=W_TRANG, valign=None)
         lines = to_mau(text, lang)
         for k, parts in enumerate(lines):
@@ -424,7 +440,7 @@ class DocxWriter:
             elif t.type in ("bullet_list_open", "ordered_list_open"):
                 j = self.list_block(tokens, j, depth + 1)
             elif t.type == "fence":
-                self.code(t.content, t.info.strip().split(" ")[0])
+                self.code(t.content, t.info)
             j += 1
         return j
 
@@ -469,7 +485,7 @@ class DocxWriter:
                 i = self.list_block(tokens, i) + 1
                 continue
             if t.type in ("fence", "code_block"):
-                self.code(t.content, (t.info or "").strip().split(" ")[0])
+                self.code(t.content, t.info or "")
             i += 1
 
 
@@ -558,6 +574,8 @@ th { background: #1f3864; color: #fff; text-align: center; }
 tr { break-inside: avoid; } thead { display: table-header-group; }
 pre.code { background: #f7f7f7; border: 0.5pt solid #bfbfbf; padding: 5pt 7pt; font: 10.5pt/1.2 Consolas, Menlo, monospace;
   white-space: pre-wrap; margin: 0 0 6pt; }
+.ctitle { background: #e7ecf5; border: 0.5pt solid #bfbfbf; border-bottom: 0; padding: 2pt 7pt; font: bold 11pt 'Times New Roman';
+  color: #1f3864; break-after: avoid; } pre.code.titled { margin-top: 0; }
 p.fig { text-align: center; text-indent: 0; margin: 6pt 0 0; break-after: avoid; } p.fig img { max-width: 15cm; max-height: 20cm; }
 p.fcap, p.tcap { text-align: center; text-indent: 0; font-style: italic; color: #555; } p.fcap { margin: 8pt 0 8pt; }
 p.tcap { margin: 6pt 0 3pt; break-after: avoid; }
@@ -609,9 +627,11 @@ def build_pdf(cfg):
                 elif raw.endswith(":"):
                     t.attrSet("class", "lead")
             if t.type in ("fence", "code_block"):
-                lines = to_mau(t.content, (t.info or "").strip().split(" ")[0])
+                lang, title = fence_info(t.info or "")
+                lines = to_mau(t.content, lang)
                 body = "\n".join("".join(f'<span style="color:#{c}">{html.escape(s)}</span>' for c, s in ln) for ln in lines)
-                out.append(_html(f'<pre class="code">{body}</pre>\n'))
+                head = f'<div class="ctitle">{html.escape(title)}</div>' if title else ""
+                out.append(_html(f'{head}<pre class="code{" titled" if title else ""}">{body}</pre>\n'))
                 i += 1
                 continue
             if t.type == "html_block" and t.content.lstrip().startswith("<!--"):
