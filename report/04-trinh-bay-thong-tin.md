@@ -293,7 +293,7 @@ Dashboard là tầng **tri thức** trong mô hình DIKW (mục 1.6.2): từ d�
 | Doanh thu năm đến tháng hiện tại | Cùng kỳ năm trước | `vw_DoanhThuThang` |
 | Tỷ lệ lấp đầy các lớp đang mở | Mục tiêu 80% | `vw_SiSoLop` |
 | Tỷ lệ chuyên cần các lớp đang học | Mục tiêu 80% | `vw_BangDiem` |
-| Công nợ hiện tại | Phần đã quá hạn (màu đỏ) | `vw_CongNoHocVien` |
+| Công nợ hiện tại | Phần đã quá hạn (màu đỏ; không hiện khi không có khoản quá hạn) | `vw_CongNoHocVien` |
 
 Hai chỉ số doanh thu (tháng này, luỹ kế năm) cùng hai mốc so sánh (tháng trước, cùng kỳ năm trước) được đọc từ indexed view `vw_DoanhThuThang` – view đã được SQL Server tổng hợp sẵn theo tháng và chi nhánh, nên các ô KPI vẫn tải nhanh khi số phiếu thu tăng lên. Các biểu đồ doanh thu cần chi tiết theo chương trình nên đọc từ view thường `vw_BaoCaoDoanhThu`.
 

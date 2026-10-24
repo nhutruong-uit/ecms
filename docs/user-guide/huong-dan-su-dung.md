@@ -129,7 +129,7 @@ Dữ liệu mẫu có sẵn năm tài khoản đại diện cho năm vai trò (B
 2. Nhập **Tên đăng nhập** và **Mật khẩu**, nhấn **Đăng nhập** hoặc phím Enter.
 3. Khi muốn thoát, nhấn **Đăng xuất** ở cuối thanh menu bên trái.
 
-Nếu nhập sai tên đăng nhập hoặc mật khẩu, hệ thống chỉ báo "Sai tên đăng nhập hoặc mật khẩu." mà không nói sai ở ô nào – để người ngoài không dò được tên tài khoản. **Sai 5 lần liên tiếp, tài khoản bị tạm khoá 15 phút**; trong thời gian này, đăng nhập đúng mật khẩu cũng nhận thông báo "Tài khoản tạm khoá đến … do nhập sai mật khẩu 5 lần liên tiếp". Chờ hết 15 phút, hoặc nhờ Quản lý gỡ tạm khoá ngay (mục 4.1.4).
+Nếu đăng nhập không được, hệ thống chỉ báo một câu chung "Sai tên đăng nhập hoặc mật khẩu, hoặc tài khoản đang bị khoá…" mà không nói sai ở ô nào hay tài khoản có đang bị khoá không – để người ngoài không dò được tên tài khoản lẫn mật khẩu. **Sai 5 lần liên tiếp, tài khoản bị tạm khoá 15 phút**; trong thời gian này, nhập đúng mật khẩu cũng chỉ nhận câu chung đó và chưa vào được. Chờ hết 15 phút rồi đăng nhập lại, hoặc nhờ Quản lý gỡ tạm khoá ngay (mục 4.1.4).
 
 Hệ thống có thể **tự đăng xuất** và hiện lý do trên màn hình đăng nhập trong ba trường hợp:
 
@@ -232,7 +232,7 @@ Kế toán cũng mở được trang này để xem danh sách phục vụ việ
 
 Vào **Báo cáo → Dashboard**, chọn chi nhánh (hoặc toàn trung tâm) và năm. Tài khoản cấp chi nhánh chỉ xem được chi nhánh của mình.
 
-- **Hàng chỉ số** trên cùng gồm sáu ô, mỗi ô có dòng so sánh bên dưới: học viên mới và doanh thu tháng này so với tháng trước; doanh thu năm so với cùng kỳ năm trước; tỷ lệ lấp đầy lớp và tỷ lệ chuyên cần so với mục tiêu 80%; công nợ hiện tại kèm phần đã quá hạn. Mũi tên xanh là tốt, đỏ là cần chú ý.
+- **Hàng chỉ số** trên cùng gồm sáu ô, mỗi ô có dòng so sánh bên dưới: học viên mới và doanh thu tháng này so với tháng trước; doanh thu năm so với cùng kỳ năm trước; tỷ lệ lấp đầy lớp và tỷ lệ chuyên cần so với mục tiêu 80%; công nợ hiện tại kèm phần đã quá hạn (không có khoản nào quá hạn thì ô này không có dòng so sánh). Mũi tên xanh là tốt, đỏ là cần chú ý.
 - **Các biểu đồ** bên dưới gồm doanh thu theo tháng xếp chồng theo chi nhánh, cơ cấu doanh thu theo chương trình, tỷ lệ lấp đầy của từng lớp, học viên mới theo tháng, tương quan giữa chuyên cần và điểm của các lớp đã kết thúc.
 
 Rê chuột lên biểu đồ để xem số liệu chi tiết của từng điểm.
@@ -626,9 +626,8 @@ Các thông báo trong Bảng 8.1 do CSDL trả về khi dữ liệu vi phạm q
 
 | Thông báo | Nguyên nhân và cách xử lý |
 |---|---|
-| Sai tên đăng nhập hoặc mật khẩu. | Kiểm tra lại cả hai ô (bật/tắt Caps Lock, bộ gõ tiếng Việt). Sai 5 lần liên tiếp tài khoản sẽ bị tạm khoá 15 phút |
-| Tài khoản tạm khoá đến … do nhập sai mật khẩu 5 lần liên tiếp. | Chờ tới giờ ghi trong thông báo, hoặc nhờ Quản lý gỡ tạm khoá ở **Hệ thống → Tài khoản** |
-| Tài khoản đã bị khoá. Liên hệ quản trị viên. | Quản lý đã khoá tài khoản – nhờ Quản lý mở khoá nếu cần |
+| Sai tên đăng nhập hoặc mật khẩu, hoặc tài khoản đang bị khoá… | Kiểm tra lại cả hai ô (bật/tắt Caps Lock, bộ gõ tiếng Việt). Nếu chắc chắn đúng mật khẩu mà vẫn bị báo: tài khoản có thể đang tạm khoá do sai 5 lần liên tiếp (chờ 15 phút) hoặc bị Quản lý khoá – nhờ Quản lý kiểm tra ở **Hệ thống → Tài khoản** |
+| Tài khoản đã bị khoá. Liên hệ quản trị viên. | Đang làm việc thì Quản lý khoá tài khoản – ứng dụng tự đăng xuất ở thao tác kế tiếp. Nhờ Quản lý mở khoá nếu cần |
 | Bạn không có quyền truy cập chức năng này. | Vai trò hiện tại không được dùng chức năng đó – đăng nhập bằng đúng tài khoản |
 | Lớp thuộc chi nhánh nằm ngoài phạm vi của tài khoản đang đăng nhập. | Tài khoản chỉ thao tác trong chi nhánh của mình – nhờ người phụ trách chi nhánh kia thực hiện |
 | Lớp đã đủ sĩ số. | Chọn lớp khác cùng khoá hoặc tăng sĩ số tối đa của lớp |

@@ -28,12 +28,15 @@ Script SQL Server, đánh số theo **thứ tự chạy**. Mỗi file chạy l�
 | File | Nội dung |
 |---|---|
 | `test_seed.sql` | Dữ liệu mẫu nhất quán: sĩ số, tổng tiền phiếu thu, công nợ, kết quả theo điểm |
-| `test_procedures.sql` | 37 ca: procedure nghiệp vụ, mã lỗi, giao dịch, khoá chống tranh chấp, mã yêu cầu chống lập phiếu trùng |
+| `test_procedures.sql` | 39 ca: procedure nghiệp vụ, mã lỗi, giao dịch, khoá chống tranh chấp, mã yêu cầu chống lập phiếu trùng |
 | `test_triggers.sql` | 22 ca: trigger sĩ số, trùng lịch, tổng tiền, nhật ký kiểm toán, view INSTEAD OF |
-| `test_security.sql` | 50 ca: phân quyền theo vai trò bằng `EXECUTE AS`, ngữ cảnh phiên chỉ đọc, phạm vi chi nhánh, đăng nhập và tạm khoá |
+| `test_security.sql` | 53 ca: phân quyền theo vai trò bằng `EXECUTE AS`, ngữ cảnh phiên chỉ đọc, phạm vi chi nhánh, đăng nhập và tạm khoá |
 | `bench_cursor.sql` | So sánh cursor với set-based trên cùng thao tác ghi, N = 20 lần |
 
 ```bash
-sqlcmd -S localhost,14334 -U sa -P "$SA_PASSWORD" -C -b -f 65001 -i database/tests/test_security.sql   # Docker
-sqlcmd -S localhost -E -C -b -f 65001 -i database\tests\test_security.sql                             # Windows
+sqlcmd -S localhost,14334 -U sa -P "$SA_PASSWORD" -C -b -I -f 65001 -i database/tests/test_security.sql   # Docker
+sqlcmd -S localhost -E -C -b -I -f 65001 -i database\tests\test_security.sql                             # Windows
 ```
+
+`-I` bật `QUOTED_IDENTIFIER` (sqlcmd mặc định tắt, SSMS mặc định bật): thiếu nó thì mọi lệnh ghi vào bảng có chỉ mục lọc
+(filtered index) hoặc gọi phương thức XML báo lỗi 1934.

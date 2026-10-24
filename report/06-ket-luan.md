@@ -44,10 +44,10 @@ Cả 22 yêu cầu chức năng từ FR01 đến FR22 đều đã được cài 
 
 | Yêu cầu | Mức độ đáp ứng |
 |---|---|
-| NFR01 Toàn vẹn | Đạt. Ghi danh, chuyển lớp, thu phí, điểm danh cả lớp chạy trong giao dịch lồng được: procedure tự mở giao dịch thì bật `XACT_ABORT`, được gọi trong giao dịch của người gọi thì dùng điểm lưu (savepoint); tranh chấp được tuần tự hoá bằng `UPDLOCK, HOLDLOCK` và `sp_getapplock`; 37 ca kiểm thử procedure và 22 ca kiểm thử trigger đều đạt |
-| NFR02 Bảo mật | Đạt. Login của ứng dụng bị cấm trên mọi bảng, chỉ thực thi procedure và đọc view; danh tính người dùng được ghi vào ngữ cảnh phiên ở chế độ chỉ đọc nên mã bị chèn cũng không đổi được, và quyền được kiểm tra theo kiểu "thiếu thông tin thì từ chối"; kết nối được mã hoá TLS; 50 ca kiểm thử phân quyền đều đạt. TDE, mã hoá cột và che dữ liệu đã chạy thử trên CSDL demo |
+| NFR01 Toàn vẹn | Đạt. Ghi danh, chuyển lớp, thu phí, điểm danh cả lớp chạy trong giao dịch lồng được: procedure tự mở giao dịch thì bật `XACT_ABORT`, được gọi trong giao dịch của người gọi thì dùng điểm lưu (savepoint); tranh chấp được tuần tự hoá bằng `UPDLOCK, HOLDLOCK` và `sp_getapplock`; 39 ca kiểm thử procedure và 22 ca kiểm thử trigger đều đạt |
+| NFR02 Bảo mật | Đạt. Login của ứng dụng bị cấm trên mọi bảng, chỉ thực thi procedure và đọc view; danh tính người dùng được ghi vào ngữ cảnh phiên ở chế độ chỉ đọc nên mã bị chèn cũng không đổi được, và quyền được kiểm tra theo kiểu "thiếu thông tin thì từ chối"; kết nối được mã hoá TLS; 53 ca kiểm thử phân quyền đều đạt. TDE, mã hoá cột và che dữ liệu đã chạy thử trên CSDL demo |
 | NFR03 Truy vết | Đạt. Sáu trigger ghi nhật ký dữ liệu trước và sau khi thay đổi kèm tài khoản ứng dụng lấy từ ngữ cảnh phiên; bảng nhật ký chỉ cho phép thêm; SQL Server Audit và ledger (lỗi 37359, 13545 khi cố sửa) đã chạy thử trên CSDL demo |
-| NFR04 Sẵn sàng | Đạt. Lịch sao lưu Full hằng tuần, vi sai hằng ngày, nhật ký 15 phút bảo đảm RPO 15 phút; diễn tập phục hồi Full + vi sai + nhật ký tới một thời điểm mất 723 – 810 ms trên CSDL mẫu (bản sao lưu nén khoảng 2 MB), xa dưới mức RTO 1 giờ; `DBCC CHECKDB` sau phục hồi không có lỗi |
+| NFR04 Sẵn sàng | Đạt. Lịch sao lưu Full hằng tuần, vi sai hằng ngày, nhật ký 15 phút bảo đảm RPO 15 phút; diễn tập phục hồi Full + vi sai + nhật ký tới một thời điểm mất 607 – 810 ms trên CSDL mẫu (Docker trên macOS và SQL Server cài trên Windows) (bản sao lưu nén khoảng 2 MB), xa dưới mức RTO 1 giờ; `DBCC CHECKDB` sau phục hồi không có lỗi |
 | NFR05 Hiệu năng | Đạt với các thao tác tra cứu. Đo trên bản sao 10.121 học viên, mọi thao tác tra cứu chính đều dưới 150 ms (Bảng 6.4); 125 ca kiểm thử giao diện mở mọi trang với mọi vai trò trên dữ liệu mẫu chạy hết trong khoảng 30 giây. Chưa kiểm thử tải với nhiều người dùng đồng thời |
 | NFR06 Tiếng Việt | Đạt. Bảng mã `Vietnamese_CI_AS`, chuỗi Unicode; báo cáo PDF dùng phông DejaVu, tệp Excel và Word hiển thị đúng dấu |
 | NFR07 Dễ dùng | Đạt. Menu hai cấp, kiểm tra dữ liệu ngay tại trường, hỏi xác nhận trước khi xoá, thông báo lỗi bằng tiếng Việt (Chương 4) |
@@ -74,7 +74,7 @@ Kiểm thử tích hợp chạy lại toàn bộ hệ thống từ **CSDL trốn
 | Khởi động SQL Server; healthcheck chờ đổi bảng mã máy chủ xong | Sẵn sàng sau khoảng 16 giây |
 | Dựng CSDL: bảng, dữ liệu mẫu, function, view, procedure, trigger, cursor, phân quyền, XML | Thành công, khoảng 18 – 20 giây; phần lớn thời gian dành cho băm mật khẩu 10.000 vòng của 80 tài khoản mẫu |
 | Kiểm tra nhất quán dữ liệu mẫu (11 điều kiện) | Không có lỗi |
-| Kiểm thử procedure, trigger, phân quyền | 37, 22 và 50 ca đều đạt |
+| Kiểm thử procedure, trigger, phân quyền | 39, 22 và 53 ca đều đạt |
 | Bộ 31 truy vấn nghiệp vụ | Chạy hết trong khoảng 4 giây, không có lỗi |
 | Kiểm thử giao diện và báo cáo: mở mọi trang với từng vai trò, vai trò bị chặn, phạm vi chi nhánh, kiểm tra lại phiên, CSDL từ chối khi thiếu ngữ cảnh, sinh tệp PDF, Excel, Word | 125 ca đạt, khoảng 30 giây |
 | **Tổng thời gian** | Khoảng 1 – 2 phút |

@@ -237,17 +237,17 @@ bullets(s, L, T, Cm(16), CH, [
     "Phân quyền: 6 role; login ecms_app bị DENY trên mọi bảng – chỉ EXECUTE procedure, SELECT view",
     "SESSION_CONTEXT @read_only = 1, một kết nối mỗi phiên; kiểm tra quyền fail-closed theo chi nhánh",
     "Mã hoá & kiểm toán: TLS, TDE, mã hoá cột, che dữ liệu, SQL Server Audit, ledger",
-    "50 ca kiểm thử phân quyền đều PASS"], 17)
+    "53 ca kiểm thử phân quyền đều PASS"], 17)
 bullets(s, Cm(17.8), T, Cm(15), CH, [
     "View: 27 view – bảo mật, báo cáo, indexed view doanh thu, WITH CHECK OPTION",
     "Sao lưu: FULL tuần, DIFF ngày, LOG 15 phút → RPO 15 phút; bản sao lưu mã hoá AES-256",
-    "Phục hồi theo thời điểm (STOPAT): RTO đo được 723–810 ms; DBCC CHECKDB; 3 job Agent",
+    "Phục hồi theo thời điểm (STOPAT): RTO đo được 607–810 ms; DBCC CHECKDB; 3 job Agent",
     "Nhập / xuất: ETL qua bảng tạm, 12 quy tắc kiểm tra, CSV / XML / JSON / Excel"], 17)
 
 # ----------------------------------------------------------------------------- 9. lập trình
 s = slide("3. Lập trình CSDL", "Phú", "Demo sp_DangKyHoc báo lỗi 'Lớp đã đủ sĩ số' và trigger cập nhật sĩ số.")
 table(s, L, T + Cm(0.2), CW, [["Đối tượng", "Số lượng", "Ví dụ tiêu biểu", "Kiểm thử"],
-                              ["Stored procedure", "40", "sp_DangKyHoc, sp_ThuHocPhi (JSON master–detail, savepoint, khoá ứng dụng)", "37 ca PASS"],
+                              ["Stored procedure", "40", "sp_DangKyHoc, sp_ThuHocPhi (JSON master–detail, savepoint, khoá ứng dụng)", "39 ca PASS"],
                               ["Function", "17", "fn_GoiYKhoaHoc, fn_BangDiemLop, fn_NguoiDungHienTai (phân quyền)", "–"],
                               ["Trigger", "14", "sĩ số, tổng tiền phiếu thu, chặn trùng phòng, nhật ký JSON, INSTEAD OF", "22 ca PASS"],
                               ["Cursor", "3", "sinh buổi học bỏ qua ngày lễ, tính lương, cảnh báo chuyên cần", "set-based nhanh 1,1–6,9×"]],
@@ -303,7 +303,7 @@ text(s, L, T + Cm(9.6), CW, Cm(2), "Kết luận: quan hệ tập trung là lự
 # ----------------------------------------------------------------------------- 14. kiểm thử
 s = slide("6. Kiểm thử tích hợp và CI", "Như", "Chạy lại toàn bộ từ CSDL trống trong 1–2 phút.")
 table(s, L, T + Cm(0.2), Cm(17), [["Bước", "Kết quả"], ["Dựng CSDL 01 → 09 từ CSDL trống", "≈ 20 giây"],
-                                  ["Kiểm tra dữ liệu mẫu", "11 kiểm tra, 0 lỗi"], ["Procedure / trigger / phân quyền", "37 / 22 / 50 ca PASS"],
+                                  ["Kiểm tra dữ liệu mẫu", "11 kiểm tra, 0 lỗi"], ["Procedure / trigger / phân quyền", "39 / 22 / 53 ca PASS"],
                                   ["31 truy vấn nghiệp vụ", "chạy hết, không lỗi"],
                                   ["Ứng dụng: mọi trang × vai trò, báo cáo PDF / Excel / Word", "125 passed"]],
       [3, 2], 16, Cm(1.3))

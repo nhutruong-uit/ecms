@@ -323,7 +323,7 @@ Các procedure quản lý tài khoản được thiết kế như sau:
 
 | Đối tượng | Chức năng và quy tắc an ninh |
 |---|---|
-| `sp_DangNhap` | So sánh giá trị băm. Đúng thì trả thông tin người dùng và phạm vi chi nhánh. Sai 5 lần liên tiếp thì **tạm khoá 15 phút** (cột `KhoaDen`) chứ không khoá vĩnh viễn, để người cố ý gõ sai không khoá hẳn được tài khoản của quản lý. Mọi trường hợp sai đều nhận cùng một câu "Sai tên đăng nhập hoặc mật khẩu"; tài khoản không tồn tại vẫn được băm một lần giả để thời gian phản hồi như tài khoản có thật; trạng thái khoá chỉ được báo khi mật khẩu đúng |
+| `sp_DangNhap` | So sánh giá trị băm. Đúng thì trả thông tin người dùng và phạm vi chi nhánh. Sai 5 lần liên tiếp thì **tạm khoá 15 phút** (cột `KhoaDen`) chứ không khoá vĩnh viễn, để người cố ý gõ sai không khoá hẳn được tài khoản của quản lý. Mọi trường hợp không đăng nhập được – sai tên, sai mật khẩu, tài khoản đang tạm khoá hoặc bị quản lý khoá – đều nhận cùng một câu "Sai tên đăng nhập hoặc mật khẩu, hoặc tài khoản đang bị khoá"; tài khoản không tồn tại vẫn được băm một lần giả để thời gian phản hồi như tài khoản có thật. Tài khoản đang khoá bị từ chối trước khi xét mật khẩu: nếu mật khẩu đúng được báo khác đi, kẻ dò mật khẩu cứ đoán tiếp trong 15 phút khoá và nhận ra lần đoán trúng qua thông báo, khoá tạm thời mất tác dụng |
 | `sp_DoiMatKhau` | Kiểm tra mật khẩu cũ (sai cũng tính vào số lần sai) và độ mạnh của mật khẩu mới (từ 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt), sinh salt mới. Kết nối của ứng dụng chỉ đổi được mật khẩu của chính tài khoản đang đăng nhập |
 | `sp_TaoTaiKhoan`, `sp_CapNhatTaiKhoan` | Chỉ quản lý được gọi (50096). Vai trò tài khoản phải khớp chức vụ của nhân viên (50098), nên quyền luôn đi theo chức vụ thật. Không tự khoá hoặc tự đổi vai trò của chính mình (50099). Đặt lại mật khẩu đồng thời gỡ tạm khoá |
 | `vw_TaiKhoan` | Danh sách tài khoản cho trang quản trị, có trạng thái và thời điểm hết tạm khoá, **không** có cột giá trị băm và salt |
@@ -411,15 +411,17 @@ Role quyết định *loại đối tượng* được dùng; còn *dòng nào* 
 | u_giaovu | Cấp tiếp quyền khi không có grant option | Bị chặn (lỗi 15151) | Đạt |
 | quanly / khongtontai | Sai mật khẩu và tài khoản không tồn tại | Cùng một thông báo, không dò được tài khoản | Đạt |
 | test.a, test.b | Hai tài khoản cùng mật khẩu `Test@12345` | Hai salt, hai giá trị băm khác nhau | Đạt |
-| test.a | Sai 5 lần rồi nhập sai tiếp; rồi nhập đúng; quản lý đặt lại mật khẩu | Vẫn chỉ báo "sai"; báo tạm khoá 15 phút; đăng nhập được | Đạt |
+| test.a | Sai 5 lần rồi nhập sai tiếp; rồi nhập **đúng** khi đang tạm khoá; quản lý đặt lại mật khẩu | Vẫn chỉ báo câu chung; vẫn đúng câu chung đó và không vào được (không dò được mật khẩu trong lúc khoá); đăng nhập được | Đạt |
+| test.a | Quản lý khoá hẳn tài khoản rồi nhập đúng mật khẩu | Cùng câu chung như nhập sai | Đạt |
 | u_giaovu | Tự đặt `ma_cn = 'ALL'` rồi xem học viên chi nhánh khác | 0 dòng (chi nhánh mình CN01: 133 dòng) | Đạt |
 | u_giaovien, u_hocvien | Xem lớp, lịch học của người khác bằng cách đổi tham số | 0 dòng | Đạt |
 | u_app (giáo viên) | Nhập điểm lớp của giáo viên khác | Bị chặn (50043) | Đạt |
 | u_app (không ngữ cảnh) | Nhập điểm khi kết nối không có ngữ cảnh người dùng | Bị chặn (50043) – mặc định từ chối | Đạt |
 | u_app (kế toán) | Tạo tài khoản; lập phiếu thu dưới tên kế toán khác | Bị chặn (50096; 50015) | Đạt |
+| u_app (kế toán CN01; giáo vụ CN01) | Lập phiếu thu cho học viên chi nhánh CN02; chuyển đăng ký ra khỏi lớp của CN02 | Bị chặn (50097) | Đạt |
 | u_app | Ghi đè `ma_cn` đã đặt chỉ đọc (giả lập câu lệnh bị chèn mã) | Bị chặn (lỗi 15664) | Đạt |
 
-Kết quả **50/50 ca đạt**. Nhóm cũng kết nối thật bằng login `ecms_app` từ Python: `sp_DangNhap` trả về thông tin người dùng, còn `SELECT * FROM NHANVIEN` bị từ chối – ứng dụng chỉ có đúng quyền tối thiểu.
+Kết quả **53/53 ca đạt**. Nhóm cũng kết nối thật bằng login `ecms_app` từ Python: `sp_DangNhap` trả về thông tin người dùng, còn `SELECT * FROM NHANVIEN` bị từ chối – ứng dụng chỉ có đúng quyền tối thiểu.
 
 ### 3.2.3 View bảo mật và view phục vụ báo cáo
 
@@ -551,7 +553,7 @@ DECLARE @RTO INT = DATEDIFF(MILLISECOND, @BatDau, SYSDATETIME());
 DBCC CHECKDB (ECMS_KhoiPhuc) WITH NO_INFOMSGS, ALL_ERRORMSGS;
 ```
 
-**Kết quả.** Bản phục hồi có đủ 503 phiếu thu – tức là giữ được cả hai phiếu lập sau lần sao lưu Full, một phiếu nằm trong bản vi sai và một phiếu chỉ có trong nhật ký – và đủ 364 dòng điểm danh đã bị xoá. `DBCC CHECKDB` không báo lỗi nào. Thời gian phục hồi đo được từ lúc bắt đầu `RESTORE` tới khi CSDL dùng được là **723 – 810 ms** qua hai lần chạy. Nhóm chọn phục hồi *song song* ra một CSDL mới thay vì ghi đè lên ECMS: ứng dụng không phải dừng, các giao dịch hợp lệ xảy ra sau sự cố không bị mất, chỉ những dòng bị xoá được chép lại. Phục hồi ghi đè chỉ nên dùng khi toàn bộ CSDL bị hỏng, và khi đó phải sao lưu phần nhật ký cuối (tail-log) trước.
+**Kết quả.** Bản phục hồi có đủ 503 phiếu thu – tức là giữ được cả hai phiếu lập sau lần sao lưu Full, một phiếu nằm trong bản vi sai và một phiếu chỉ có trong nhật ký – và đủ 364 dòng điểm danh đã bị xoá. `DBCC CHECKDB` không báo lỗi nào. Thời gian phục hồi đo được từ lúc bắt đầu `RESTORE` tới khi CSDL dùng được là **723 – 810 ms** qua hai lần chạy trên Docker (macOS) và **607 – 735 ms** qua ba lần chạy trên SQL Server 2025 Developer cài trên Windows 11 (một lần đo khác lên tới 15,9 giây – thời gian phục hồi phụ thuộc vào tình trạng đĩa lúc chạy, nên cần đo nhiều lần chứ không dựa vào một lần). Nhóm chọn phục hồi *song song* ra một CSDL mới thay vì ghi đè lên ECMS: ứng dụng không phải dừng, các giao dịch hợp lệ xảy ra sau sự cố không bị mất, chỉ những dòng bị xoá được chép lại. Phục hồi ghi đè chỉ nên dùng khi toàn bộ CSDL bị hỏng, và khi đó phải sao lưu phần nhật ký cuối (tail-log) trước.
 
 **Kiểm tra bản sao lưu.** Một bản sao lưu chưa từng được kiểm tra thì chưa chắc dùng được. Nhóm dùng năm công cụ kiểm tra:
 
@@ -587,9 +589,9 @@ Với lịch này, lượng dữ liệu tối đa có thể mất (RPO) là **15
 |---|---|---|---|
 | ECMS – Full hằng tuần | Hằng tuần, Chủ nhật, 01:00 | `EXEC master.dbo.sp_SaoLuuECMS 'FULL'` | – |
 | ECMS – Diff hằng ngày | Thứ Hai – thứ Bảy, 01:00 | `EXEC master.dbo.sp_SaoLuuECMS 'DIFF'` | – |
-| ECMS – Log 15 phút | Hằng ngày, mỗi 15 phút | `EXEC master.dbo.sp_SaoLuuECMS 'LOG'` | Thành công |
+| ECMS – Log 15 phút | Hằng ngày, mỗi 15 phút từ 00:00 | `EXEC master.dbo.sp_SaoLuuECMS 'LOG'` | Thành công |
 
-Bật lịch thật bằng `sp_update_job @enabled = 1`. Bản Express không có Agent nên script tự bỏ qua phần này; khi đó dùng Task Scheduler (Windows) hoặc cron gọi `scripts/backup.sh`.
+Khung giờ lặp của job nhật ký phải bắt đầu từ 00:00: nếu đặt giờ bắt đầu 01:00 như hai job kia thì từ 00:00 đến 01:00 mỗi ngày không có bản sao lưu nhật ký nào, RPO thực tế thành 75 phút thay vì 15 phút. Bật lịch thật bằng `sp_update_job @enabled = 1`. Script chỉ lập lịch khi dịch vụ Agent đang chạy (bản Developer cài Agent ở chế độ khởi động thủ công nên sau khi khởi động lại máy thường đang dừng); bản Express không có Agent nên script tự bỏ qua phần này, khi đó dùng Task Scheduler (Windows) hoặc cron gọi `scripts/backup.sh`.
 
 **Sao lưu có mã hoá.** Bản sao lưu bị lấy cắp sẽ làm lộ toàn bộ dữ liệu, kể cả khi CSDL đang chạy được bảo vệ tốt. Script tạo certificate `ECMS_BackupCert` trong `master` và sao lưu với `ENCRYPTION (ALGORITHM = AES_256, SERVER CERTIFICATE = ECMS_BackupCert)`. Bản sao lưu mã hoá có nén nặng 1,97 MB, `RESTORE VERIFYONLY` xác nhận hợp lệ, và lịch sử sao lưu ghi nhận thuật toán `aes_256`, loại khoá `CERTIFICATE_OAEP_256`. Certificate và khoá riêng được sao lưu ra tệp ngay sau khi tạo – mất certificate đồng nghĩa với không thể phục hồi bản sao lưu.
 
@@ -630,20 +632,20 @@ Script mặc định chạy ở chế độ thử (huỷ giao dịch ở cuối)
 | JSON | `FOR JSON PATH, ROOT`: lớp đang học kèm mảng học viên lồng bên trong; `OPENJSON … WITH` đọc ngược thành bảng | `DataFrame.to_json` | Cung cấp cho API, ứng dụng di động |
 | XML | `FOR XML PATH, ROOT`: công nợ theo học viên | `DataFrame.to_xml` | Trao đổi với hệ thống kế toán |
 
-**So sánh tốc độ nhập 10.000 dòng.** Nhóm nhập cùng một tệp 10.000 dòng vào bảng trung gian bằng sáu cách để so sánh. Hai cách phía máy chủ được đo trong `12_import_export.sql`; bốn cách phía máy khách được đo bằng `import_export.py bench`:
+**So sánh tốc độ nhập 10.000 dòng.** Nhóm nhập cùng một tệp 10.000 dòng vào bảng trung gian bằng sáu cách để so sánh. Hai cách phía máy chủ được đo trong `12_import_export.sql`; bốn cách phía máy khách được đo bằng `import_export.py bench` (riêng `bcp in` chạy bằng tay, tính cả thời gian khởi động tiến trình). Mỗi cách được đo trên hai môi trường: SQL Server 2025 chạy trong Docker trên macOS, máy khách đi qua mạng ảo của Docker; và SQL Server 2025 Developer cài trên Windows 11, máy khách cùng máy kết nối qua bộ nhớ chia sẻ (trung vị của 5 lần đo):
 
-*Bảng 3.29 – Tốc độ nhập 10.000 dòng bằng sáu cách*
+*Bảng 3.29 – Tốc độ nhập 10.000 dòng bằng sáu cách trên hai môi trường*
 
-| Phương pháp | Thời gian | Số dòng mỗi giây | Ghi chú |
-|---|--:|--:|---|
-| `BULK INSERT` (tệp trên máy chủ, khoá bảng) | **32 ms** | khoảng 312.000 | Nhanh nhất: máy chủ đọc tệp trực tiếp, ghi nhật ký tối thiểu; nhưng tệp phải nằm trên máy chủ |
-| `bcp in` | 513 ms | khoảng 19.500 | Đọc tệp phía máy khách, gửi theo lô; thời gian gồm cả khởi động tiến trình |
-| Python `executemany` với `fast_executemany` | 352 ms | khoảng 28.400 | Gửi cả mảng tham số trong ít lượt mạng; cách ứng dụng web nên dùng |
-| Python `executemany` mặc định | 10.133 ms | khoảng 990 | Mỗi dòng một lượt gọi ODBC |
-| Python `execute` từng dòng | 16.865 ms | khoảng 590 | Mỗi dòng một lượt mạng |
-| T-SQL `INSERT` từng dòng (10.000 câu lệnh trong cùng phiên) | 5.708 ms | khoảng 1.750 | Không có độ trễ mạng nhưng vẫn là 10.000 câu lệnh |
+| Phương pháp | Docker (macOS) | Windows, cùng máy | Số dòng mỗi giây (Windows) | Ghi chú |
+|---|--:|--:|--:|---|
+| `BULK INSERT` (tệp trên máy chủ, khoá bảng) | **32 ms** | **27 ms** | khoảng 370.000 | Nhanh nhất: máy chủ đọc tệp trực tiếp, ghi nhật ký tối thiểu; nhưng tệp phải nằm trên máy chủ |
+| `bcp in` | 513 ms | 85 ms | khoảng 118.000 | Đọc tệp phía máy khách, gửi theo lô; thời gian gồm cả khởi động tiến trình |
+| Python `executemany` với `fast_executemany` | 352 ms | 235 ms | khoảng 42.600 | Gửi cả mảng tham số trong ít lượt gọi; cách ứng dụng web nên dùng |
+| Python `executemany` mặc định | 10.133 ms | 1.395 ms | khoảng 7.200 | Mỗi dòng một lượt gọi ODBC |
+| Python `execute` từng dòng | 16.865 ms | 1.370 ms | khoảng 7.300 | Mỗi dòng một lượt gọi tới máy chủ |
+| T-SQL `INSERT` từng dòng (10.000 câu lệnh trong cùng phiên) | 5.708 ms | 1.489 ms | khoảng 6.700 | Không có lượt gọi từ máy khách nhưng vẫn là 10.000 câu lệnh |
 
-**Nhận xét.** Chênh lệch giữa cách nhanh nhất và chậm nhất lên tới hơn 500 lần, chủ yếu do số lượt trao đổi giữa máy khách và máy chủ. Từ kết quả đo, nhóm đánh giá các công cụ như sau:
+**Nhận xét.** Trên Docker, cách chậm nhất chậm hơn cách nhanh nhất hơn 500 lần; trên Windows cùng máy chỉ còn khoảng 55 lần. `BULK INSERT` gần như không đổi giữa hai môi trường (32 so với 27 ms), trong khi `execute` từng dòng nhanh lên khoảng 12 lần khi bỏ được mạng ảo của Docker. Điều đó cho thấy chi phí chính của cách nhập từng dòng là số lượt trao đổi giữa máy khách và máy chủ: khi máy chủ ở xa qua mạng thật, khoảng cách còn lớn hơn số đo trên Docker. Từ kết quả đo, nhóm đánh giá các công cụ như sau:
 
 *Bảng 3.30 – Đánh giá các công cụ nhập, xuất dữ liệu*
 
@@ -665,7 +667,7 @@ Script mặc định chạy ở chế độ thử (huỷ giao dịch ở cuối)
 |---|---|---|---|
 | TLS (mã hoá đường truyền) | Nghe lén, sửa gói tin giữa ứng dụng và máy chủ | ODBC Driver 18 mặc định `Encrypt=yes`; môi trường thật cài chứng chỉ do CA cấp, đặt `TrustServerCertificate=no` và bật *Force Encryption* trên máy chủ | `sys.dm_exec_connections`: kết nối của sqlcmd có `encrypt_option = TRUE` |
 | TDE (mã hoá dữ liệu lưu trữ) | Sao chép tệp .mdf, .ldf, .bak | Khoá mã hoá CSDL AES-256, bảo vệ bằng certificate `ECMS_TDECert` trong `master`; sao lưu certificate ra tệp ngay khi tạo | `ECMS_BaoMat`: ENCRYPTED, AES 256; tempdb cũng tự được mã hoá |
-| Mã hoá cột | Người có quyền đọc bảng nhưng không được xem lương | Khoá đối xứng AES-256 bảo vệ bằng certificate; `ENCRYPTBYKEY` kèm `MaNV` làm authenticator để bản mã chép sang dòng khác không giải mã được | Có khoá: 27.000.000; không có quyền trên khoá: NULL; cột chỉ còn bản mã `0x0069D572…` |
+| Mã hoá cột | Người có quyền đọc bảng nhưng không được xem lương | Khoá đối xứng AES-256 bảo vệ bằng certificate; `ENCRYPTBYKEY` kèm `MaNV` làm authenticator để bản mã chép sang dòng khác không giải mã được | Có khoá: 27.000.000; không có quyền trên khoá: NULL; cột chỉ còn bản mã 84 byte. Hai người cùng lương 27.000.000 có bản mã khác nhau (`0x23E2806C…` và `0x820EFCAC…`, phần sau GUID của khoá) nhờ IV ngẫu nhiên, nên không suy ra được ai cùng mức lương |
 | Dynamic Data Masking | Hiển thị thừa thông tin cá nhân | `partial(0, "xxxxxxx", 3)` cho số điện thoại, `default()` cho tên phụ huynh | Quản trị thấy `0938494732`; giáo vụ thấy `xxxxxxx732` và `xxxx` |
 | Sao lưu mã hoá | Lấy cắp tệp sao lưu | `BACKUP … WITH ENCRYPTION (AES_256, SERVER CERTIFICATE)` (mục 3.2.4) | 1,97 MB, `VERIFYONLY` hợp lệ |
 
@@ -700,11 +702,11 @@ Phần này trình bày bốn loại đối tượng lập trình của SQL Serv
 | Procedure | Tham số vào | Tham số ra | Giao dịch | Kiểm tra chính |
 |---|---|---|:-:|---|
 | `sp_DangKyHoc` | Mã học viên, mã lớp, giảm giá | Mã đăng ký | Có | Học viên tồn tại, lớp trong phạm vi chi nhánh, đang mở, không trùng, còn chỗ, đủ điều kiện tiên quyết |
-| `sp_ThuHocPhi` | Mã học viên, mã nhân viên, hình thức, danh sách chi tiết (JSON), ghi chú, mã yêu cầu | Mã phiếu thu, tổng tiền | Có | Gửi lại cùng mã yêu cầu thì trả phiếu đã lập; người lập là kế toán hoặc quản lý đang đăng nhập; đăng ký thuộc học viên; không thu vượt số nợ |
+| `sp_ThuHocPhi` | Mã học viên, mã nhân viên, hình thức, danh sách chi tiết (JSON), ghi chú, mã yêu cầu | Mã phiếu thu, tổng tiền | Có | Gửi lại cùng mã yêu cầu thì trả phiếu đã lập (mã đã dùng cho học viên khác thì báo lỗi); người lập là kế toán hoặc quản lý đang đăng nhập; học viên trong phạm vi chi nhánh; đăng ký thuộc học viên; không thu vượt số nợ |
 | `sp_XepLichLop`, `sp_XoaLichLop` | Mã lớp, thứ, ca, phòng | – | Có | Khoá ứng dụng chống xếp lịch đồng thời; lớp chưa điểm danh; phòng thuộc chi nhánh, đủ sức chứa; không trùng phòng, không trùng giáo viên; xoá các buổi đã sinh theo lịch cũ |
 | `sp_DiemDanhBuoi` | Mã lớp, số buổi, danh sách (JSON) | – | Có | Người gọi được thao tác trên lớp; buổi đã tới ngày; học viên thuộc lớp; lưu cả lớp một lần bằng `MERGE`; ghi giáo viên đã dạy buổi |
 | `sp_NhapDiem` | Mã lớp, danh sách (JSON) | Số dòng | Có | Người gọi được thao tác trên lớp; điểm từ 0 đến 10; học viên đang học; phân biệt "không gửi điểm" với "xoá điểm" |
-| `sp_ChuyenLop` | Mã đăng ký, mã lớp mới | Mã đăng ký mới | Có | Cùng khoá, lớp mới còn chỗ và trong phạm vi; chuyển cả số tiền đã đóng |
+| `sp_ChuyenLop` | Mã đăng ký, mã lớp mới | Mã đăng ký mới | Có | Cùng khoá, lớp mới còn chỗ; cả lớp cũ và lớp mới trong phạm vi; chuyển cả số tiền đã đóng |
 | `sp_ThongKeDoanhThu` | Từ ngày, đến ngày, mã chi nhánh | Tổng doanh thu | | Trả bảng chi nhánh × tháng và tổng qua tham số ra |
 | `sp_TimKiemHocVien` | Từ khoá, chi nhánh, khoá học, còn nợ, trang, số dòng mỗi trang | Tổng số kết quả | | Tiêu chí tuỳ chọn, phân trang `OFFSET … FETCH` |
 
@@ -811,7 +813,7 @@ Procedure này thể hiện các quyết định thiết kế mà nhóm áp dụ
 - **XACT_ABORT chỉ khi procedure sở hữu giao dịch.** Với `SET XACT_ABORT ON`, khi máy khách huỷ lệnh giữa chừng (hết thời gian chờ, mất kết nối), SQL Server huỷ toàn bộ giao dịch thay vì để lại một giao dịch mở cùng các khoá treo trên máy chủ. Tuy nhiên, nếu bật khi đang chạy trong giao dịch của người gọi, mọi lỗi sẽ làm giao dịch ngoài hỏng hẳn (`XACT_STATE() = -1`) và không quay về điểm lưu được nữa. Vì vậy procedure chỉ bật tuỳ chọn này khi `@@TRANCOUNT = 0`. Ca kiểm thử 35 xác nhận: lỗi trong `sp_SinhBuoiHoc` được gọi bên trong một giao dịch khác vẫn giữ nguyên giao dịch ngoài (`@@TRANCOUNT = 1`).
 - **Chống ghi danh vượt sĩ số khi có truy cập đồng thời.** Nếu hai giáo vụ cùng ghi danh vào chỗ cuối cùng của một lớp, cả hai có thể cùng đọc thấy "còn 1 chỗ" rồi cùng thêm đăng ký. Gợi ý khoá `UPDLOCK, HOLDLOCK` giữ khoá cập nhật trên dòng LOPHOC tới hết giao dịch, nên phiên thứ hai phải chờ, đọc lại thấy lớp đã đầy và nhận lỗi 50004. `sp_ThuHocPhi` khoá theo cách tương tự các đăng ký được thu, để hai kế toán thu cùng một khoản không thu vượt. Trigger ở mục 3.3.3 là lớp bảo vệ thứ hai.
 - **Khoá ứng dụng cho kiểm tra trên nhiều dòng.** `sp_XepLichLop` phải kiểm tra rằng *không tồn tại* lớp nào khác dùng cùng phòng hoặc cùng giáo viên vào thứ và ca đó – không có dòng nào để khoá bằng `UPDLOCK`. Procedure dùng `sp_getapplock` giữ khoá độc quyền trên tài nguyên `'ECMS.XepLich'` tới hết giao dịch, chờ tối đa 10 giây; quá thời gian thì báo lỗi 50028 "Đang có người xếp lịch khác, vui lòng thử lại sau ít giây".
-- **Mã yêu cầu chống lập phiếu trùng (idempotency key).** Mỗi lần mở form lập phiếu, ứng dụng sinh một mã `@MaYeuCau` kiểu `UNIQUEIDENTIFIER`. Nếu kế toán bấm nút hai lần hoặc trình duyệt gửi lại form, procedure tìm thấy phiếu đã lập với cùng mã và trả lại phiếu đó thay vì lập phiếu thứ hai; chỉ mục duy nhất có lọc `UX_PHIEUTHU_MaYeuCau` là lớp bảo vệ cuối. Ca kiểm thử 27 gửi cùng mã hai lần và chỉ có một phiếu được lập.
+- **Mã yêu cầu chống lập phiếu trùng (idempotency key).** Ứng dụng sinh một mã `@MaYeuCau` kiểu `UNIQUEIDENTIFIER` cho mỗi *nội dung* phiếu (học viên và các khoản thu); đổi học viên hay khoản thu là một yêu cầu mới với mã mới. Nếu kế toán bấm nút hai lần, hoặc lần trước mất kết nối sau khi máy chủ đã ghi rồi bấm lại, procedure tìm thấy phiếu đã lập với cùng mã và trả lại phiếu đó thay vì lập phiếu thứ hai; chỉ mục duy nhất có lọc `UX_PHIEUTHU_MaYeuCau` là lớp bảo vệ cuối. Mã đã dùng cho phiếu của học viên khác thì procedure báo lỗi 50016 chứ không trả nhầm phiếu cũ. Tham số OUTPUT `@MaPT` được xoá về NULL trước khi tra, nên biến của người gọi còn giữ mã phiếu lần trước cũng không bị hiểu thành "đã lập". Ca kiểm thử 27 gửi cùng mã hai lần và chỉ có một phiếu được lập; ca 38 và 39 kiểm tra hai tình huống còn lại.
 - **Truyền danh sách bằng JSON.** Các procedure thu học phí, điểm danh, nhập điểm nhận cả danh sách trong một tham số chuỗi JSON và tách bằng `OPENJSON … WITH`. So với tham số kiểu bảng, JSON gọi được trực tiếp từ pyodbc mà không cần tạo kiểu dữ liệu riêng, trong khi vẫn xử lý theo tập hợp trong một giao dịch – cả lớp được lưu trong một lần. Với `sp_NhapDiem`, hàm `JSON_PATH_EXISTS` (SQL Server 2022 trở lên) phân biệt phần tử *không có* khoá `DiemCK` (giữ nguyên điểm cũ) với phần tử có `"DiemCK": null` (xoá điểm nhập nhầm). Phiên bản đầu dùng `ISNULL(mới, cũ)` nên không xoá được điểm, trong khi ứng dụng vẫn báo "Đã lưu".
 - **SQL tĩnh thay cho SQL động.** `sp_TimKiemHocVien` có nhiều tiêu chí tuỳ chọn nhưng không ghép chuỗi SQL; điều kiện được viết dạng `(@x IS NULL OR cot = @x)` kèm `OPTION (RECOMPILE)` để mỗi lần chạy được tối ưu theo giá trị thực. Cách này loại bỏ nguy cơ chèn mã SQL và giữ nguyên chuỗi sở hữu.
 
@@ -822,6 +824,7 @@ Procedure này thể hiện các quyết định thiết kế mà nhóm áp dụ
 | Mã lỗi | Đối tượng ném lỗi | Ý nghĩa |
 |:-:|---|---|
 | 50015 | `sp_ThuHocPhi` | Người lập phiếu phải là chính nhân viên đang đăng nhập, không lập hộ người khác |
+| 50016 | `sp_ThuHocPhi` | Mã yêu cầu đã dùng cho phiếu thu của học viên khác – không trả nhầm phiếu cũ cho yêu cầu mới |
 | 50027 | `sp_XepLichLop`, `sp_XoaLichLop` | Lớp đã điểm danh thì không sửa lịch cố định (các buổi đã học gắn với lịch cũ) |
 | 50028 | `sp_XepLichLop` | Đang có người xếp lịch khác – chờ khoá ứng dụng quá 10 giây |
 | 50037 | `sp_XuLyCanhBao` | Tài khoản không có quyền xử lý cảnh báo của lớp này |
@@ -839,7 +842,7 @@ Procedure này thể hiện các quyết định thiết kế mà nhóm áp dụ
 | 50156 | `sp_LuuLopHoc` | Khoá học đã mở đủ 99 lớp trong năm, không sinh thêm được mã lớp |
 | 50167 | `sp_LuuHocVien` | Đã dùng hết mã học viên HV0001 – HV9999 |
 
-**Kiểm thử.** Bộ kiểm thử `test_procedures.sql` chạy 37 ca trong một giao dịch rồi huỷ ở cuối; kết quả từng ca được ghi vào biến bảng vì biến bảng không bị ảnh hưởng khi huỷ giao dịch. Kết quả:
+**Kiểm thử.** Bộ kiểm thử `test_procedures.sql` chạy 39 ca trong một giao dịch rồi huỷ ở cuối; kết quả từng ca được ghi vào biến bảng vì biến bảng không bị ảnh hưởng khi huỷ giao dịch. Kết quả:
 
 *Bảng 3.36 – Kết quả kiểm thử procedure (test_procedures.sql)*
 
@@ -882,8 +885,10 @@ Procedure này thể hiện các quyết định thiết kế mà nhóm áp dụ
 | 35 | sp_SinhBuoiHoc | Lỗi khi đang ở trong giao dịch của người gọi | Giữ giao dịch ngoài | `@@TRANCOUNT = 1`, lỗi 50080 | Đạt |
 | 36 | sp_SinhBuoiHoc_SetBased | Bản cursor và bản set-based sinh 20 buổi cho GT3-2601 | 0 dòng khác nhau | 0 dòng khác nhau | Đạt |
 | 37 | sp_CapNhatTrangThaiLop | Lớp IE65-2601 tới ngày khai giảng | Đang học | Đang học (1 lớp) | Đạt |
+| 38 | sp_ThuHocPhi | Mã yêu cầu đã dùng cho phiếu của học viên khác | 50016 | 50016 Mã yêu cầu đã dùng cho phiếu thu của học viên khác | Đạt |
+| 39 | | Biến `@MaPT` còn giữ mã phiếu lần trước, mã yêu cầu mới | Phiếu mới | Phiếu mới, mã phiếu 504 → 505 | Đạt |
 
-Kết quả **37/37 ca đạt**; sau khi chạy, dữ liệu mẫu giữ nguyên (bộ kiểm tra nhất quán vẫn không có lỗi). Giá trị tự tăng đã cấp trong giao dịch bị huỷ không được trả lại, nên mã đăng ký và mã phiếu ở mỗi lần chạy khác nhau và có khoảng trống – đây là hành vi bình thường của SQL Server.
+Kết quả **39/39 ca đạt**; sau khi chạy, dữ liệu mẫu giữ nguyên (bộ kiểm tra nhất quán vẫn không có lỗi). Giá trị tự tăng đã cấp trong giao dịch bị huỷ không được trả lại, nên mã đăng ký và mã phiếu ở mỗi lần chạy khác nhau và có khoảng trống – đây là hành vi bình thường của SQL Server.
 
 ### 3.3.2 Hàm do người dùng định nghĩa
 
@@ -906,7 +911,7 @@ Kết quả **37/37 ca đạt**; sau khi chạy, dữ liệu mẫu giữ nguyên
 | `fn_NguoiDungHienTai` | Bảng nội tuyến | – → tài khoản, vai trò, mã nhân viên hoặc học viên, phạm vi chi nhánh của người gọi | Mọi kiểm tra quyền mức dòng, trigger nhật ký |
 | `fn_TrongPhamVi` | Vô hướng | Mã chi nhánh → người gọi có được thao tác không | Procedure ghi dữ liệu theo chi nhánh (50097) |
 | `fn_DuocThaoTacLop` | Vô hướng | Mã lớp → người gọi có được ghi dữ liệu học tập của lớp không | Điểm danh, nhập điểm, cảnh báo (50035, 50043) |
-| `fn_VaiTroTheoChucVu` | Vô hướng | Mã nhân viên, mã học viên → vai trò đúng với chức vụ | Tạo, cập nhật tài khoản (50098) |
+| `fn_VaiTroTheoChucVu` | Vô hướng | Mã nhân viên, mã học viên → vai trò đúng với chức vụ | Nguồn duy nhất của ánh xạ chức vụ → vai trò: tạo, cập nhật tài khoản (50098), đổi chức vụ ở `sp_LuuNhanVien`, trang Tài khoản |
 
 **Phân tích hàm tiêu biểu – fn_TyLeChuyenCan.** Hàm này là "tầng thông tin" trong ví dụ DIKW ở mục 1.6.2. Theo quy định của trung tâm, đi muộn vẫn tính là có mặt, còn vắng có phép không tính vào tổng số buổi. Hàm trả về NULL khi chưa có buổi nào được điểm danh để phân biệt "chưa có dữ liệu" với "chuyên cần 0%".
 
@@ -1103,7 +1108,7 @@ Người thực hiện  sa (login SQL) / kiemthu (tài khoản ứng dụng)
 | trg_NhatKy_CTPhieuThu | Xoá một chi tiết phiếu thu | Ghi thao tác DELETE kèm số tiền và tài khoản `kiemthu` | Đạt |
 | trg_NhatKy_HocVien | Lệnh UPDATE giữ nguyên giá trị, rồi đổi địa chỉ | Chỉ lần đổi địa chỉ được ghi | Đạt |
 
-Kết quả **22/22 ca đạt**. Bộ kiểm thử procedure vẫn đạt 37/37 ca khi các trigger hoạt động, chứng tỏ procedure và trigger không xung đột nhau.
+Kết quả **22/22 ca đạt**. Bộ kiểm thử procedure vẫn đạt 39/39 ca khi các trigger hoạt động, chứng tỏ procedure và trigger không xung đột nhau.
 
 **So sánh trigger và ràng buộc CHECK.**
 
@@ -1207,4 +1212,4 @@ Chạy cảnh báo chuyên cần với ngưỡng mặc định 20% sinh ra 2 c�
 
 ## 3.4 Tiểu kết chương
 
-Chương 3 đã xây dựng toàn bộ lớp xử lý và bảo vệ thông tin ngay trong CSDL. Về truy vấn, bộ 31 truy vấn SQL và 18 truy vấn XML trả lời các câu hỏi quản lý thực tế, kèm số liệu đo cho thấy tác dụng của chỉ mục, cách viết điều kiện đúng và cả trường hợp chỉ mục XML làm truy vấn chậm đi. Về an ninh, hệ thống bảo vệ theo bảy lớp: mã hoá đường truyền; băm lặp mật khẩu có salt với tạm khoá chống dò; phân quyền tối thiểu với login ứng dụng bị cấm trên mọi bảng; phân quyền theo dòng dựa trên ngữ cảnh phiên chỉ đọc và mặc định từ chối; che, ẩn dữ liệu theo cột; mã hoá dữ liệu lưu trữ và bản sao lưu; kiểm toán bằng trigger, SQL Server Audit và bảng ledger. Chiến lược sao lưu đạt RPO 15 phút, đã được diễn tập phục hồi về đúng thời điểm với RTO đo được dưới một giây và kiểm tra toàn vẹn bằng `DBCC CHECKDB`; quy trình nhập dữ liệu kiểm tra 12 quy tắc chất lượng. Về lập trình, 40 procedure, 17 function, 14 trigger và các cursor đóng gói mọi quy tắc nghiệp vụ, an toàn khi có truy cập đồng thời và khi người dùng bấm nút hai lần. Tổng cộng **109 ca kiểm thử tự động** (37 procedure, 22 trigger, 50 phân quyền) đều đạt. Lớp xử lý này là nền tảng để Chương 4 xây dựng giao diện chỉ gọi view và procedure mà không truy cập bảng gốc.
+Chương 3 đã xây dựng toàn bộ lớp xử lý và bảo vệ thông tin ngay trong CSDL. Về truy vấn, bộ 31 truy vấn SQL và 18 truy vấn XML trả lời các câu hỏi quản lý thực tế, kèm số liệu đo cho thấy tác dụng của chỉ mục, cách viết điều kiện đúng và cả trường hợp chỉ mục XML làm truy vấn chậm đi. Về an ninh, hệ thống bảo vệ theo bảy lớp: mã hoá đường truyền; băm lặp mật khẩu có salt với tạm khoá chống dò; phân quyền tối thiểu với login ứng dụng bị cấm trên mọi bảng; phân quyền theo dòng dựa trên ngữ cảnh phiên chỉ đọc và mặc định từ chối; che, ẩn dữ liệu theo cột; mã hoá dữ liệu lưu trữ và bản sao lưu; kiểm toán bằng trigger, SQL Server Audit và bảng ledger. Chiến lược sao lưu đạt RPO 15 phút, đã được diễn tập phục hồi về đúng thời điểm với RTO đo được dưới một giây và kiểm tra toàn vẹn bằng `DBCC CHECKDB`; quy trình nhập dữ liệu kiểm tra 12 quy tắc chất lượng. Về lập trình, 40 procedure, 17 function, 14 trigger và các cursor đóng gói mọi quy tắc nghiệp vụ, an toàn khi có truy cập đồng thời và khi người dùng bấm nút hai lần. Tổng cộng **114 ca kiểm thử tự động** (39 procedure, 22 trigger, 53 phân quyền) đều đạt. Lớp xử lý này là nền tảng để Chương 4 xây dựng giao diện chỉ gọi view và procedure mà không truy cập bảng gốc.
