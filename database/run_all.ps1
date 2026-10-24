@@ -1,4 +1,4 @@
-<#
+﻿<#
   Dựng lại toàn bộ CSDL ECMS trên Windows: chạy lần lượt các script 01 → 09.
 
     .\database\run_all.ps1                           # Windows Authentication, server localhost
