@@ -1,0 +1,35 @@
+// Diễn tập sự cố: chuỗi sao lưu Full → Diff → Log và phục hồi về thời điểm T0 (Chương 3, mục 3.2.4)
+// Số liệu: lần chạy database/11_backup_restore.sql ngày 25/10/2026. Nguồn sinh sao-luu-phuc-hoi.png:
+//   dot -Tpng -Gdpi=200 sao-luu-phuc-hoi.dot -o sao-luu-phuc-hoi.png
+digraph SaoLuuPhucHoi {
+  rankdir=TB; nodesep=0.5; ranksep=0.28; fontname="Arial"; bgcolor="white"; newrank=true;
+  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
+        fontcolor="#0f172a", margin="0.12,0.07", width=3.3];
+  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+
+  subgraph cluster_ecms {
+    label="CSDL ECMS (đang hoạt động)"; fontsize=12; fontcolor="#1f3864"; style="rounded"; color="#cbd5e1";
+    F  [label="① 00:19:35.068  sao lưu Full\n364 dòng điểm danh · 501 phiếu thu", fillcolor="#dbeafe"];
+    D  [label="② thêm 1 phiếu, sao lưu Diff\n502 phiếu thu", fillcolor="#dbeafe"];
+    T0 [label="③ 00:19:36.150  thêm 1 phiếu\nMỐC T0 · 503 phiếu thu", fillcolor="#fef3c7"];
+    X  [label="④ 00:19:37.214  SỰ CỐ\nxoá nhầm điểm danh lớp GT2-2601\n0 dòng điểm danh", fillcolor="#fee2e2"];
+    L  [label="⑤ sao lưu nhật ký\n(mọi giao dịch sau bản Diff)", fillcolor="#dbeafe"];
+    C  [label="⑦ 00:19:38.427  chép lại dữ liệu\n364 dòng điểm danh · 503 phiếu thu", fillcolor="#dcfce7"];
+    F -> D -> T0 -> X -> L;
+  }
+  subgraph cluster_kp {
+    label="CSDL ECMS_KhoiPhuc (phục hồi song song)"; fontsize=12; fontcolor="#1f3864"; style="rounded"; color="#cbd5e1";
+    R1 [label="RESTORE DATABASE … Full\nWITH NORECOVERY"];
+    R2 [label="RESTORE DATABASE … Diff\nWITH NORECOVERY"];
+    R3 [label="RESTORE LOG …\nWITH STOPAT = T0, RECOVERY"];
+    R4 [label="⑥ DBCC CHECKDB: không lỗi\n364 dòng điểm danh · 503 phiếu thu\nRTO đo được 723 – 810 ms", fillcolor="#dcfce7"];
+    R1 -> R2 -> R3 -> R4;
+  }
+  F -> R1 [style=dashed, label=" .bak"];
+  D -> R2 [style=dashed, label=" .bak"];
+  L -> R3 [style=dashed, label=" .trn"];
+  R4 -> C [label=" chỉ chép các dòng bị xoá"];
+  {rank=same; F; R1}
+  {rank=same; D; R2}
+  {rank=same; L; R3}
+}

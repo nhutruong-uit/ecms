@@ -1,0 +1,29 @@
+// Nửa kết (semi-join) tại trạm CN01 so với chuyển nguyên mảnh (T30) – database/13_distributed.sql mục 8
+//   dot -Tpng -Gdpi=200 nua-ket.dot -o nua-ket.png
+digraph NuaKet {
+  rankdir=TB; nodesep=0.25; ranksep=0.5; fontname="Arial"; bgcolor="white"; newrank=true;
+  node [fontname="Arial", fontsize=13, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc"];
+  edge [fontname="Arial", fontsize=12, arrowsize=0.8];
+
+  subgraph cluster_a {
+    label=<<B>Cách 1 – chuyển nguyên mảnh</B><BR/>216 dòng · 15.186 byte>; fontsize=13; style="rounded"; color="#dc2626";
+    A2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB></TD></TR><TR><TD CELLPADDING="1">119 dòng</TD></TR></TABLE>>];
+    A3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB></TD></TR><TR><TD CELLPADDING="1">97 dòng</TD></TR></TABLE>>];
+    A1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">DANGKY<SUB>1</SUB> ⋈ HOCVIEN<SUB>2,3</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+    A2 -> A1 [label="119 dòng", color="#dc2626", penwidth=2.5];
+    A3 -> A1 [label=" 97 dòng", color="#dc2626", penwidth=2.5];
+  }
+
+  subgraph cluster_b {
+    label=<<B>Cách 2 – nửa kết</B><BR/>406 dòng · 4.104 byte (−73%)>; fontsize=13; style="rounded"; color="#16a34a";
+    B1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">π<SUB>MaHV</SUB>(DANGKY<SUB>1</SUB>)</TD></TR><TR><TD CELLPADDING="1">175 mã học viên</TD></TR></TABLE>>];
+    B2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">27 dòng khớp</TD></TR></TABLE>>];
+    B3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">29 dòng khớp</TD></TR></TABLE>>];
+    B4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">kết với DANGKY<SUB>1</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+    B1 -> B2 [label="175 khoá", color="#2563eb"];
+    B1 -> B3 [label=" 175 khoá", color="#2563eb"];
+    B2 -> B4 [label="27 dòng", color="#16a34a", penwidth=2.5];
+    B3 -> B4 [label=" 29 dòng", color="#16a34a", penwidth=2.5];
+  }
+  { rank=same; A2; A3; B1; }
+}

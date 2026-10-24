@@ -1,0 +1,16 @@
+// Tháp DIKW trên bài toán chuyên cần của ECMS (T30) – nguồn sinh dikw.png:  dot -Tpng -Gdpi=300 dikw.dot -o dikw.png
+// Mỗi tầng là một khối, càng lên cao càng hẹp (ít dữ liệu hơn, giá trị ra quyết định cao hơn); cạnh = phép xử lý chuyển tầng
+digraph DIKW {
+  rankdir=TB; nodesep=0.2; ranksep=0.12; fontname="Arial"; bgcolor="white";
+  node [fontname="Arial", fontsize=11, shape=box, style="filled", color="white", fontcolor="#0f172a", height=0.75, fixedsize=true];
+  edge [fontname="Arial", fontsize=9, color="#475569", arrowsize=0.7];
+
+  W [label="TRÍ TUỆ (Wisdom)\nGọi điện chăm sóc, đề xuất học bù / chuyển ca", width=3.6, fillcolor="#fde68a"];
+  K [label="TRI THỨC (Knowledge)\nChuyên cần < 80% → tỷ lệ không đạt 33,3%, gấp 3 lần nhóm còn lại", width=5.2, fillcolor="#bbf7d0"];
+  I [label="THÔNG TIN (Information)\nHV0021 – lớp TC650-2601: vắng 7 buổi, chuyên cần 56,25%", width=6.6, fillcolor="#bfdbfe"];
+  D [label="DỮ LIỆU (Data)\n10.063 bản ghi điểm danh: (học viên, lớp, buổi, Có mặt / Vắng / Muộn / Có phép)", width=8.0, fillcolor="#e2e8f0"];
+
+  D -> I [label="  tổng hợp theo đăng ký: fn_TyLeChuyenCan"];
+  I -> K [label="  so sánh nhiều khoá: kết quả theo nhóm chuyên cần"];
+  K -> W [label="  cảnh báo + quyết định: sp_CanhBaoChuyenCan, dashboard"];
+}

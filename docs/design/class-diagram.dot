@@ -25,7 +25,7 @@ digraph CD {
   Nguoi -> HocVien [dir=back, arrowtail=onormal];
   Nguoi -> NhanVien [dir=back, arrowtail=onormal];
   NhanVien -> GiaoVien [dir=back, arrowtail=onormal];
-  LopHoc -> BuoiHoc [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
+  LopHoc -> BuoiHoc [dir=back, arrowtail=diamond, taillabel="1", headlabel="0..*"];
   PhieuThu -> CTPhieuThu [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
   ChiNhanh -> PhongHoc [dir=back, arrowtail=diamond, taillabel="1", headlabel="1..*"];
   GiaoVien -> ChungChi [dir=back, arrowtail=diamond, taillabel="1", headlabel="0..*"];
