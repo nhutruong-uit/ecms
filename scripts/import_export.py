@@ -27,19 +27,22 @@ EXPORT_DIR = ROOT / "data" / "export"
 COLS = ["HoHV", "TenHV", "NgaySinh", "GioiTinh", "SoDienThoai", "Email", "QuanHuyen", "MaCN", "MaKHQuanTam", "NgayDangKy"]
 
 
-def sa_password() -> str:
-    """Mật khẩu sa lấy từ .env (SA_PASSWORD) – không viết cứng trong mã nguồn."""
+def xac_thuc_quan_tri() -> str:
+    """sa với mật khẩu trong .env (SA_PASSWORD) – không viết cứng trong mã nguồn; SA_TRUSTED=yes thì dùng Windows
+    Authentication của người đang chạy (máy Windows tắt login sa, người dùng Windows là sysadmin)."""
+    if os.getenv("SA_TRUSTED", "no").strip().lower() in ("1", "yes", "true"):
+        return "Trusted_Connection=yes"
     mk = os.getenv("SA_PASSWORD")
     if not mk:
         sys.exit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
-    return mk
+    return f"UID=sa;PWD={mk}"
 
 
 def connect(fast=True):
     port = os.getenv("DB_PORT", "1433").strip()
     server = os.getenv("DB_SERVER", "localhost") + (f",{port}" if port else "")   # Express: localhost\SQLEXPRESS, không cổng
     cs = (f"DRIVER={{{os.getenv('DB_DRIVER', 'ODBC Driver 18 for SQL Server')}}};SERVER={server};DATABASE=ECMS;"
-          f"UID=sa;PWD={sa_password()};Encrypt=yes;TrustServerCertificate=yes")
+          f"{xac_thuc_quan_tri()};Encrypt=yes;TrustServerCertificate=yes")
     cn = pyodbc.connect(cs, autocommit=False)
     return cn
 
@@ -189,7 +192,7 @@ def cmd_bench(args):
             def bcp():
                 cmd = ["docker", "exec", args.container, "/opt/mssql-tools18/bin/bcp", "ECMS.dbo.STG_HOCVIEN_ONLINE", "in",
                        f"{args.server_dir}hocvien_10000.csv", "-c", "-t,", "-F", "2", "-S", "localhost", "-U", "sa",
-                       "-P", sa_password(), "-u", "-b", "5000"]      # bcp chỉ nhận mật khẩu qua -P – chỉ dùng trên máy demo
+                       "-P", os.getenv("SA_PASSWORD", ""), "-u", "-b", "5000"]   # bcp chỉ nhận mật khẩu qua -P – chỉ dùng trên máy demo
                 subprocess.run(cmd, check=True, capture_output=True)
             try:
                 run("bcp in (công cụ dòng lệnh)", bcp)

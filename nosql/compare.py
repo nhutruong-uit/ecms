@@ -171,7 +171,9 @@ def mg_hoan_ghi_danh():
 
 
 gv = sql("SELECT TOP 1 l.MaGV, COUNT(*) FROM LOPHOC l GROUP BY l.MaGV ORDER BY COUNT(*) DESC, l.MaGV")[0]
-ten_cu = db.lop_hoc.find_one({"giao_vien.ma": gv[0]})["giao_vien"]["ho_ten"]
+# tên gốc lấy từ SQL Server (nguồn của migrate.py), như W1: đọc từ MongoDB thì lần chạy trước bị ngắt giữa chừng
+# để lại tên có dấu cách thừa, lần sau "hoàn tác" về chính tên sai đó và cứ thế lệch dần
+ten_cu = sql("SELECT HoTen FROM NHANVIEN WHERE MaNV = ?", gv[0])[0][0]
 
 
 def sql_doi_ten():

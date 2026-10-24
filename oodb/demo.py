@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from models import GiaoVien, HocVien, KhoaHoc, LoiNghiepVu, LopHoc, NhanVien, Session  # noqa: E402
+from models import DangKy, GiaoVien, HocVien, KhoaHoc, LoiNghiepVu, LopHoc, NhanVien, Session  # noqa: E402
 
 
 def do(ten, fn):
@@ -97,7 +97,8 @@ n = s.luu()
 sau = s.rows("SELECT COUNT(*) AS n FROM DANGKY")[0]["n"]
 si_so = s.rows("SELECT SiSoHienTai FROM LOPHOC WHERE MaLop = ?", mo[0].ma_lop)[0]["SiSoHienTai"]
 print(f"  s.luu() ghi {n} đối tượng → MaDK = {dk.ma_dk}; DANGKY {truoc} → {sau} dòng; "
-      f"sĩ số lớp {mo[0].ma_lop} (trigger cập nhật) = {si_so}")
+      f"sĩ số lớp {mo[0].ma_lop} (trigger cập nhật) = {si_so}; "
+      f"s.get(DangKy, {dk.ma_dk}) is dk → {s.get(DangKy, dk.ma_dk) is dk} (vẫn OID {dk.oid})")
 s.cn.rollback()                                         # demo không đổi dữ liệu mẫu
 print(f"  rollback → DANGKY còn {s.rows('SELECT COUNT(*) AS n FROM DANGKY')[0]['n']} dòng\n")
 

@@ -31,13 +31,18 @@ class LoiNghiepVu(Exception):
 
 
 def ket_noi() -> pyodbc.Connection:
-    mk = os.getenv("SA_PASSWORD")
-    if not mk:
-        raise SystemExit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
+    """sa + SA_PASSWORD; SA_TRUSTED=yes → Windows Authentication (máy Windows tắt login sa)."""
+    if os.getenv("SA_TRUSTED", "no").strip().lower() in ("1", "yes", "true"):
+        xac_thuc = "Trusted_Connection=yes"
+    else:
+        mk = os.getenv("SA_PASSWORD")
+        if not mk:
+            raise SystemExit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
+        xac_thuc = f"UID=sa;PWD={mk}"
     port = os.getenv("DB_PORT", "1433").strip()
     server = os.getenv("DB_SERVER", "localhost") + (f",{port}" if port else "")
     return pyodbc.connect(f"DRIVER={{{os.getenv('DB_DRIVER', 'ODBC Driver 18 for SQL Server')}}};SERVER={server};"
-                          f"DATABASE=ECMS;UID=sa;PWD={mk};Encrypt=yes;TrustServerCertificate=yes", autocommit=False)
+                          f"DATABASE=ECMS;{xac_thuc};Encrypt=yes;TrustServerCertificate=yes", autocommit=False)
 
 
 class Session:
@@ -84,10 +89,12 @@ class Session:
         return obj
 
     def luu(self) -> int:
-        """Ghi các đối tượng mới xuống CSDL (đối tượng tự biết cách lưu – phương thức _luu); trả số đối tượng đã ghi."""
+        """Ghi các đối tượng mới xuống CSDL (đối tượng tự biết cách lưu – phương thức _luu trả khoá CSDL vừa sinh);
+        trả số đối tượng đã ghi. Đối tượng đã lưu được đưa vào identity map: get() theo khoá mới trả ĐÚNG đối tượng này."""
         n = 0
         for obj in self.moi:
-            obj._luu(self.cn.cursor())
+            khoa = obj._luu(self.cn.cursor())
+            self.identity[(getattr(type(obj), "ROOT", type(obj)).__name__, khoa)] = obj
             n += 1
         self.moi.clear()
         return n
@@ -288,11 +295,12 @@ class DangKy(CoOID):
             raise LoiNghiepVu("Giảm giá phải từ 0 đến 50%.")
         self.giam_gia = phan_tram
 
-    def _luu(self, cur) -> None:
-        """Ghi đối tượng DangKy mới xuống bảng DANGKY và nhận MaDK do CSDL sinh."""
+    def _luu(self, cur) -> int:
+        """Ghi đối tượng DangKy mới xuống bảng DANGKY, nhận và trả MaDK do CSDL sinh."""
         cur.execute("SET NOCOUNT ON; INSERT DANGKY (MaHV, MaLop, HocPhi, GiamGia) VALUES (?, ?, ?, ?); "
                     "SELECT CAST(SCOPE_IDENTITY() AS INT)", self._ma_hv, self._ma_lop, self.hoc_phi, self.giam_gia)
         self.ma_dk = cur.fetchone()[0]
+        return self.ma_dk
 
     def thanh_tien(self) -> float:
         return round(self.hoc_phi * (100 - self.giam_gia) / 100, -3)

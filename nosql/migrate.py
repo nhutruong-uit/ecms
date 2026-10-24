@@ -33,13 +33,18 @@ load_dotenv(ROOT / ".env")
 
 
 def sql_conn():
-    mk = os.getenv("SA_PASSWORD")
-    if not mk:
-        sys.exit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
+    """sa + SA_PASSWORD; SA_TRUSTED=yes → Windows Authentication (máy Windows tắt login sa)."""
+    if os.getenv("SA_TRUSTED", "no").strip().lower() in ("1", "yes", "true"):
+        xac_thuc = "Trusted_Connection=yes"
+    else:
+        mk = os.getenv("SA_PASSWORD")
+        if not mk:
+            sys.exit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
+        xac_thuc = f"UID=sa;PWD={mk}"
     port = os.getenv("DB_PORT", "1433").strip()
     server = os.getenv("DB_SERVER", "localhost") + (f",{port}" if port else "")
     return pyodbc.connect(f"DRIVER={{{os.getenv('DB_DRIVER', 'ODBC Driver 18 for SQL Server')}}};SERVER={server};"
-                          f"DATABASE=ECMS;UID=sa;PWD={mk};Encrypt=yes;TrustServerCertificate=yes")
+                          f"DATABASE=ECMS;{xac_thuc};Encrypt=yes;TrustServerCertificate=yes")
 
 
 def mongo_db():

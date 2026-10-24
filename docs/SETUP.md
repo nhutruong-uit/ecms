@@ -47,7 +47,8 @@ HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
 3. Cài **SSMS** và **ODBC Driver 18 for SQL Server**.
 4. Mở *SQL Server Configuration Manager* → bật **TCP/IP** cho instance, khởi động lại dịch vụ.
 5. Sửa `.env`: `DB_SERVER=localhost` (Express: `localhost\SQLEXPRESS`, khi đó để trống `DB_PORT` hoặc dùng cổng động đã cấu hình).
-6. Nên giữ `DB_USER=ecms_app` (SQL Authentication, cần *Mixed Mode*): ứng dụng khi đó chỉ có quyền gọi procedure và đọc view như thiết kế. `DB_TRUSTED=yes` (Windows Authentication) chỉ dùng khi không bật được Mixed Mode – tài khoản Windows thường là `sysadmin` nên bỏ qua phân quyền của `ecms_app`; các kiểm tra theo ngữ cảnh phiên trong procedure vẫn áp dụng.
+6. Nên giữ `DB_USER=ecms_app` (SQL Authentication, cần *Mixed Mode*): ứng dụng khi đó chỉ có quyền gọi procedure và đọc view như thiết kế. `DB_TRUSTED=yes` (Windows Authentication) chỉ dùng khi không bật được Mixed Mode – tài khoản Windows thường là `sysadmin` nên bỏ qua phân quyền của `ecms_app`; các kiểm tra theo ngữ cảnh phiên trong procedure vẫn áp dụng. Login `sa` đang tắt (mặc định khi cài bằng Windows Authentication) thì đặt `SA_TRUSTED=yes` để các script quản trị (`scripts/import_export.py`, `oodb/`, `nosql/`) kết nối bằng tài khoản Windows đang chạy thay cho `sa`.
+7. Chạy kiểm thử SQL bằng `sqlcmd` nhớ thêm `-I` (bật `QUOTED_IDENTIFIER`): `foreach ($t in "test_seed","test_procedures","test_triggers","test_security") { sqlcmd -S localhost -E -C -b -I -f 65001 -i "database\tests\$t.sql" }`.
 
 Khác biệt theo bản SQL Server:
 
