@@ -116,7 +116,7 @@ elif ma == "bang_diem":
         df = db.query("SELECT * FROM dbo.fn_BangDiemLop(?) ORDER BY ISNULL(Hang, 999), HoTen", [lop])
         view = df[["Hang", "MaHV", "HoTen", "DiemGK", "DiemCK", "DiemTB", "XepLoai", "ChuyenCan", "KetQua", "GhiChu"]].rename(columns={
             "Hang": "Hạng", "MaHV": "Mã HV", "HoTen": "Họ tên", "DiemGK": "GK", "DiemCK": "CK", "DiemTB": "TB", "XepLoai": "Xếp loại",
-            "ChuyenCan": "Chuyên cần %", "KetQua": "Kết quả", "GhiChu": "Ghi chú"})
+            "ChuyenCan": "Chuyên cần %", "KetQua": "Kết quả", "GhiChu": "Ghi chú"}).fillna({"Xếp loại": "", "Kết quả": "", "Ghi chú": ""})
 
         css = {"do": "background-color:#fee2e2;color:#991b1b", "xanh": "background-color:#dcfce7;color:#14532d"}
         mau_dong = [css.get(mau_diem(r), "") for r in df.to_dict("records")]       # cùng quy tắc với file PDF / Excel / Word

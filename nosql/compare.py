@@ -119,6 +119,10 @@ hv = db.hoc_vien.find_one({"_id": HV})
 dk = next(d for d in hv["dang_ky"] if d["diem_danh"])
 buoi = dk["diem_danh"][0]
 lop = sql("SELECT MaLop FROM DANGKY WHERE MaDK = ?", dk["ma_dk"])[0][0]
+# Giá trị gốc lấy từ SQL Server (phía SQL luôn ROLLBACK nên là nguồn đúng): nếu lần chạy trước bị ngắt giữa chừng,
+# bản MongoDB có thể đang lệch – hoàn tác bằng giá trị đọc từ MongoDB sẽ giữ nguyên chỗ lệch đó
+buoi["trang_thai"] = sql("SELECT TrangThai FROM DIEMDANH WHERE MaDK = ? AND MaLop = ? AND STT = ?",
+                         dk["ma_dk"], lop, buoi["buoi"])[0][0]
 cur = cn.cursor()
 
 

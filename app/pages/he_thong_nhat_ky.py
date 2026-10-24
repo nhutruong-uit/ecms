@@ -25,7 +25,9 @@ sel = ui.table(df, {"ThoiGian": "Thời gian", "TenBang": "Bảng", "ThaoTac": "
 if sel:
     cu = json.loads(sel["DuLieuCu"]) if sel["DuLieuCu"] else {}
     moi = json.loads(sel["DuLieuMoi"]) if sel["DuLieuMoi"] else {}
-    rows = [{"Trường": k, "Trước": cu.get(k), "Sau": moi.get(k), "Thay đổi": "●" if cu.get(k) != moi.get(k) else ""}
+    # giá trị NULL hiện ô trống (Streamlit vẽ None thành chữ "None"); đổi mọi giá trị sang chuỗi để cột không lẫn kiểu
+    rows = [{"Trường": k, "Trước": "" if cu.get(k) is None else str(cu.get(k)), "Sau": "" if moi.get(k) is None else str(moi.get(k)),
+             "Thay đổi": "●" if cu.get(k) != moi.get(k) else ""}
             for k in dict.fromkeys([*cu, *moi])]
     st.subheader(f"{sel['ThaoTac']} {sel['TenBang']} {sel['KhoaChinh']}")
     st.dataframe(rows, hide_index=True)

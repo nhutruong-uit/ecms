@@ -70,8 +70,10 @@ GO
 -- Gắn schema vào cột (typed XML, DOCUMENT = phải có đúng 1 phần tử gốc). Dữ liệu cũ được kiểm tra lại toàn bộ.
 ALTER TABLE dbo.KIEMTRA_DAUVAO ALTER COLUMN KetQuaChiTiet XML(DOCUMENT dbo.XSC_KetQuaKiemTra) NOT NULL;
 GO
--- Không tạo chỉ mục XML cố định: phép đo X18 cho thấy với ~360 tài liệu nhỏ, chỉ mục XML làm truy vấn đọc NHIỀU
--- trang hơn và tốn gấp ~3 lần dung lượng; chỉ có lợi khi số tài liệu lớn (xem X18).
+-- Không tạo chỉ mục XML cố định. Phép đo X18 (điều kiện Speaking >= 7, khớp 14,6% số bài):
+--   357 bài   : chỉ mục giảm số trang đọc 1.969 → 707 (tính cả lượt đọc LOB) nhưng chiếm 1,09 MB – gấp 3,3 lần dữ liệu XML;
+--   10.710 bài: kế hoạch dùng chỉ mục tra 10.712 lần, đọc 40.490 trang so với 1.956 trang khi quét thẳng.
+-- Chỉ mục XML chỉ đáng giá khi điều kiện chọn lọc cao (ít bài khớp) và XML được truy vấn thường xuyên (xem X18).
 
 /* =====================================================================
    2. ĐỐI TƯỢNG CHO ỨNG DỤNG WEB (T21)

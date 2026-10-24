@@ -803,8 +803,15 @@ BEGIN
             IF EXISTS (SELECT 1 FROM @Cu WHERE SiSo > @SiSoToiDa) THROW 50149, N'Sĩ số tối đa nhỏ hơn số học viên đang có.', 1;
             IF EXISTS (SELECT 1 FROM dbo.DANGKY WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE MaKH <> @MaKH OR MaCN <> @MaCN)
                 THROW 50150, N'Lớp đã có học viên – không đổi được khoá học hoặc chi nhánh.', 1;
+            -- đổi ngày khai giảng: các buổi đã sinh theo ngày cũ không còn đúng. Lớp chưa điểm danh → xoá để giáo vụ
+            -- sinh lại (như khi đổi lịch cố định ở sp_XepLichLop); lớp đã điểm danh → không cho đổi
+            DECLARE @XoaBuoi BIT = 0;
             IF EXISTS (SELECT 1 FROM dbo.BUOIHOC WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE NgayKG <> @NgayKhaiGiang)
-                THROW 50151, N'Lớp đã sinh buổi học – muốn đổi ngày khai giảng hãy sinh lại buổi học.', 1;
+            BEGIN
+                IF EXISTS (SELECT 1 FROM dbo.DIEMDANH WHERE MaLop = @MaLop)
+                    THROW 50151, N'Lớp đã điểm danh – không đổi được ngày khai giảng.', 1;
+                SET @XoaBuoi = 1;
+            END
             IF EXISTS (SELECT 1 FROM @Cu WHERE TrangThai = N'Đã kết thúc') AND @TrangThai <> N'Đã kết thúc'
                 THROW 50152, N'Lớp đã kết thúc không thể mở lại.', 1;
             IF EXISTS (SELECT 1 FROM dbo.LICHHOC WHERE MaLop = @MaLop) AND EXISTS (SELECT 1 FROM @Cu WHERE MaGV <> @MaGV)
@@ -826,7 +833,10 @@ BEGIN
             UPDATE b SET MaGVDay = c.MaGV
             FROM dbo.BUOIHOC b CROSS JOIN @Cu c
             WHERE b.MaLop = @MaLop AND b.TrangThai = N'Đã dạy' AND b.MaGVDay IS NULL AND c.MaGV <> @MaGV;
+            IF @XoaBuoi = 1
+                DELETE dbo.BUOIHOC WHERE MaLop = @MaLop;
             UPDATE dbo.LOPHOC SET TenLop = @TenLop, MaKH = @MaKH, MaCN = @MaCN, MaGV = @MaGV, NgayKhaiGiang = @NgayKhaiGiang,
+                   NgayKetThuc = IIF(@XoaBuoi = 1, NULL, NgayKetThuc),
                    SiSoToiDa = @SiSoToiDa, TrangThai = @TrangThai
             WHERE MaLop = @MaLop;
         END
