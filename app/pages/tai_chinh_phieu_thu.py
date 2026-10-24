@@ -30,8 +30,6 @@ with tab_lap:
         ma_pt, tong_pt = st.session_state["pt_vua_lap"]
         st.success(f"Đã lập phiếu thu PT{ma_pt:06d}. Tổng {ui.money(tong_pt)}.")
         nut_in(ma_pt, "in_moi")
-    # Mã yêu cầu cho lần lập phiếu này: bấm nút hai lần / trình duyệt gửi lại cũng chỉ ra MỘT phiếu (sp_ThuHocPhi @MaYeuCau)
-    st.session_state.setdefault("pt_ma_yeu_cau", str(uuid.uuid4()))
     st.markdown("##### 1. Thông tin phiếu (master)")
     q = st.text_input("Tìm học viên (tên, SĐT hoặc mã)", placeholder="VD: HV0019")
     hv = None
@@ -80,13 +78,19 @@ with tab_lap:
                 if st.form_submit_button("Lập phiếu thu", type="primary", icon=":material/receipt_long:",
                                          disabled=chon.empty or not loi.empty):
                     ct_json = json.dumps([{"MaDK": int(r.MaDK), "SoTien": int(r.SoTien)} for r in chon.itertuples()])
+                    # Mã yêu cầu gắn với NỘI DUNG phiếu (học viên + các khoản thu): gửi lại đúng phiếu đó (bấm hai lần, lần
+                    # trước mất kết nối sau khi máy chủ đã ghi) → sp_ThuHocPhi trả phiếu đã lập, không lập thêm; đổi học viên
+                    # hoặc khoản thu là một yêu cầu mới → mã mới (không bao giờ nhận nhầm phiếu của học viên trước)
+                    noi_dung = (hv, ct_json)
+                    if st.session_state.get("pt_yeu_cau", (None, None))[0] != noi_dung:
+                        st.session_state["pt_yeu_cau"] = (noi_dung, str(uuid.uuid4()))
                     out = ui.run(lambda: db.call_proc("sp_ThuHocPhi", {"MaHV": hv, "MaNV": user["ma_nv"], "HinhThuc": ht,
                                                                        "ChiTiet": ct_json, "GhiChu": gc.strip() or None,
-                                                                       "MaYeuCau": st.session_state["pt_ma_yeu_cau"]},
+                                                                       "MaYeuCau": st.session_state["pt_yeu_cau"][1]},
                                                       outputs={"MaPT": "INT", "TongTien": "DECIMAL(12,0)"}), rerun=False)
                     if out is not None:
                         st.session_state["pt_vua_lap"] = (int(out["MaPT"]), out["TongTien"])
-                        st.session_state["pt_ma_yeu_cau"] = str(uuid.uuid4())       # phiếu tiếp theo dùng mã mới
+                        st.session_state.pop("pt_yeu_cau", None)                   # phiếu tiếp theo dùng mã mới
                         st.rerun()
 
 with tab_tra:

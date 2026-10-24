@@ -51,7 +51,9 @@ lap_day, chuyen_can = float(k.LapDay or 0), float(k.ChuyenCan or 0)
 m4.metric("Lấp đầy lớp đang mở", f"{lap_day:.1f}%", f"{lap_day - MUC_TIEU_LAP_DAY:+.1f} điểm % so với mục tiêu {MUC_TIEU_LAP_DAY}%")
 m5.metric("Chuyên cần lớp đang học", f"{chuyen_can:.1f}%",
           f"{chuyen_can - MUC_TIEU_CHUYEN_CAN:+.1f} điểm % so với mục tiêu {MUC_TIEU_CHUYEN_CAN}%")
-m6.metric("Công nợ hiện tại", ui.money_short(k.CongNo), f"{ui.money_short(k.CongNoQuaHan)} đã quá hạn", delta_color="inverse",
+# delta dạng chuỗi luôn được vẽ là "tăng" (mũi tên lên, inverse → đỏ): chỉ hiện khi thật sự có khoản quá hạn
+m6.metric("Công nợ hiện tại", ui.money_short(k.CongNo),
+          f"{ui.money_short(k.CongNoQuaHan)} đã quá hạn" if float(k.CongNoQuaHan) > 0 else None, delta_color="inverse",
           help=ui.money(k.CongNo))
 
 dt = db.query("""SELECT TenCN, Nam, Thang, SUM(SoTien) AS DoanhThu FROM vw_BaoCaoDoanhThu

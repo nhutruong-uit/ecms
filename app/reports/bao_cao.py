@@ -93,6 +93,8 @@ def pdf(tieu_de: str, tham_so: str, df: pd.DataFrame, cot: list[Cot], nhom: str 
     thong_ke: {cột: ("avg", "min", "max")} – thêm dòng thống kê ở chân nhóm và chân báo cáo. to_mau: định dạng có điều kiện."""
     st = styles()
     o = ParagraphStyle("o", fontName=FONT, fontSize=8.5, leading=10.5)                      # ô chữ: tự xuống dòng trong cột
+    # TEXTCOLOR của TableStyle không áp vào Paragraph → ô chữ của dòng tô màu cần style riêng mang màu chữ
+    o_mau = {m: ParagraphStyle(f"o_{m}", parent=o, textColor=v[1]) for m, v in MAU.items()}
     buf = BytesIO()
     size = landscape(A4) if ngang else A4
     doc = SimpleDocTemplate(buf, pagesize=size, leftMargin=12 * mm, rightMargin=12 * mm, topMargin=12 * mm, bottomMargin=14 * mm,
@@ -103,9 +105,9 @@ def pdf(tieu_de: str, tham_so: str, df: pd.DataFrame, cot: list[Cot], nhom: str 
     rows, kieu_dong = [head], []
     thong_ke = thong_ke or {}
 
-    def o_du_lieu(v, k):
+    def o_du_lieu(v, k, mau=None):
         txt = _fmt(v, k)
-        return txt if k in ("money", "num", "date") else Paragraph(escape(txt), o)
+        return txt if k in ("money", "num", "date") else Paragraph(escape(txt), o_mau.get(mau, o))
 
     def dong_tong(nhan, d):
         r = [""] * len(cot)
@@ -117,8 +119,9 @@ def pdf(tieu_de: str, tham_so: str, df: pd.DataFrame, cot: list[Cot], nhom: str 
 
     def chi_tiet(d):
         for r in d.to_dict("records"):
-            rows.append([o_du_lieu(r.get(c), k) for c, _, _, k in cot])
-            kieu_dong.append(("d", to_mau(r) if to_mau else None))
+            mau = to_mau(r) if to_mau else None
+            rows.append([o_du_lieu(r.get(c), k, mau) for c, _, _, k in cot])
+            kieu_dong.append(("d", mau))
 
     if nhom:
         for g, d in df.groupby(nhom, sort=False):

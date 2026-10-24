@@ -85,8 +85,7 @@ with st.form("f_tao", clear_on_submit=True):
     mk = c3.text_input("Mật khẩu ban đầu *", type="password", help=MK_HELP)
     with c3: fe.slot("mk")
     # vai trò suy từ chức vụ của nhân viên (CSDL cũng kiểm tra – lỗi 50098 nếu không khớp)
-    VT = {"Quản lý": "QuanLy", "Giáo vụ": "GiaoVu", "Kế toán": "KeToan", "Giáo viên": "GiaoVien"}
-    vt = "HocVien" if loai == "Học viên" else VT.get(db.scalar("SELECT ChucVu FROM vw_NhanVien WHERE MaNV = ?", [chu]) if chu else "")
+    vt = "HocVien" if loai == "Học viên" else (db.scalar("SELECT dbo.fn_VaiTroTheoChucVu(?, NULL)", [chu]) if chu else None)
     st.caption(f"Vai trò: **{auth.ROLES.get(vt, '—')}** (theo chức vụ)")
     if st.form_submit_button("Tạo tài khoản", type="primary"):
         fe.check("chu", chu is not None and (loai == "Nhân viên" or re.fullmatch(r"HV\d{4}", chu) is not None),

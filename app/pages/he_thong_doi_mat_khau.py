@@ -23,9 +23,9 @@ with st.form(f"f_mk_{lan}"):
         fe.check("lai", moi == lai, "Mật khẩu nhập lại không khớp")
         if fe.ok:
             out = ui.run(lambda: db.call_proc("sp_DoiMatKhau", {"TenDangNhap": user["username"], "MatKhauCu": cu, "MatKhauMoi": moi},
-                                              outputs={"ThongBao": "NVARCHAR(200)"}), rerun=False)
+                                              outputs={"ThongBao": "NVARCHAR(200)", "ThanhCong": "BIT"}), rerun=False)
             if out is not None:
-                if out.get("ThongBao") == "Đã đổi mật khẩu.":
+                if out.get("ThanhCong"):
                     st.session_state["_mk_lan"] = lan + 1
                     ui.flash("Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.")
                     st.rerun()
