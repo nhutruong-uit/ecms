@@ -88,7 +88,7 @@ EXEC @rc = dbo.sp_DangNhap 'quanly', N'sai-mat-khau', @tb OUTPUT;
 EXEC dbo.sp_DangNhap 'khongtontai', N'abc', @tb2 OUTPUT;
 INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('quanly / khongtontai',
     N'Sai mật khẩu và tài khoản không tồn tại: cùng một thông báo (không dò được tài khoản)', N'Giống nhau',
-    IIF(@tb = @tb2 AND @tb = N'Sai tên đăng nhập hoặc mật khẩu.', N'Giống nhau: ' + @tb, CONCAT(N'Khác: ', @tb, N' / ', @tb2)));
+    IIF(@tb = @tb2 AND @tb LIKE N'Sai tên đăng nhập hoặc mật khẩu%', N'Giống nhau: ' + @tb, CONCAT(N'Khác: ', @tb, N' / ', @tb2)));
 
 DECLARE @hv1 CHAR(6), @hv2 CHAR(6), @hv3 CHAR(6);     -- học viên chưa có tài khoản
 SELECT @hv1 = MIN(MaHV) FROM HOCVIEN h WHERE NOT EXISTS (SELECT 1 FROM TAIKHOAN t WHERE t.MaHV = h.MaHV);
@@ -107,12 +107,23 @@ SELECT 'fn_BamMatKhau', N'Băm lặp 10.000 vòng ≠ một vòng SHA2_256', N'K
 SET @n = 0;
 WHILE @n < 5 BEGIN EXEC dbo.sp_DangNhap 'test.a', N'sai', @tb OUTPUT; SET @n += 1; END
 EXEC @rc = dbo.sp_DangNhap 'test.a', N'sai', @tb OUTPUT;
-INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Sai 5 lần rồi nhập SAI tiếp: không lộ trạng thái khoá', N'Sai tên đăng nhập hoặc mật khẩu.', @tb);
-EXEC @rc = dbo.sp_DangNhap 'test.a', N'Test@12345', @tb OUTPUT;
-INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Sai 5 lần rồi nhập đúng → tạm khoá 15 phút', N'Tài khoản tạm khoá', @tb);
+INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Sai 5 lần rồi nhập SAI tiếp: không lộ trạng thái khoá', N'Sai tên đăng nhập hoặc mật khẩu', @tb);
+-- đang tạm khoá mà nhập ĐÚNG: phải nhận đúng câu như nhập sai và không đăng nhập được – nếu thông báo khác đi thì
+-- kẻ dò mật khẩu cứ đoán tiếp trong lúc khoá và nhận ra lần đoán trúng (khoá mất tác dụng)
+DECLARE @tbSai NVARCHAR(200) = @tb;
+DELETE @U;
+INSERT @U EXEC @rc = dbo.sp_DangNhap 'test.a', N'Test@12345', @tb OUTPUT;
+INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Đang tạm khoá, nhập ĐÚNG mật khẩu: cùng thông báo như nhập sai, không đăng nhập được', N'Giống nhập sai',
+    CONCAT(IIF(@tb = @tbSai AND @rc = 4 AND NOT EXISTS (SELECT 1 FROM @U), N'Giống nhập sai', N'Khác'), N' (rc = ', @rc, N') ', @tb));
 EXEC dbo.sp_CapNhatTaiKhoan 'test.a', @MatKhauMoi = N'Moi@12345';
 EXEC @rc = dbo.sp_DangNhap 'test.a', N'Moi@12345', @tb OUTPUT;
 INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Quản lý đặt lại mật khẩu → gỡ tạm khoá, đăng nhập được', N'Đăng nhập thành công', @tb);
+-- quản lý khoá hẳn tài khoản: mật khẩu đúng cũng chỉ nhận câu chung (không xác nhận được mật khẩu của tài khoản bị khoá)
+EXEC dbo.sp_CapNhatTaiKhoan 'test.a', @TrangThai = 0;
+DELETE @U;
+INSERT @U EXEC @rc = dbo.sp_DangNhap 'test.a', N'Moi@12345', @tb OUTPUT;
+INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.a', N'Quản lý khoá tài khoản, nhập ĐÚNG mật khẩu: cùng thông báo như nhập sai', N'Giống nhập sai',
+    CONCAT(IIF(@tb = @tbSai AND @rc = 2 AND NOT EXISTS (SELECT 1 FROM @U), N'Giống nhập sai', N'Khác'), N' (rc = ', @rc, N') ', @tb));
 EXEC dbo.sp_DoiMatKhau 'test.b', N'sai-mat-khau', N'Moi@12345', @tb OUTPUT;
 INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('test.b', N'Đổi mật khẩu nhập sai mật khẩu cũ → tính vào số lần sai', N'Mật khẩu hiện tại không đúng. Số lần sai 1',
     CONCAT(@tb, N' Số lần sai ', (SELECT SoLanSai FROM TAIKHOAN WHERE TenDangNhap = 'test.b')));
@@ -197,6 +208,28 @@ BEGIN TRY
 END TRY BEGIN CATCH SET @tb = CONCAT(N'BỊ CHẶN (', ERROR_NUMBER(), N') ', ERROR_MESSAGE()); END CATCH;
 REVERT;
 INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('u_app (ketoan)', N'Lập phiếu thu dưới tên kế toán khác', N'BỊ CHẶN (50015)', @tb);
+-- phạm vi chi nhánh: kế toán CN01 lập phiếu cho học viên CN02 (@hvCN02 ở trên); giáo vụ CN01 chuyển đăng ký ra khỏi lớp CN02
+DECLARE @dkCN02 INT, @lopCN02 VARCHAR(10);
+SELECT TOP 1 @dkCN02 = d.MaDK, @lopCN02 = d.MaLop FROM DANGKY d JOIN LOPHOC l ON l.MaLop = d.MaLop
+WHERE l.MaCN = 'CN02' AND d.TrangThai = N'Đang học' ORDER BY d.MaDK;
+EXECUTE AS USER = 'u_app';
+EXEC sp_set_session_context N'ma_cn', 'CN01';
+BEGIN TRY
+    EXEC dbo.sp_ThuHocPhi @MaHV = @hvCN02, @MaNV = 'NV0008', @ChiTiet = N'[]', @MaPT = @pt OUTPUT;
+    SET @tb = N'ĐƯỢC';
+END TRY BEGIN CATCH SET @tb = CONCAT(N'BỊ CHẶN (', ERROR_NUMBER(), N') ', ERROR_MESSAGE()); END CATCH;
+REVERT;
+INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('u_app (ketoan CN01)', N'Lập phiếu thu cho học viên chi nhánh CN02', N'BỊ CHẶN (50097)', @tb);
+EXECUTE AS USER = 'u_app';
+EXEC sp_set_session_context N'app_user', 'giaovu'; EXEC sp_set_session_context N'vai_tro', 'GiaoVu';
+EXEC sp_set_session_context N'ma_nv', 'NV0004';   EXEC sp_set_session_context N'ma_cn', 'CN01';
+BEGIN TRY
+    DECLARE @dkMoi INT;
+    EXEC dbo.sp_ChuyenLop @MaDK = @dkCN02, @MaLopMoi = @lopCN02, @MaDKMoi = @dkMoi OUTPUT;
+    SET @tb = N'ĐƯỢC';
+END TRY BEGIN CATCH SET @tb = CONCAT(N'BỊ CHẶN (', ERROR_NUMBER(), N') ', ERROR_MESSAGE()); END CATCH;
+REVERT;
+INSERT @R (NguoiDung, ThaoTac, MongDoi, ThucTe) VALUES ('u_app (giaovu CN01)', N'Chuyển đăng ký ra khỏi lớp chi nhánh CN02', N'BỊ CHẶN (50097)', @tb);
 EXEC sp_set_session_context N'app_user', NULL; EXEC sp_set_session_context N'vai_tro', NULL;
 EXEC sp_set_session_context N'ma_nv', NULL;    EXEC sp_set_session_context N'ma_cn', NULL;
 

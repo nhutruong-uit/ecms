@@ -97,7 +97,10 @@ GO
 OPEN SYMMETRIC KEY KhoaLuong DECRYPTION BY CERTIFICATE CertLuong;
 UPDATE dbo.NHANVIEN SET LuongMaHoa = ENCRYPTBYKEY(KEY_GUID('KhoaLuong'), CAST(LuongCoBan AS NVARCHAR(20)), 1, MaNV);  -- MaNV làm "authenticator": chép bản mã sang dòng khác sẽ không giải mã được
 ALTER TABLE dbo.NHANVIEN DROP COLUMN LuongCoBan;                                                                     -- chỉ còn bản mã
-SELECT TOP 3 MaNV, HoTen, CONVERT(VARCHAR(34), LuongMaHoa, 1) AS BanMa,
+-- Bản mã = 16 byte GUID của khoá (giống nhau mọi dòng) + phiên bản + IV ngẫu nhiên + dữ liệu mã hoá: in phần SAU GUID để
+-- thấy hai người cùng lương 27.000.000 (NV0001, NV0003) vẫn có bản mã khác nhau – không suy được lương từ bản mã trùng nhau
+SELECT TOP 3 MaNV, HoTen, CONVERT(VARCHAR(10), SUBSTRING(LuongMaHoa, 1, 4), 1) + '…' AS GuidKhoa,
+       CONVERT(VARCHAR(34), SUBSTRING(LuongMaHoa, 21, 16), 1) AS BanMa_SauGuid, DATALENGTH(LuongMaHoa) AS SoByte,
        CAST(CAST(DECRYPTBYKEY(LuongMaHoa, 1, MaNV) AS NVARCHAR(20)) AS DECIMAL(12,0)) AS GiaiMa_CoKhoa
 FROM dbo.NHANVIEN ORDER BY MaNV;
 CLOSE SYMMETRIC KEY KhoaLuong;

@@ -19,7 +19,9 @@ $root = Split-Path -Parent $PSScriptRoot
 $files = @("01_schema","02_seed","03_functions","04_views","05_procedures","06_triggers","07_cursors","08_security","09_xml")
 if ($Only.Count -gt 0) { $files = $Only }
 
-$auth = if ($SqlLogin) { @("-U", $SqlLogin, "-P", $Password) } else { @("-E") }
+# @(…) bên ngoài: `if` trả mảng 1 phần tử thì PowerShell rút thành chuỗi "-E", splat chuỗi làm sqlcmd báo
+# "Unknown Option" – Windows Authentication (cách chạy mặc định) không dựng được CSDL
+$auth = @(if ($SqlLogin) { "-U", $SqlLogin, "-P", $Password } else { "-E" })
 $sw = [Diagnostics.Stopwatch]::StartNew()
 # Chờ SQL Server sẵn sàng (tối đa 2 phút) – cần khi chạy ngay sau khi khởi động dịch vụ / container
 $ready = $false

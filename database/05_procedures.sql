@@ -105,12 +105,20 @@ BEGIN
     IF @tc = 0 SET XACT_ABORT ON;
     IF @tc = 0 BEGIN TRANSACTION; ELSE SAVE TRANSACTION sp_ThuHocPhi;
     BEGIN TRY
-        -- Gửi lại cùng mã yêu cầu (bấm nút hai lần, trình duyệt gửi lại form): trả về phiếu đã lập, không lập thêm
+        -- Gửi lại cùng mã yêu cầu (bấm nút hai lần, trình duyệt gửi lại form): trả về phiếu đã lập, không lập thêm.
+        -- @MaPT là tham số OUTPUT nên có thể mang sẵn giá trị của lần gọi trước: xoá trước khi tra, nếu không thì
+        -- "không tìm thấy" vẫn bị hiểu thành "đã lập" và phiếu mới không được ghi.
+        SELECT @MaPT = NULL, @TongTien = NULL;
         IF @MaYeuCau IS NOT NULL
         BEGIN
-            SELECT @MaPT = MaPT, @TongTien = TongTien FROM dbo.PHIEUTHU WITH (UPDLOCK, HOLDLOCK) WHERE MaYeuCau = @MaYeuCau;
+            DECLARE @HVDaLap CHAR(6);
+            SELECT @MaPT = MaPT, @TongTien = TongTien, @HVDaLap = MaHV
+            FROM dbo.PHIEUTHU WITH (UPDLOCK, HOLDLOCK) WHERE MaYeuCau = @MaYeuCau;
             IF @MaPT IS NOT NULL
             BEGIN
+                -- mã yêu cầu chỉ có nghĩa cho đúng yêu cầu đã gửi: phiếu của học viên khác → báo lỗi, không trả nhầm phiếu
+                IF @HVDaLap <> @MaHV
+                    THROW 50016, N'Mã yêu cầu đã dùng cho phiếu thu của học viên khác – tải lại trang rồi lập phiếu mới.', 1;
                 IF @tc = 0 COMMIT TRANSACTION;
                 RETURN 1;
             END
@@ -123,6 +131,9 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.fn_NguoiDungHienTai() u WHERE u.MaNV = @MaNV)
            AND NOT (IS_MEMBER('db_owner') = 1 AND SESSION_CONTEXT(N'app_user') IS NULL)
             THROW 50015, N'Người lập phiếu phải là nhân viên đang đăng nhập.', 1;
+        -- Phạm vi chi nhánh theo hồ sơ học viên – cùng phạm vi trang Phiếu thu dùng để tìm học viên (vw_HocVien_ChiNhanh)
+        IF dbo.fn_TrongPhamVi((SELECT MaCN FROM dbo.HOCVIEN WHERE MaHV = @MaHV)) = 0
+            THROW 50097, N'Học viên thuộc chi nhánh nằm ngoài phạm vi của tài khoản đang đăng nhập.', 1;
 
         DECLARE @CT TABLE (MaDK INT PRIMARY KEY, SoTien DECIMAL(12,0) NULL);
         INSERT @CT (MaDK, SoTien)
@@ -393,7 +404,10 @@ BEGIN
         IF @MaHV IS NULL THROW 50050, N'Đăng ký không tồn tại.', 1;
         IF @TT NOT IN (N'Đang học', N'Bảo lưu') THROW 50051, N'Chỉ chuyển lớp cho đăng ký đang học hoặc bảo lưu.', 1;
 
-        DECLARE @KhCu VARCHAR(6) = (SELECT MaKH FROM dbo.LOPHOC WHERE MaLop = @LopCu);
+        DECLARE @KhCu VARCHAR(6), @CNCu CHAR(4);
+        SELECT @KhCu = MaKH, @CNCu = MaCN FROM dbo.LOPHOC WHERE MaLop = @LopCu;
+        -- chuyển đi cũng là thay đổi lớp cũ: lớp cũ phải trong phạm vi (cùng luật với sp_HuyDangKy)
+        IF dbo.fn_TrongPhamVi(@CNCu) = 0 THROW 50097, N'Lớp hiện tại thuộc chi nhánh nằm ngoài phạm vi của tài khoản đang đăng nhập.', 1;
         DECLARE @KhMoi VARCHAR(6), @TTMoi NVARCHAR(20), @ToiDa TINYINT, @HienTai TINYINT, @CNMoi CHAR(4);
         SELECT @KhMoi = MaKH, @TTMoi = TrangThai, @ToiDa = SiSoToiDa, @HienTai = SiSoHienTai, @CNMoi = MaCN
         FROM dbo.LOPHOC WITH (UPDLOCK, HOLDLOCK) WHERE MaLop = @MaLopMoi;
@@ -635,9 +649,7 @@ BEGIN
         ELSE
             DELETE dbo.GIAOVIEN WHERE MaGV = @MaNV;
         -- vai trò tài khoản ứng dụng luôn đi theo chức vụ (đổi chức vụ → đổi vai trò, không để lệch quyền)
-        UPDATE dbo.TAIKHOAN SET VaiTro = CASE @ChucVu WHEN N'Quản lý' THEN 'QuanLy' WHEN N'Giáo vụ' THEN 'GiaoVu'
-                                                     WHEN N'Kế toán' THEN 'KeToan' ELSE 'GiaoVien' END
-        WHERE MaNV = @MaNV;
+        UPDATE dbo.TAIKHOAN SET VaiTro = dbo.fn_VaiTroTheoChucVu(@MaNV, NULL) WHERE MaNV = @MaNV;
         SET @MaNVMoi = @MaNV;
         IF @tc = 0 COMMIT TRANSACTION;
     END TRY

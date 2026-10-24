@@ -213,7 +213,7 @@ END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_TimKiemHocVien', N'Tham số trang = 
 
 /* ---------- Bổ sung sau rà soát: chống lập phiếu trùng, xoá điểm, mã lớp, lương, trạng thái lớp ---------- */
 -- sp_ThuHocPhi gửi lại cùng @MaYeuCau (bấm nút hai lần) → chỉ một phiếu
-DECLARE @HVNo CHAR(6), @DKNo INT, @YC UNIQUEIDENTIFIER = NEWID(), @PT1 INT, @PT2 INT;
+DECLARE @HVNo CHAR(6), @DKNo INT, @YC UNIQUEIDENTIFIER = NEWID(), @YC2 UNIQUEIDENTIFIER = NEWID(), @PT1 INT, @PT2 INT;
 SELECT TOP 1 @HVNo = MaHV, @DKNo = MaDK FROM vw_CongNoHocVien WHERE ConNo >= 300000 ORDER BY MaDK;
 BEGIN TRY
     SET @json = CONCAT(N'[{"MaDK":', @DKNo, N',"SoTien":100000}]');
@@ -309,6 +309,25 @@ BEGIN TRY
     INSERT @KQ VALUES ('sp_CapNhatTrangThaiLop', CONCAT(N'Lớp ', @LopToi, N' tới ngày khai giảng'), N'OK Đang học',
         CONCAT(N'OK ', (SELECT TrangThai FROM LOPHOC WHERE MaLop = @LopToi), N' (', @n, N' lớp)'));
 END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_CapNhatTrangThaiLop', N'Chuyển trạng thái lớp', N'OK Đang học', ERROR_MESSAGE()); END CATCH;
+
+-- sp_ThuHocPhi: mã yêu cầu đã dùng cho phiếu của học viên @HVNo, gửi kèm học viên khác → báo lỗi, không trả nhầm phiếu
+DECLARE @HVKhac CHAR(6), @DKKhac INT, @PT3 INT;
+SELECT TOP 1 @HVKhac = MaHV, @DKKhac = MaDK FROM vw_CongNoHocVien WHERE MaHV <> @HVNo ORDER BY MaDK;
+BEGIN TRY
+    SET @json = CONCAT(N'[{"MaDK":', @DKKhac, N'}]');
+    EXEC sp_ThuHocPhi @MaHV = @HVKhac, @MaNV = @KeToan, @ChiTiet = @json, @MaPT = @PT3 OUTPUT, @MaYeuCau = @YC;
+    INSERT @KQ VALUES ('sp_ThuHocPhi', N'Mã yêu cầu của phiếu học viên khác', N'50016', CONCAT(N'không báo lỗi, trả MaPT ', @PT3));
+END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_ThuHocPhi', N'Mã yêu cầu của phiếu học viên khác', N'50016', CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE())); END CATCH;
+
+-- sp_ThuHocPhi: biến OUTPUT @MaPT còn giữ mã phiếu của lần gọi trước, mã yêu cầu MỚI → vẫn phải lập phiếu mới
+BEGIN TRY
+    SET @PT3 = @PT1;
+    SET @json = CONCAT(N'[{"MaDK":', @DKNo, N',"SoTien":100000}]');
+    EXEC sp_ThuHocPhi @MaHV = @HVNo, @MaNV = @KeToan, @ChiTiet = @json, @MaPT = @PT3 OUTPUT, @MaYeuCau = @YC2;
+    INSERT @KQ VALUES ('sp_ThuHocPhi', N'@MaPT đầu vào khác NULL, mã yêu cầu mới', N'OK phiếu mới',
+        CONCAT(IIF(@PT3 <> @PT1 AND EXISTS (SELECT 1 FROM PHIEUTHU WHERE MaPT = @PT3 AND MaYeuCau = @YC2), N'OK phiếu mới ', N'SAI '),
+               N'MaPT ', @PT1, N' → ', @PT3));
+END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_ThuHocPhi', N'@MaPT đầu vào khác NULL, mã yêu cầu mới', N'OK phiếu mới', ERROR_MESSAGE()); END CATCH;
 
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;      -- hoàn tác mọi thay đổi của kiểm thử
 INSERT #KQ (Procedure_, Ca, MongDoi, ThucTe) SELECT Procedure_, Ca, MongDoi, ThucTe FROM @KQ ORDER BY STT;

@@ -244,6 +244,19 @@ BEGIN
 END
 GO
 
+-- Vai trò tài khoản ứng dụng theo chức vụ (học viên → HocVien): quyền luôn đi theo chức vụ thật. Nguồn DUY NHẤT
+-- của ánh xạ này – sp_LuuNhanVien (đổi chức vụ), sp_TaoTaiKhoan / sp_CapNhatTaiKhoan (08) và trang Tài khoản cùng dùng
+CREATE OR ALTER FUNCTION dbo.fn_VaiTroTheoChucVu (@MaNV CHAR(6), @MaHV CHAR(6))
+RETURNS VARCHAR(10)
+AS
+BEGIN
+    IF @MaHV IS NOT NULL RETURN 'HocVien';
+    RETURN (SELECT CASE ChucVu WHEN N'Quản lý' THEN 'QuanLy' WHEN N'Giáo vụ' THEN 'GiaoVu'
+                               WHEN N'Kế toán' THEN 'KeToan' WHEN N'Giáo viên' THEN 'GiaoVien' END
+            FROM dbo.NHANVIEN WHERE MaNV = @MaNV);
+END
+GO
+
 /* ---------------------------------------------------------------------
    5. DÙNG HÀM TRONG CHECK CONSTRAINT
    Nhân viên phải trong độ tuổi lao động (18 – 65) tại ngày vào làm.
@@ -252,5 +265,5 @@ ALTER TABLE NHANVIEN WITH CHECK ADD CONSTRAINT CK_NHANVIEN_TuoiLaoDong
     CHECK (dbo.fn_TinhTuoi(NgaySinh, NgayVaoLam) BETWEEN 18 AND 65);
 GO
 
-PRINT N'✓ 03_functions.sql: 8 hàm vô hướng, 4 hàm inline, 1 hàm multi-statement.';
+PRINT N'✓ 03_functions.sql: 9 hàm vô hướng, 4 hàm inline, 1 hàm multi-statement.';
 GO

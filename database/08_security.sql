@@ -124,7 +124,9 @@ GO
 --     không báo số lần thử còn lại → không đoán được tên đăng nhập nào có thật.
 --   • Sai 5 lần liên tiếp → TẠM KHOÁ 15 phút (KhoaDen), không khoá vĩnh viễn: người khác gõ sai cố ý
 --     cũng không khoá hẳn được tài khoản của quản lý (tấn công từ chối dịch vụ).
---   • Trạng thái khoá chỉ được báo khi mật khẩu ĐÚNG: người đang dò mật khẩu không biết tài khoản đã bị khoá.
+--   • Tài khoản đang khoá (tạm khoá hoặc quản lý khoá) bị từ chối TRƯỚC khi xét mật khẩu, với cùng thông báo như
+--     nhập sai: nếu mật khẩu đúng được báo khác đi thì kẻ dò mật khẩu cứ đoán tiếp trong lúc khoá và nhận ra lần
+--     đoán trúng qua thông báo – khoá tạm thời mất tác dụng.
 CREATE OR ALTER PROCEDURE dbo.sp_DangNhap
     @TenDangNhap VARCHAR(30),
     @MatKhau     NVARCHAR(100),
@@ -132,8 +134,10 @@ CREATE OR ALTER PROCEDURE dbo.sp_DangNhap
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @Hash VARBINARY(32), @Salt VARBINARY(16), @TrangThai BIT, @KhoaDen DATETIME2(0),
-            @Luc DATETIME2(0) = SYSDATETIME(), @SaiChung NVARCHAR(200) = N'Sai tên đăng nhập hoặc mật khẩu.';
+    DECLARE @Hash VARBINARY(32), @Salt VARBINARY(16), @TrangThai BIT, @KhoaDen DATETIME2(0), @Dung BIT,
+            @Luc DATETIME2(0) = SYSDATETIME(),
+            @SaiChung NVARCHAR(200) = N'Sai tên đăng nhập hoặc mật khẩu, hoặc tài khoản đang bị khoá. '
+                                    + N'Sai 5 lần liên tiếp thì tài khoản bị tạm khoá 15 phút.';
     SELECT @Hash = MatKhauHash, @Salt = Salt, @TrangThai = TrangThai, @KhoaDen = KhoaDen
     FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap;
 
@@ -143,26 +147,21 @@ BEGIN
         SET @ThongBao = @SaiChung;
         RETURN 1;
     END
-    IF dbo.fn_BamMatKhau(@MatKhau, @Salt) <> @Hash
+    SET @Dung = IIF(dbo.fn_BamMatKhau(@MatKhau, @Salt) = @Hash, 1, 0);   -- luôn băm: mọi nhánh tốn cùng thời gian
+    IF @TrangThai = 0 OR @KhoaDen > @Luc
     BEGIN
-        -- đang tạm khoá thì không cộng dồn; đủ 5 lần sai thì tạm khoá 15 phút và đếm lại từ đầu
+        SET @ThongBao = @SaiChung;                          -- đúng hay sai mật khẩu cũng cùng một câu
+        RETURN IIF(@TrangThai = 0, 2, 4);
+    END
+    IF @Dung = 0
+    BEGIN
+        -- đủ 5 lần sai thì tạm khoá 15 phút và đếm lại từ đầu
         UPDATE dbo.TAIKHOAN
         SET KhoaDen  = IIF(SoLanSai + 1 >= 5, DATEADD(MINUTE, 15, @Luc), KhoaDen),
             SoLanSai = IIF(SoLanSai + 1 >= 5, 0, SoLanSai + 1)
         WHERE TenDangNhap = @TenDangNhap AND (KhoaDen IS NULL OR KhoaDen <= @Luc);
         SET @ThongBao = @SaiChung;
         RETURN 3;
-    END
-    IF @TrangThai = 0
-    BEGIN
-        SET @ThongBao = N'Tài khoản đã bị khoá. Liên hệ quản trị viên.';
-        RETURN 2;
-    END
-    IF @KhoaDen > @Luc
-    BEGIN
-        SET @ThongBao = CONCAT(N'Tài khoản tạm khoá đến ', FORMAT(@KhoaDen, 'HH:mm'),
-                               N' do nhập sai mật khẩu 5 lần liên tiếp. Thử lại sau hoặc liên hệ quản trị viên.');
-        RETURN 4;
     END
 
     UPDATE dbo.TAIKHOAN SET SoLanSai = 0, KhoaDen = NULL, LanDangNhapCuoi = @Luc WHERE TenDangNhap = @TenDangNhap;
@@ -182,15 +181,17 @@ GO
 
 -- Đổi mật khẩu của chính mình. Sai mật khẩu hiện tại cũng tính vào số lần sai (không dò mật khẩu qua trang này được).
 -- Giống sp_DangNhap: sai mật khẩu không THROW (để số lần sai vừa tăng không bị rollback theo lỗi) mà trả
--- @ThongBao; @ThongBao = N'Đã đổi mật khẩu.' nghĩa là thành công.
+-- @ThongBao; @ThanhCong = 1 nghĩa là đã đổi (ứng dụng xét cờ này, không so khớp câu thông báo).
 CREATE OR ALTER PROCEDURE dbo.sp_DoiMatKhau
     @TenDangNhap VARCHAR(30),
     @MatKhauCu   NVARCHAR(100),
     @MatKhauMoi  NVARCHAR(100),
-    @ThongBao    NVARCHAR(200) = NULL OUTPUT
+    @ThongBao    NVARCHAR(200) = NULL OUTPUT,
+    @ThanhCong   BIT = 0 OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET @ThanhCong = 0;
     -- kết nối của ứng dụng chỉ đổi được mật khẩu của tài khoản đang đăng nhập
     IF IS_ROLEMEMBER('r_App') = 1 AND ISNULL(CAST(SESSION_CONTEXT(N'app_user') AS VARCHAR(30)), '') <> @TenDangNhap
         THROW 50090, N'Mật khẩu hiện tại không đúng.', 1;
@@ -212,22 +213,13 @@ BEGIN
     UPDATE dbo.TAIKHOAN SET Salt = @Salt, MatKhauHash = dbo.fn_BamMatKhau(@MatKhauMoi, @Salt), SoLanSai = 0
     WHERE TenDangNhap = @TenDangNhap;
     SET @ThongBao = N'Đã đổi mật khẩu.';
+    SET @ThanhCong = 1;
     RETURN 0;
 END
 GO
 
--- Vai trò tài khoản phải khớp chức vụ của nhân viên (học viên → HocVien): quyền luôn đi theo chức vụ thật
-CREATE OR ALTER FUNCTION dbo.fn_VaiTroTheoChucVu (@MaNV CHAR(6), @MaHV CHAR(6))
-RETURNS VARCHAR(10)
-AS
-BEGIN
-    IF @MaHV IS NOT NULL RETURN 'HocVien';
-    RETURN (SELECT CASE ChucVu WHEN N'Quản lý' THEN 'QuanLy' WHEN N'Giáo vụ' THEN 'GiaoVu'
-                               WHEN N'Kế toán' THEN 'KeToan' WHEN N'Giáo viên' THEN 'GiaoVien' END
-            FROM dbo.NHANVIEN WHERE MaNV = @MaNV);
-END
-GO
-
+-- Vai trò tài khoản phải khớp chức vụ của nhân viên: dbo.fn_VaiTroTheoChucVu (03_functions.sql) – cùng một ánh xạ
+-- với sp_LuuNhanVien (đổi chức vụ → đổi vai trò) và trang Tài khoản của ứng dụng
 CREATE OR ALTER PROCEDURE dbo.sp_TaoTaiKhoan
     @TenDangNhap VARCHAR(30),
     @MatKhau     NVARCHAR(100),

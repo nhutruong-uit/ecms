@@ -158,15 +158,21 @@ GO
       MỘT lần bằng sp_start_job rồi xem kết quả trong lịch sử job. Bật lịch thật: sp_update_job @enabled = 1.
       Bản Express không có Agent: dùng Task Scheduler / cron gọi scripts/backup.sh.
    --------------------------------------------------------------------- */
+-- 'Agent XPs' = 1 chỉ nói Agent đã từng được bật; bản Developer cài Agent ở chế độ khởi động Manual nên sau khi
+-- khởi động lại máy dịch vụ thường đang dừng (sp_start_job báo "SQLServerAgent is not currently running") →
+-- kiểm tra thêm phiên làm việc của Agent (program_name 'SQLAgent - …', có trên cả Windows lẫn Linux)
 IF (SELECT CAST(value_in_use AS INT) FROM sys.configurations WHERE name = N'Agent XPs') = 1
+   AND EXISTS (SELECT 1 FROM sys.dm_exec_sessions WHERE program_name LIKE N'SQLAgent%')
 BEGIN
-    DECLARE @Jobs TABLE (Ten SYSNAME, Loai VARCHAR(4), FreqType INT, FreqInterval INT, SubdayType INT, SubdayInterval INT);
-    INSERT @Jobs VALUES (N'ECMS – Full hằng tuần', 'FULL', 8, 1, 1, 0),        -- hằng tuần, Chủ nhật, 1 lần/ngày
-                        (N'ECMS – Diff hằng ngày', 'DIFF', 8, 126, 1, 0),      -- 126 = T2 … T7 (2+4+8+16+32+64)
-                        (N'ECMS – Log 15 phút',    'LOG',  4, 1, 4, 15);       -- hằng ngày, mỗi 15 phút
-    DECLARE @Ten SYSNAME, @L VARCHAR(4), @ft INT, @fi INT, @st INT, @si INT, @cmd NVARCHAR(200);
+    -- BatDau (HHMMSS): giờ chạy của Full / Diff; với Log là đầu khung giờ lặp 15 phút – phải từ 00:00:00, nếu đặt
+    -- 01:00 như hai job kia thì 00:00 – 01:00 mỗi ngày không có bản sao lưu log nào (RPO thành 75 phút)
+    DECLARE @Jobs TABLE (Ten SYSNAME, Loai VARCHAR(4), FreqType INT, FreqInterval INT, SubdayType INT, SubdayInterval INT, BatDau INT);
+    INSERT @Jobs VALUES (N'ECMS – Full hằng tuần', 'FULL', 8, 1, 1, 0, 10000),     -- hằng tuần, Chủ nhật, 01:00
+                        (N'ECMS – Diff hằng ngày', 'DIFF', 8, 126, 1, 0, 10000),   -- 126 = T2 … T7 (2+4+8+16+32+64), 01:00
+                        (N'ECMS – Log 15 phút',    'LOG',  4, 1, 4, 15, 0);        -- hằng ngày, mỗi 15 phút, cả ngày
+    DECLARE @Ten SYSNAME, @L VARCHAR(4), @ft INT, @fi INT, @st INT, @si INT, @bd INT, @cmd NVARCHAR(200);
     DECLARE cj CURSOR LOCAL FAST_FORWARD FOR SELECT * FROM @Jobs;
-    OPEN cj; FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si;
+    OPEN cj; FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si, @bd;
     WHILE @@FETCH_STATUS = 0
     BEGIN
         IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @Ten) EXEC msdb.dbo.sp_delete_job @job_name = @Ten;
@@ -174,9 +180,9 @@ BEGIN
         EXEC msdb.dbo.sp_add_job @job_name = @Ten, @enabled = 0, @description = N'ECMS – lịch sao lưu (T17)';
         EXEC msdb.dbo.sp_add_jobstep @job_name = @Ten, @step_name = @L, @subsystem = N'TSQL', @database_name = N'master', @command = @cmd;
         EXEC msdb.dbo.sp_add_jobschedule @job_name = @Ten, @name = @Ten, @freq_type = @ft, @freq_interval = @fi,
-             @freq_recurrence_factor = 1, @freq_subday_type = @st, @freq_subday_interval = @si, @active_start_time = 10000;
+             @freq_recurrence_factor = 1, @freq_subday_type = @st, @freq_subday_interval = @si, @active_start_time = @bd;
         EXEC msdb.dbo.sp_add_jobserver @job_name = @Ten;
-        FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si;
+        FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si, @bd;
     END
     CLOSE cj; DEALLOCATE cj;
 
@@ -192,7 +198,8 @@ BEGIN
     WHERE j.name LIKE N'ECMS – %' ORDER BY j.name;
 END
 ELSE
-    PRINT N'SQL Server Agent chưa bật (bản Express hoặc Docker thiếu MSSQL_AGENT_ENABLED) – bỏ qua phần lập lịch.';
+    PRINT N'SQL Server Agent không chạy (bản Express, Docker thiếu MSSQL_AGENT_ENABLED, hoặc dịch vụ SQL Server Agent '
+        + N'đang dừng – bật trong SQL Server Configuration Manager) – bỏ qua phần lập lịch.';
 GO
 
 /* ---------------------------------------------------------------------

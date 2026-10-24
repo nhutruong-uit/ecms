@@ -199,7 +199,7 @@ FROM (
     UNION ALL SELECT 'DIEMDANH',
            (SELECT COUNT(*) FROM (SELECT MaDK, STT, TrangThai, GhiChu FROM ECMS.dbo.DIEMDANH EXCEPT SELECT MaDK, STT, TrangThai, GhiChu FROM dbo.DIEMDANH) a)
          + (SELECT COUNT(*) FROM (SELECT MaDK, STT, TrangThai, GhiChu FROM dbo.DIEMDANH EXCEPT SELECT MaDK, STT, TrangThai, GhiChu FROM ECMS.dbo.DIEMDANH) b)
-    UNION ALL SELECT 'NHANVIEN (dọc + ngang)',
+    UNION ALL SELECT N'NHANVIEN (dọc + ngang)',
            (SELECT COUNT(*) FROM (SELECT MaNV, MaCN, HoNV, TenNV, ChucVu, SoDienThoai, Email, LuongCoBan FROM ECMS.dbo.NHANVIEN
                                   EXCEPT SELECT MaNV, MaCN, HoNV, TenNV, ChucVu, SoDienThoai, Email, LuongCoBan FROM dbo.NHANVIEN) a)
          + (SELECT COUNT(*) FROM (SELECT MaNV, MaCN, HoNV, TenNV, ChucVu, SoDienThoai, Email, LuongCoBan FROM dbo.NHANVIEN
