@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "slides" / "ECMS_Nhom1.pptx"
 IMG = ROOT / "report" / "images" / "ch4"
 DES = ROOT / "docs" / "design"
+CH2 = ROOT / "report" / "images" / "ch2"
 NAVY, BLUE, GREY, LIGHT, WHITE = (RGBColor(0x1F, 0x38, 0x64), RGBColor(0x2E, 0x75, 0xB6), RGBColor(0x59, 0x59, 0x59),
                                   RGBColor(0xE7, 0xEC, 0xF5), RGBColor(0xFF, 0xFF, 0xFF))
 FONT = "Times New Roman"
@@ -182,7 +183,7 @@ bullets(s, L, T, Cm(15.5), CH, [
 picture(s, DES / "quy-trinh-nghiep-vu.png", Cm(17.5), T, Cm(15.2), CH)
 
 # ----------------------------------------------------------------------------- 4. yêu cầu
-s = slide("1. Đặc tả yêu cầu", "Như", "22 yêu cầu chức năng, 8 phi chức năng; 5 tác nhân.")
+s = slide("1. Đặc tả yêu cầu", "Như", "22 yêu cầu chức năng, 8 phi chức năng; 6 tác nhân (5 vai trò nghiệp vụ + quản trị).")
 table(s, L, T + Cm(0.2), Cm(15), [["Vai trò", "Chức năng chính"], ["Quản lý", "Danh mục, tài khoản, nhật ký, dashboard"],
                                   ["Giáo vụ", "Khoá học, mở lớp, xếp lịch, ghi danh"], ["Kế toán", "Phiếu thu, công nợ, lương"],
                                   ["Giáo viên", "Điểm danh, nhập điểm, cảnh báo"], ["Học viên", "Lịch học, điểm, học phí"]],
@@ -192,27 +193,28 @@ bullets(s, Cm(17.2), T, Cm(15.5), CH, [
     "8 yêu cầu phi chức năng:",
     ("Toàn vẹn – giao dịch, ràng buộc tại CSDL", 1), ("Bảo mật – quyền tối thiểu, ẩn lương", 1),
     ("Truy vết – nhật ký thay đổi", 1), ("Sẵn sàng – RPO 15 phút", 1), ("Tiếng Việt, dễ dùng, tái lập bằng 1 lệnh", 1),
-    "Ánh xạ DIKW: điểm danh → chuyên cần → cảnh báo bỏ học"], 18)
+    "DIKW trên số liệu thật: 10.063 điểm danh → HV0021 chuyên cần 56,25% → chuyên cần < 80% thì không đạt 33,3% (gấp 3) → gọi điện, học bù"], 18)
 
 # ----------------------------------------------------------------------------- 5. ERD
 s = slide("2. Tổ chức thông tin – ERD và Class Diagram", "Trâm",
           "Giải thích thực thể yếu (PHONGHOC, BUOIHOC), chuyên biệt hoá NHANVIEN–GIAOVIEN, liên kết 3 ngôi LICHHOC.")
 picture(s, DES / "erd.png", L, T, Cm(19.5), CH)
 bullets(s, Cm(21.2), T, Cm(11.6), CH, [
-    "17 tập thực thể: 2 thực thể yếu, 1 chuyên biệt hoá, 1 liên kết 3 ngôi",
+    "14 tập thực thể: 2 thực thể yếu, 1 chuyên biệt hoá, 1 liên kết 3 ngôi",
     "Đủ loại thuộc tính: khoá, phức hợp, đa trị, suy diễn",
     "Class Diagram UML: kế thừa, kết hợp, thành phần, phụ thuộc",
     "So sánh ERD ↔ Class Diagram trên cùng bài toán"], 18)
 
 # ----------------------------------------------------------------------------- 6. lược đồ
-s = slide("2. Lược đồ quan hệ và cài đặt", "Trâm", "Sơ đồ sinh từ metadata sau khi chạy 01_schema.sql.")
-picture(s, DES / "db-diagram.png", L, T, Cm(19.5), CH)
+s = slide("2. Lược đồ quan hệ và cài đặt", "Trâm", "Sơ đồ sinh từ metadata sau khi chạy 01_schema.sql (nhóm học viên – tài chính – "
+          "hệ thống). DIEMDANH, LICHHOC vi phạm 2NF có chủ đích: giữ cột để khai báo khoá ngoại phức hợp thay cho trigger.")
+picture(s, CH2 / "db-diagram-2.png", L, T, Cm(19.5), CH)
 bullets(s, Cm(21.2), T, Cm(11.6), CH, [
-    "22 bảng, 32 khoá ngoại, 22 chỉ mục",
-    "Chuẩn hoá: 17/22 quan hệ đạt BCNF, phần còn lại có lý do giữ",
-    "RBTV: CHECK, UNIQUE, FK, computed column PERSISTED, trigger",
-    "So sánh mô hình phẳng – quan hệ – XML",
-    "Dữ liệu mẫu ~350 học viên, 25 lớp, ~500 phiếu thu"], 18)
+    "22 bảng, 33 khoá ngoại, 53 CHECK, 23 chỉ mục",
+    "Chuẩn hoá theo khoá dự tuyển: 16/22 BCNF, 4 quan hệ 2NF (lưu giá trị suy diễn), 2 vi phạm 2NF có chủ đích",
+    "21 RBTV: CHECK, UNIQUE, FK, cột tính toán, trigger",
+    "So sánh phẳng – phân cấp – mạng – quan hệ – XML; DTD ↔ XSD",
+    "Dữ liệu mẫu: 349 học viên, 25 lớp, 539 đăng ký, 501 phiếu thu"], 17)
 
 # ----------------------------------------------------------------------------- 7. truy vấn
 s = slide("3. Xử lý thông tin – Truy vấn SQL và XML", "Dương", "Chọn 1–2 truy vấn tiêu biểu để chạy trực tiếp (Q18, Q24).")
@@ -223,33 +225,36 @@ table(s, L, T + Cm(0.2), Cm(16), [["Nhóm", "Kỹ thuật", "Số câu"], ["Cơ 
       [2.2, 5, 1], 15, Cm(1.15))
 bullets(s, Cm(18), T, Cm(14.8), CH, [
     "31 truy vấn trả lời câu hỏi quản lý thực tế",
-    "XML: kết quả kiểm tra đầu vào lưu cột XML có XML Schema",
+    "XML: kết quả kiểm tra đầu vào lưu cột XML có XML Schema – 18 truy vấn XML",
     ("query(), value(), exist(), nodes(), modify()", 1), ("FOR XML / OPENXML, điểm ngoài 0–10 bị từ chối", 1),
-    "Đo hiệu năng trước / sau khi thêm chỉ mục"], 18)
+    "Chỉ mục trên 1 triệu dòng điểm danh: 6.023 trang → 3 trang (1 đăng ký), 150 trang (1 lớp = 3,2%)",
+    ("Chỉ mục XML có lợi ở 357 bài, bất lợi ở 10.710 bài (40.490 so với 1.956 trang)", 1)], 18)
 
 # ----------------------------------------------------------------------------- 8. an ninh
 s = slide("3. An ninh dữ liệu", "Như · Giang", "Như: xác thực, phân quyền. Giang: view, sao lưu – phục hồi. Dương: nhập / xuất.")
 bullets(s, L, T, Cm(16), CH, [
-    "Xác thực: login SQL theo vai trò; tài khoản ứng dụng băm SHA2_256 + salt, khoá sau 5 lần sai",
-    "Phân quyền: 5 role, ứng dụng dùng login ecms_app bị DENY trên mọi bảng – chỉ EXECUTE procedure, SELECT view",
-    "Row-level: SESSION_CONTEXT lọc dữ liệu theo chi nhánh; ẩn lương với vai trò không liên quan",
-    "36 ca kiểm thử phân quyền đều PASS"], 18)
+    "Xác thực: băm lặp 10.000 vòng SHA2_256 + salt; sai 5 lần → tạm khoá 15 phút; thông báo chung không lộ tài khoản",
+    "Phân quyền: 6 role; login ecms_app bị DENY trên mọi bảng – chỉ EXECUTE procedure, SELECT view",
+    "SESSION_CONTEXT @read_only = 1, một kết nối mỗi phiên; kiểm tra quyền fail-closed theo chi nhánh",
+    "Mã hoá & kiểm toán: TLS, TDE, mã hoá cột, che dữ liệu, SQL Server Audit, ledger",
+    "50 ca kiểm thử phân quyền đều PASS"], 17)
 bullets(s, Cm(17.8), T, Cm(15), CH, [
     "View: 27 view – bảo mật, báo cáo, indexed view doanh thu, WITH CHECK OPTION",
-    "Sao lưu: FULL tuần, DIFF ngày, LOG 15 phút → RPO 15 phút",
-    "Phục hồi theo thời điểm (STOPAT) ra CSDL song song để đối chiếu",
-    "Nhập / xuất: BULK INSERT, bcp, FOR JSON / XML, pandas – kiểm tra và báo dòng lỗi"], 18)
+    "Sao lưu: FULL tuần, DIFF ngày, LOG 15 phút → RPO 15 phút; bản sao lưu mã hoá AES-256",
+    "Phục hồi theo thời điểm (STOPAT): RTO đo được 723–810 ms; DBCC CHECKDB; 3 job Agent",
+    "Nhập / xuất: ETL qua bảng tạm, 12 quy tắc kiểm tra, CSV / XML / JSON / Excel"], 17)
 
 # ----------------------------------------------------------------------------- 9. lập trình
 s = slide("3. Lập trình CSDL", "Phú", "Demo sp_DangKyHoc báo lỗi 'Lớp đã đủ sĩ số' và trigger cập nhật sĩ số.")
 table(s, L, T + Cm(0.2), CW, [["Đối tượng", "Số lượng", "Ví dụ tiêu biểu", "Kiểm thử"],
-                              ["Stored procedure", "38", "sp_DangKyHoc, sp_ThuHocPhi (JSON master–detail, SAVE TRANSACTION)", "25 ca PASS"],
-                              ["Function", "13", "fn_GoiYKhoaHoc, fn_BangDiemLop (inline / multi-statement TVF)", "–"],
-                              ["Trigger", "11", "sĩ số, tổng tiền phiếu thu, chặn trùng phòng, nhật ký JSON, INSTEAD OF", "17 ca PASS"],
-                              ["Cursor", "3", "sinh buổi học bỏ qua ngày lễ, tính lương, cảnh báo chuyên cần", "so sánh set-based"]],
+                              ["Stored procedure", "40", "sp_DangKyHoc, sp_ThuHocPhi (JSON master–detail, savepoint, khoá ứng dụng)", "37 ca PASS"],
+                              ["Function", "17", "fn_GoiYKhoaHoc, fn_BangDiemLop, fn_NguoiDungHienTai (phân quyền)", "–"],
+                              ["Trigger", "14", "sĩ số, tổng tiền phiếu thu, chặn trùng phòng, nhật ký JSON, INSTEAD OF", "22 ca PASS"],
+                              ["Cursor", "3", "sinh buổi học bỏ qua ngày lễ, tính lương, cảnh báo chuyên cần", "set-based nhanh 1,1–6,9×"]],
       [2.4, 1.2, 8, 2], 16, Cm(1.5))
 text(s, L, T + Cm(8.4), CW, Cm(3), ["Lỗi nghiệp vụ trả về bằng THROW 500xx với thông báo tiếng Việt → giao diện hiển thị nguyên văn.",
-                                    "Mọi nghiệp vụ nhiều bước chạy trong transaction lồng được; trigger viết set-based."], 18, color=GREY)
+                                    "XACT_ABORT + savepoint, sp_getapplock / UPDLOCK chống tranh chấp, mã yêu cầu chống lập phiếu thu trùng."],
+     18, color=GREY)
 
 # ----------------------------------------------------------------------------- 10. menu
 s = slide("4. Trình bày thông tin – Menu và Form", "Giang", "Đăng nhập 2 vai trò khác nhau để thấy menu thay đổi.")
@@ -259,7 +264,8 @@ picture(s, IMG / "04_kiem_tra_nhap_lieu.jpg", Cm(21.6), T, Cm(11.2), Cm(7.1))
 bullets(s, Cm(9.8), T + Cm(7.6), Cm(23), Cm(6.5), [
     "Menu rộng & nông: 2 cấp, 8 nhóm theo nghiệp vụ, ẩn theo vai trò, chặn cả truy cập bằng URL",
     "Form: control theo kiểu dữ liệu, giá trị mặc định, lỗi hiện ngay dưới ô nhập + kiểm tra lần 2 tại CSDL",
-    "Ánh xạ mỗi form ↔ view / procedure / trigger – giao diện không truy cập bảng gốc"], 18)
+    "Xoá phải xác nhận; tài khoản chi nhánh bị khoá ở chi nhánh mình; phiên được kiểm tra lại mỗi 60 giây",
+    "Ánh xạ mỗi form ↔ view / procedure / trigger – giao diện không truy cập bảng gốc"], 17)
 
 # ----------------------------------------------------------------------------- 11. master-detail
 s = slide("4. Form master–detail và nhập liệu hàng loạt", "Giang", "Demo lập phiếu thu 2 khoản, in PDF.")
@@ -274,8 +280,10 @@ text(s, Cm(17.2), T + Cm(10.1), Cm(15.6), Cm(2.5), "Điểm danh / nhập điể
 s = slide("4. Báo cáo và Dashboard", "Giang", "Mở PDF doanh thu: Report/Page/Group header-footer, Trang X / Y.")
 picture(s, IMG / "16_dashboard.jpg", L, T, Cm(17), Cm(10.6))
 picture(s, IMG / "20_pdf_doanh_thu.jpg", Cm(18.6), T, Cm(7), CH)
-bullets(s, Cm(25.9), T, Cm(7), CH, ["9 báo cáo: định kỳ, theo yêu cầu, tổng hợp, biểu mẫu", "PDF + Excel",
-                                    "Dashboard 6 KPI so kỳ trước, đọc từ indexed view"], 16)
+bullets(s, Cm(25.9), T, Cm(7), CH, ["9 báo cáo: định kỳ, theo yêu cầu, tổng hợp, biểu mẫu",
+                                    "PDF (A4 / A5) + Excel + Word, giữ tô màu và dòng TB / Min / Max",
+                                    "Dashboard 6 KPI có mốc so sánh; KPI doanh thu đọc từ indexed view",
+                                    "So sánh với Crystal Report (Lab 4)"], 15)
 text(s, L, T + Cm(10.9), Cm(17), Cm(2.5), "Dashboard – tầng Knowledge trong DIKW", 16, align=PP_ALIGN.CENTER, color=GREY)
 
 # ----------------------------------------------------------------------------- 13. CSDL tiên tiến
@@ -287,22 +295,23 @@ table(s, L, T + Cm(0.2), CW, [
     ["Báo cáo thống kê", "Mạnh nhất", "Yếu (N+1)", "Tốt nếu cục bộ", "Khá (aggregation)"],
     ["Đọc 1 hồ sơ trọn vẹn", "Nhiều JOIN", "Duyệt đối tượng", "Như quan hệ", "Nhanh nhất – 1 document"],
     ["Mở rộng", "Dọc", "Dọc", "Ngang theo chi nhánh", "Ngang (sharding)"],
-    ["Demo", "–", "ODL + mapper Python", "3 trạm + partitioned view", "4 collection, 6 cặp truy vấn"]],
+    ["Demo", "–", "ODL 16 lớp, OID, 3 cách ánh xạ kế thừa", "3 trạm, nửa kết −73% byte, 2PC", "4 collection, 6 đọc + 3 ghi"]],
       [2.6, 2.3, 2.3, 3, 3], 15, Cm(1.25))
 text(s, L, T + Cm(9.6), CW, Cm(2), "Kết luận: quan hệ tập trung là lựa chọn chính; phân tán khi mở rộng nhiều tỉnh; NoSQL làm kho phụ "
      "(polyglot persistence).", 17, True, NAVY)
 
 # ----------------------------------------------------------------------------- 14. kiểm thử
-s = slide("6. Kiểm thử tích hợp và CI", "Như", "Chạy lại toàn bộ từ CSDL trống trong khoảng 35 giây.")
-table(s, L, T + Cm(0.2), Cm(17), [["Bước", "Kết quả"], ["Dựng CSDL 01 → 09 từ CSDL trống", "≈ 10 giây"],
-                                  ["Kiểm tra dữ liệu mẫu", "11 kiểm tra, 0 lỗi"], ["Procedure / trigger / phân quyền", "25 / 17 / 36 ca PASS"],
-                                  ["31 truy vấn nghiệp vụ", "chạy hết, không lỗi"], ["Smoke test mọi trang × 5 vai trò + mọi báo cáo", "52 passed"]],
+s = slide("6. Kiểm thử tích hợp và CI", "Như", "Chạy lại toàn bộ từ CSDL trống trong 1–2 phút.")
+table(s, L, T + Cm(0.2), Cm(17), [["Bước", "Kết quả"], ["Dựng CSDL 01 → 09 từ CSDL trống", "≈ 20 giây"],
+                                  ["Kiểm tra dữ liệu mẫu", "11 kiểm tra, 0 lỗi"], ["Procedure / trigger / phân quyền", "37 / 22 / 50 ca PASS"],
+                                  ["31 truy vấn nghiệp vụ", "chạy hết, không lỗi"],
+                                  ["Ứng dụng: mọi trang × vai trò, báo cáo PDF / Excel / Word", "125 passed"]],
       [3, 2], 16, Cm(1.3))
 bullets(s, Cm(19.4), T, Cm(13.4), CH, [
-    "GitHub Actions: SQL Server 2025 (Docker) → run_all → test SQL → pytest",
-    "Bắt buộc xanh trước khi merge develop → main",
-    "Quy trình nhóm: 29 task = 29 issue = 29 PR vào develop, review bởi nhóm trưởng",
-    "Phát hành v1.0.0"], 18)
+    "GitHub Actions: SQL Server 2025 (Docker) → run_all → test SQL → pytest, khi PR / push vào main",
+    "Healthcheck chờ đổi collation xong – sửa lỗi CI ngày 20/10",
+    "Quy trình nhóm: 30 task = 30 issue, PR vào develop, review bởi nhóm trưởng",
+    "Rà soát theo bài giảng → T30 khắc phục, đo lại số liệu"], 18)
 
 # ----------------------------------------------------------------------------- 15. demo
 s = slide("Kịch bản demo (≈ 5 phút)", "Cả nhóm", "Chuẩn bị sẵn 5 tab trình duyệt đã đăng nhập 5 vai trò.")
@@ -319,7 +328,7 @@ table(s, L, T + Cm(0.2), CW, [
 s = slide("Phân công và đóng góp", "Như", "Số liệu commit từ scripts/thong_ke_dong_gop.py.")
 table(s, L, T + Cm(0.2), CW, [
     ["Thành viên", "Task", "Phụ trách chính", "Đóng góp"],
-    ["Trương Quang Như", "T01–T03, T15, T19, T29", "Quản lý dự án, Chương 1, môi trường, phân quyền, khung web, CI, tổng hợp", "20%"],
+    ["Trương Quang Như", "T01–T03, T15, T19, T29, T30", "Quản lý dự án, Chương 1, môi trường, phân quyền, khung web, CI, tổng hợp, khắc phục", "20%"],
     ["Đỗ Phạm Minh Trâm", "T04–T07, T20, T25", "ERD, Class Diagram, lược đồ, DDL, trang Đào tạo, CSDL hướng đối tượng", "20%"],
     ["Đỗ Bình Dương", "T08–T10, T18, T21, T27", "Dữ liệu mẫu, truy vấn, XML, nhập / xuất, trang Học viên, NoSQL", "20%"],
     ["Nguyễn Việt Phú", "T11–T14, T22, T26", "Procedure, function, trigger, cursor, trang Học tập, CSDL phân tán", "20%"],
@@ -330,15 +339,15 @@ table(s, L, T + Cm(0.2), CW, [
 s = slide("Kết luận và hướng phát triển", "Như", "")
 bullets(s, L, T, Cm(15.5), CH, [
     "Đạt được: đủ 22 yêu cầu chức năng, đi qua đủ quy trình QLTT",
-    ("Thu thập → Tổ chức → Xử lý → Trình bày", 1), ("Luật nghiệp vụ nằm trong CSDL, không thể bị bỏ qua", 1),
+    ("Thu thập → Tổ chức → Chuyển đổi → Trình bày → An toàn", 1), ("Luật nghiệp vụ nằm trong CSDL, không thể bị bỏ qua", 1),
     ("Tái lập từ đầu bằng một lệnh, CI tự động", 1),
-    "Hạn chế: dữ liệu nhỏ, giao diện chưa tối ưu di động, phân tán mới mô phỏng trên 1 máy"], 19)
+    "Hạn chế: dữ liệu nhỏ, chưa có phím tắt và giao diện di động, phân tán mô phỏng trên 1 máy (MSDTC 2 máy chạy trên Windows)"], 19)
 bullets(s, Cm(17.6), T, Cm(15.2), CH, [
     "Hướng phát triển:",
     ("Cổng học viên / phụ huynh, thanh toán online, thông báo vắng học", 1),
     ("REST API + frontend di động, giữ lớp procedure / view", 1),
     ("Redis cache, MongoDB đồng bộ CDC cho cổng học viên", 1),
-    ("Kho dữ liệu và dự báo học viên bỏ học (tầng Wisdom)", 1)], 19)
+    ("Kho dữ liệu và dự báo học viên bỏ học (tầng Trí tuệ)", 1)], 19)
 
 # ----------------------------------------------------------------------------- 18. cảm ơn
 s = prs.slides.add_slide(BLANK)
