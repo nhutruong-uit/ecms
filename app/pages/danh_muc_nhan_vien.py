@@ -15,8 +15,7 @@ ui.show_flash()
 CHUC_VU = ["Quản lý", "Giáo vụ", "Kế toán", "Giáo viên"]
 c1, c2, c3, c4 = st.columns([1, 1, 1, 2])
 with c1:
-    f_cn = ui.pick("Chi nhánh", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", allow_empty=True, key="f_cn",
-                   empty_label="— tất cả —")
+    f_cn = ui.chon_chi_nhanh(user, key="f_cn")           # kế toán / quản lý chi nhánh chỉ thấy lương chi nhánh mình
 f_cv = c2.selectbox("Chức vụ", [None] + CHUC_VU, format_func=lambda v: v or "— tất cả —")
 f_tt = c3.selectbox("Trạng thái", [1, 0, None], format_func={1: "Đang làm", 0: "Đã nghỉ", None: "— tất cả —"}.get)
 f_q = c4.text_input("Tìm theo tên, mã, SĐT, email")
@@ -57,7 +56,7 @@ with st.form("f_nv", clear_on_submit=not sel):
     luong = c4.number_input("Lương cơ bản (đ) *", 0, 200_000_000, int(r.get("LuongCoBan") or 8_000_000), step=500_000)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        cn = ui.pick("Chi nhánh *", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", r.get("MaCN"), key="nv_cn")
+        cn = ui.chon_chi_nhanh(user, "Chi nhánh *", r.get("MaCN"), allow_all=False, key="nv_cn")
     nvl = c2.date_input("Ngày vào làm *", ui.to_date(r.get("NgayVaoLam"), date.today()), format="DD/MM/YYYY")
     with c2: fe.slot("nvl")
     with c3:
@@ -90,7 +89,8 @@ with st.form("f_nv", clear_on_submit=not sel):
                 st.rerun()
 
 if sel:
-    if st.button(f"Xoá / cho nghỉ {r['MaNV']}", icon=":material/person_remove:"):
+    if ui.nut_xoa(f"Xoá / cho nghỉ {r['MaNV']}", key=f"x_nv_{r['MaNV']}", icon=":material/person_remove:",
+                  canh_bao="Nhân viên đã có lớp, phiếu thu, bảng lương… sẽ được chuyển sang Đã nghỉ và khoá tài khoản thay vì xoá."):
         res = ui.run(lambda: db.call_proc("sp_XoaNhanVien", {"MaNV": r["MaNV"]}, fetch=True), rerun=False)
         if res is not None:
             ui.flash(res[0].iloc[0]["ThongBao"], "info")
@@ -114,5 +114,5 @@ if sel:
                     ui.run(lambda: db.call_proc("sp_LuuChungChi", {"MaGV": r["MaNV"], "TenChungChi": ten_cc.strip(),
                                                                   "Diem": diem or None, "NgayCap": ngay, "NoiCap": noi.strip() or None}),
                            "Đã lưu chứng chỉ.")
-        if csel and st.button(f"Xoá chứng chỉ {csel['TenChungChi']}", icon=":material/delete:"):
+        if csel and ui.nut_xoa(f"Xoá chứng chỉ {csel['TenChungChi']}", key=f"x_cc_{r['MaNV']}_{csel['TenChungChi']}"):
             ui.run(lambda: db.call_proc("sp_XoaChungChi", {"MaGV": r["MaNV"], "TenChungChi": csel["TenChungChi"]}), "Đã xoá chứng chỉ.")

@@ -39,55 +39,106 @@ def _friendly(err: pyodbc.Error) -> DbError:
     return DbError(raw)
 
 
+# Không dùng connection pool của ODBC: kết nối lấy lại từ pool GIỮ NGUYÊN SESSION_CONTEXT của người dùng trước
+# (đã thử trên ODBC Driver 18 – cùng SPID, khoá cũ còn nguyên), nên người sau có thể "thừa hưởng" phạm vi chi nhánh
+# hoặc mã nhân viên của người trước. Thay vào đó mỗi phiên Streamlit giữ MỘT kết nối vật lý riêng (xem connect()).
+pyodbc.pooling = False
+
+_CONN_KEY = "_db_conn"          # st.session_state[_CONN_KEY] = (ngữ cảnh, kết nối)
+
+
 def _session_context() -> dict:
-    """Ngữ cảnh người dùng đang đăng nhập (đặt vào SESSION_CONTEXT của kết nối).
+    """Ngữ cảnh người dùng đang đăng nhập (đặt vào SESSION_CONTEXT của kết nối, chế độ read-only).
 
     - app_user: tài khoản ứng dụng → trigger ghi vào NHATKY.NguoiDungUD
     - ma_cn: phạm vi chi nhánh → vw_HocVien_ChiNhanh lọc dòng ('ALL' = mọi chi nhánh)
+    - vai_tro, ma_nv, ma_hv: procedure kiểm tra quyền mức dòng (dbo.fn_DuocThaoTacLop, fn_TrongPhamVi…)
     """
-    try:
-        import streamlit as st
-        user = st.session_state.get("user")
-    except Exception:          # chạy ngoài Streamlit (script, test)
-        user = None
+    user = _session_state().get("user") if _session_state() is not None else None
     if not user:
         return {}
-    return {"app_user": user["username"], "ma_cn": user["pham_vi_cn"], "vai_tro": user["role"],
-            "ma_nv": user.get("ma_nv"), "ma_hv": user.get("ma_hv")}
+    ctx = {"app_user": user["username"], "ma_cn": user["pham_vi_cn"], "vai_tro": user["role"],
+           "ma_nv": user.get("ma_nv"), "ma_hv": user.get("ma_hv")}
+    return {k: v for k, v in ctx.items() if v is not None}
 
 
-def connect() -> pyodbc.Connection:
-    """Mở kết nối mới (ODBC tự quản lý connection pool) và đặt SESSION_CONTEXT của người dùng.
-
-    Khi kết nối được trả về pool, sp_reset_connection xoá SESSION_CONTEXT, nên mỗi lần mở đều đặt lại.
-    """
+def _session_state():
+    """st.session_state khi chạy trong Streamlit; None khi chạy ngoài (script, test thuần Python)."""
     try:
-        conn = pyodbc.connect(DB.connection_string, timeout=5, autocommit=False)
-        ctx = {k: v for k, v in _session_context().items() if v is not None}
-        if ctx:
-            cur = conn.cursor()
-            for k, v in ctx.items():
-                cur.execute("EXEC sp_set_session_context @key = ?, @value = ?", k, v)
-        return conn
+        import streamlit as st
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        return st.session_state if get_script_run_ctx() is not None else None
+    except Exception:
+        return None
+
+
+def _open(ctx: dict) -> pyodbc.Connection:
+    """Mở kết nối vật lý mới và đặt SESSION_CONTEXT với @read_only = 1: trong suốt kết nối không câu lệnh nào
+    (kể cả câu lệnh bị chèn mã) đổi được phạm vi chi nhánh / vai trò của người dùng nữa."""
+    conn = pyodbc.connect(DB.connection_string, timeout=5, autocommit=False)
+    cur = conn.cursor()
+    for k, v in ctx.items():
+        cur.execute("EXEC sp_set_session_context @key = ?, @value = ?, @read_only = 1", k, v)
+    conn.commit()
+    return conn
+
+
+def connect() -> tuple[pyodbc.Connection, bool]:
+    """Trả (kết nối, có_phải_đóng_sau_khi_dùng).
+
+    Trong Streamlit: dùng lại kết nối riêng của phiên nếu ngữ cảnh người dùng không đổi; đăng nhập / đăng xuất
+    (ngữ cảnh đổi) thì đóng kết nối cũ, mở kết nối mới. Ngoài Streamlit: mỗi lần một kết nối, dùng xong đóng.
+    """
+    ctx = _session_context()
+    ss = _session_state()
+    try:
+        if ss is None:
+            return _open(ctx), True
+        held = ss.get(_CONN_KEY)
+        if held and held[0] == ctx:
+            return held[1], False
+        if held:
+            close()
+        conn = _open(ctx)
+        ss[_CONN_KEY] = (ctx, conn)
+        return conn, False
     except pyodbc.Error as e:
         raise _friendly(e) from e
+
+
+def close() -> None:
+    """Đóng kết nối của phiên (gọi khi đăng xuất)."""
+    ss = _session_state()
+    held = ss.pop(_CONN_KEY, None) if ss is not None else None
+    if held:
+        try:
+            held[1].close()
+        except pyodbc.Error:
+            pass
 
 
 @contextmanager
 def cursor():
-    conn = connect()
+    conn, owned = connect()
+    done = False
     try:
         cur = conn.cursor()
         yield cur
         conn.commit()
+        done = True
     except pyodbc.Error as e:
-        conn.rollback()
+        if e.args and str(e.args[0]) in ("08S01", "08003", "08001", "HYT00"):
+            close()              # mất kết nối / hết thời gian: lần gọi sau mở kết nối mới
         raise _friendly(e) from e
-    except Exception:
-        conn.rollback()
-        raise
     finally:
-        conn.close()
+        # rollback cả khi Streamlit dừng giữa chừng (bấm nút khác → RerunException không phải Exception)
+        if not done:
+            try:
+                conn.rollback()
+            except pyodbc.Error:
+                pass
+        if owned:
+            conn.close()
 
 
 def _frame(cur: pyodbc.Cursor) -> pd.DataFrame:

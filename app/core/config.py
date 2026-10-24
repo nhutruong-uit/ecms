@@ -28,7 +28,8 @@ class DbConfig:
     def connection_string(self) -> str:
         parts = [
             f"DRIVER={{{self.driver}}}",
-            f"SERVER={self.server},{self.port}",
+            # SQL Server Express dùng tên instance (localhost\SQLEXPRESS) và để trống DB_PORT → không ghép ",cổng"
+            f"SERVER={self.server},{self.port}" if self.port.strip() else f"SERVER={self.server}",
             f"DATABASE={self.database}",
             f"TrustServerCertificate={'yes' if self.trust_cert else 'no'}",
             "Encrypt=yes",
@@ -42,3 +43,5 @@ class DbConfig:
 
 DB = DbConfig()
 APP_TITLE = "ECMS – Quản lý Trung tâm Tiếng Anh"
+# Hiện hộp "Tài khoản demo" ở trang Đăng nhập – chỉ cho môi trường phát triển, đặt ECMS_SHOW_DEMO=no khi triển khai
+SHOW_DEMO_ACCOUNTS = _flag("ECMS_SHOW_DEMO", "yes")

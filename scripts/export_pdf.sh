@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Xuất PDF bằng Microsoft Word (macOS) từ file .docx do build_report.py sinh ra: Word cập nhật Mục lục, Danh mục
-# hình ảnh và số trang rồi lưu PDF cạnh file docx – PDF giống hệt bản Word (A4, Times New Roman 13).
+# hình ảnh, Danh mục bảng và số trang rồi lưu PDF cạnh file docx – PDF giống hệt bản Word (A4, Times New Roman 13).
 #
 #   scripts/export_pdf.sh                                   # cả báo cáo và hướng dẫn sử dụng
 #   scripts/export_pdf.sh report/BaoCao_IE103_Nhom1.docx    # một tài liệu
@@ -8,7 +8,7 @@
 # File docx được thay bằng bản Word đã cập nhật trường (mục lục có số trang, không còn cờ updateFields) nên mở bằng
 # Word không bị hỏi "cập nhật trường?". Word trên macOS chạy trong sandbox: file được mở bằng "open -a" để macOS tự
 # cấp quyền đọc. Nếu Word vẫn hiện "Grant File Access", NGƯỜI DÙNG bấm "Select..." và chọn file (script không tự bấm).
-# Không có Word (Windows, Linux): dùng python scripts/build_report.py --pdf (in bằng Chrome/Edge).
+# Windows có Word: scripts/export_pdf.ps1. Không có Word: python scripts/build_report.py --pdf (in bằng Chrome/Edge).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -59,7 +59,7 @@ on run argv
     with timeout of 900 seconds
         tell application "Microsoft Word"
             set d to document (item 2 of argv)
-            -- Mục lục và Danh mục hình ảnh đều là "table of contents" trong Word
+            -- Mục lục, Danh mục hình ảnh và Danh mục bảng đều là "table of contents" trong Word
             repeat with i from 1 to (count of tables of contents of d)
                 update (table of contents i of d)
             end repeat

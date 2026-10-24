@@ -47,12 +47,15 @@ SELECT N'BULK INSERT hocvien_online.csv' AS Buoc, COUNT(*) AS SoDong, @ms AS Tho
 -- 1.2 Transform: chuẩn hoá và kiểm tra từng dòng
 DROP TABLE IF EXISTS #KT;
 SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS Dong, s.*,
+       s.HoHV AS s_Ho, s.TenHV AS s_Ten,
        CAST(LTRIM(RTRIM(s.HoHV)) AS NVARCHAR(50)) COLLATE DATABASE_DEFAULT AS Ho,
        CAST(LTRIM(RTRIM(s.TenHV)) AS NVARCHAR(20)) COLLATE DATABASE_DEFAULT AS Ten,
        CAST(s.GioiTinh AS NVARCHAR(3)) COLLATE DATABASE_DEFAULT AS GT,
        CAST(s.QuanHuyen AS NVARCHAR(50)) COLLATE DATABASE_DEFAULT AS Quan,
        TRY_CONVERT(DATE, s.NgaySinh, 103) AS NS,             -- dd/MM/yyyy
-       TRY_CONVERT(DATE, s.NgayDangKy, 103) AS NDK,
+       -- file CSV từ Windows / Excel xuống dòng bằng CRLF: cột cuối dính CHAR(13) làm TRY_CONVERT trả NULL
+       -- (trước đây NULL bị thay bằng ngày hôm nay một cách lặng lẽ) → bỏ CR trước khi đổi kiểu
+       TRY_CONVERT(DATE, REPLACE(s.NgayDangKy, CHAR(13), ''), 103) AS NDK,
        REPLACE(REPLACE(REPLACE(s.SoDienThoai, ' ', ''), '.', ''), '-', '') AS SDT,
        LOWER(LTRIM(RTRIM(s.Email))) AS Mail
 INTO #KT
@@ -61,6 +64,9 @@ FROM dbo.STG_HOCVIEN_ONLINE s;
 ALTER TABLE #KT ADD Loi NVARCHAR(400);
 UPDATE #KT SET Loi = CONCAT_WS(N'; ',
     IIF(ISNULL(Ten, N'') = N'' OR ISNULL(Ho, N'') = N'', N'Thiếu họ tên', NULL),
+    -- CAST ở trên cắt chuỗi theo độ dài cột HOCVIEN: báo lỗi thay vì lặng lẽ cắt họ tên
+    IIF(LEN(LTRIM(RTRIM(s_Ho))) > 50 OR LEN(LTRIM(RTRIM(s_Ten))) > 20, N'Họ tên quá dài', NULL),
+    IIF(NULLIF(LTRIM(REPLACE(NgayDangKy, CHAR(13), '')), '') IS NOT NULL AND NDK IS NULL, N'Ngày đăng ký sai định dạng', NULL),
     IIF(NS IS NULL, N'Ngày sinh sai định dạng', NULL),
     IIF(NS IS NOT NULL AND NS > DATEADD(YEAR, -4, CAST(GETDATE() AS DATE)), N'Ngày sinh không hợp lệ', NULL),
     IIF(ISNULL(GT, N'') NOT IN (N'Nam', N'Nữ'), N'Giới tính sai', NULL),

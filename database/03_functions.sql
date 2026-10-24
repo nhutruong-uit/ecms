@@ -92,6 +92,33 @@ GO
    2. HÀM INLINE TRẢ VỀ BẢNG (một câu SELECT – tối ưu như view có tham số)
    --------------------------------------------------------------------- */
 
+-- Danh tính của người đang gọi – nguồn DUY NHẤT cho mọi kiểm tra quyền mức dòng (view, function, procedure).
+--  • Kết nối của ứng dụng web (role r_App) và dbo: đọc SESSION_CONTEXT. Ứng dụng đặt các khoá app_user,
+--    vai_tro, ma_cn, ma_nv, ma_hv với @read_only = 1 ngay khi mở kết nối (app/core/db.py), nên trong
+--    phiên không ghi đè được nữa – kể cả khi có câu lệnh bị chèn mã.
+--  • Các login minh hoạ khác (u_giaovu, u_ketoan, …) tự gọi được sp_set_session_context nên KHÔNG tin
+--    SESSION_CONTEXT: danh tính lấy theo tài khoản ứng dụng cùng tên (u_giaovu ↔ TAIKHOAN 'giaovu').
+--  • Không xác định được danh tính → không có dòng nào → mọi kiểm tra dựa trên hàm này đều TỪ CHỐI.
+CREATE OR ALTER FUNCTION dbo.fn_NguoiDungHienTai ()
+RETURNS TABLE
+AS
+RETURN
+    SELECT CAST(SESSION_CONTEXT(N'app_user') AS VARCHAR(30)) AS TenDangNhap,
+           CAST(SESSION_CONTEXT(N'vai_tro') AS VARCHAR(10))  AS VaiTro,
+           CAST(SESSION_CONTEXT(N'ma_nv') AS CHAR(6))         AS MaNV,
+           CAST(SESSION_CONTEXT(N'ma_hv') AS CHAR(6))         AS MaHV,
+           CAST(SESSION_CONTEXT(N'ma_cn') AS VARCHAR(4))      AS PhamViCN
+    WHERE IS_ROLEMEMBER('r_App') = 1 OR IS_MEMBER('db_owner') = 1
+    UNION ALL
+    SELECT t.TenDangNhap, t.VaiTro, t.MaNV, t.MaHV,
+           CASE WHEN t.VaiTro = 'QuanLy' AND nv.MaNVQuanLy IS NULL THEN 'ALL' ELSE COALESCE(nv.MaCN, hv.MaCN) END
+    FROM dbo.TAIKHOAN t
+    LEFT JOIN dbo.NHANVIEN nv ON nv.MaNV = t.MaNV
+    LEFT JOIN dbo.HOCVIEN hv  ON hv.MaHV = t.MaHV
+    WHERE ISNULL(IS_ROLEMEMBER('r_App'), 0) = 0 AND IS_MEMBER('db_owner') = 0
+      AND USER_NAME() LIKE 'u[_]%' AND t.TenDangNhap = SUBSTRING(USER_NAME(), 3, 30) AND t.TrangThai = 1;
+GO
+
 -- Lịch học của học viên trong tuần chứa ngày @Tuan (thứ Hai → Chủ nhật)
 CREATE OR ALTER FUNCTION dbo.fn_LichHocHocVien (@MaHV CHAR(6), @Tuan DATE)
 RETURNS TABLE
@@ -111,12 +138,15 @@ RETURN
     JOIN dbo.NHANVIEN nv ON nv.MaNV = l.MaGV
     WHERE d.MaHV = @MaHV
       AND d.TrangThai = N'Đang học'
+      -- người gọi là học viên thì chỉ xem được lịch của chính mình (truyền mã học viên khác → không có dòng)
+      AND NOT EXISTS (SELECT 1 FROM dbo.fn_NguoiDungHienTai() u WHERE u.VaiTro = 'HocVien' AND ISNULL(u.MaHV, '') <> @MaHV)
       -- (DATEDIFF(DAY, '19000101', x) % 7) = 0 là thứ Hai, không phụ thuộc SET DATEFIRST
       AND b.NgayHoc >= DATEADD(DAY, -(DATEDIFF(DAY, '19000101', @Tuan) % 7), @Tuan)
       AND b.NgayHoc <  DATEADD(DAY, 7 - (DATEDIFF(DAY, '19000101', @Tuan) % 7), @Tuan);
 GO
 
--- Các lớp của một giáo viên (dùng để giáo viên chỉ thấy lớp mình – T22)
+-- Các lớp của một giáo viên (dùng để giáo viên chỉ thấy lớp mình – T22).
+-- Người gọi là giáo viên thì @MaGV phải là chính họ – không xem được lớp của giáo viên khác bằng cách đổi tham số.
 CREATE OR ALTER FUNCTION dbo.fn_LopCuaGiaoVien (@MaGV CHAR(6))
 RETURNS TABLE
 AS
@@ -126,7 +156,8 @@ RETURN
            (SELECT COUNT(*) FROM dbo.BUOIHOC b WHERE b.MaLop = l.MaLop AND b.NgayHoc <= CAST(GETDATE() AS DATE)) AS SoBuoiDaQua,
            k.SoBuoi
     FROM dbo.LOPHOC l JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH
-    WHERE l.MaGV = @MaGV;
+    WHERE l.MaGV = @MaGV
+      AND NOT EXISTS (SELECT 1 FROM dbo.fn_NguoiDungHienTai() u WHERE u.VaiTro = 'GiaoVien' AND ISNULL(u.MaNV, '') <> @MaGV);
 GO
 
 -- Gợi ý khoá học theo điểm test đầu vào (và chương trình nếu có)
@@ -184,12 +215,42 @@ END
 GO
 
 /* ---------------------------------------------------------------------
-   4. DÙNG HÀM TRONG CHECK CONSTRAINT
+   4. HÀM KIỂM TRA QUYỀN cho procedure ghi dữ liệu (mặc định TỪ CHỐI – fail-closed)
+   dbo chạy script / kiểm thử mà không đặt ngữ cảnh người dùng ứng dụng thì được phép (quản trị CSDL).
+   --------------------------------------------------------------------- */
+
+-- Chi nhánh @MaCN có thuộc phạm vi của người đang gọi không ('ALL' = mọi chi nhánh)
+CREATE OR ALTER FUNCTION dbo.fn_TrongPhamVi (@MaCN CHAR(4))
+RETURNS BIT
+AS
+BEGIN
+    IF IS_MEMBER('db_owner') = 1 AND SESSION_CONTEXT(N'app_user') IS NULL RETURN 1;
+    RETURN CASE WHEN EXISTS (SELECT 1 FROM dbo.fn_NguoiDungHienTai() u
+                             WHERE u.TenDangNhap IS NOT NULL AND u.PhamViCN IN (@MaCN, 'ALL')) THEN 1 ELSE 0 END;
+END
+GO
+
+-- Người đang gọi có được ghi dữ liệu học tập (điểm danh, nhập điểm, quét cảnh báo) của lớp không:
+-- giáo viên → chỉ lớp mình phụ trách; quản lý, giáo vụ → lớp thuộc chi nhánh trong phạm vi; vai trò khác → không
+CREATE OR ALTER FUNCTION dbo.fn_DuocThaoTacLop (@MaLop VARCHAR(10))
+RETURNS BIT
+AS
+BEGIN
+    IF IS_MEMBER('db_owner') = 1 AND SESSION_CONTEXT(N'app_user') IS NULL RETURN 1;
+    RETURN CASE WHEN EXISTS (
+        SELECT 1 FROM dbo.fn_NguoiDungHienTai() u JOIN dbo.LOPHOC l ON l.MaLop = @MaLop
+        WHERE (u.VaiTro = 'GiaoVien' AND l.MaGV = u.MaNV)
+           OR (u.VaiTro IN ('QuanLy', 'GiaoVu') AND u.PhamViCN IN (l.MaCN, 'ALL'))) THEN 1 ELSE 0 END;
+END
+GO
+
+/* ---------------------------------------------------------------------
+   5. DÙNG HÀM TRONG CHECK CONSTRAINT
    Nhân viên phải trong độ tuổi lao động (18 – 65) tại ngày vào làm.
    --------------------------------------------------------------------- */
 ALTER TABLE NHANVIEN WITH CHECK ADD CONSTRAINT CK_NHANVIEN_TuoiLaoDong
     CHECK (dbo.fn_TinhTuoi(NgaySinh, NgayVaoLam) BETWEEN 18 AND 65);
 GO
 
-PRINT N'✓ 03_functions.sql: 6 hàm vô hướng, 3 hàm inline, 1 hàm multi-statement.';
+PRINT N'✓ 03_functions.sql: 8 hàm vô hướng, 4 hàm inline, 1 hàm multi-statement.';
 GO

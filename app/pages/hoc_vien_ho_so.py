@@ -7,7 +7,7 @@ import streamlit as st
 from core import auth, db, ui
 
 user = auth.require_role("QuanLy", "GiaoVu")
-ui.header("🔎 Hồ sơ học viên", "Danh sách tự giới hạn theo chi nhánh của người đăng nhập (row-level security).")
+ui.header("🔎 Hồ sơ học viên", "Danh sách chỉ gồm học viên thuộc chi nhánh của người đăng nhập (quản lý trung tâm thấy tất cả).")
 ui.show_flash()
 
 SO_DONG = 15
@@ -15,8 +15,7 @@ with st.form("f_tim"):
     c1, c2, c3, c4 = st.columns([2, 1, 1.4, 1])
     tu = c1.text_input("Tên, mã HV, SĐT hoặc email", st.session_state.get("hv_tu", ""))
     with c2:
-        cn = ui.pick("Chi nhánh", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", allow_empty=True, empty_label="— tất cả —",
-                     key="hv_cn", disabled=user["pham_vi_cn"] != "ALL")
+        cn = ui.chon_chi_nhanh(user, key="hv_cn")
     with c3:
         kh = ui.pick("Đã / đang học khoá", "SELECT MaKH, TenKH FROM vw_DM_KhoaHoc ORDER BY MaCT, CapDo", allow_empty=True,
                      empty_label="— bất kỳ —", key="hv_kh")

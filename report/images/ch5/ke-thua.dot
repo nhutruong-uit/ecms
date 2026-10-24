@@ -1,0 +1,57 @@
+// Ba chiến lược ánh xạ kế thừa NhanVien ← GiaoVien sang bảng (T30) – oodb/demo.py mục 7
+//   dot -Tpng -Gdpi=200 ke-thua.dot -o ke-thua.png
+// Bố cục cố định bằng một nhãn HTML (hàng trên: lược đồ lớp; hàng dưới: 3 chiến lược) để hình vừa khổ A4.
+digraph KeThua {
+  bgcolor="white"; pad=0.1;
+  node [shape=plain, fontname="Arial", fontsize=13];
+  H [label=<
+<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0">
+<TR><TD COLSPAN="3">
+  <TABLE BORDER="1" COLOR="#94a3b8" STYLE="rounded" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0"><TR>
+    <TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc"><TR><TD BGCOLOR="#e2e8f0"><I>«interface» Nguoi</I></TD></TR><TR><TD>hoTen, ngaySinh<BR/>tuoi()</TD></TR></TABLE></TD>
+    <TD>◁‒ ‒</TD>
+    <TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc"><TR><TD BGCOLOR="#1d4ed8"><FONT COLOR="white"><B>NhanVien</B></FONT></TD></TR><TR><TD>maNV, chucVu,<BR/>luongCoBan<BR/>tinhLuong(thang)</TD></TR></TABLE></TD>
+    <TD>◁──</TD>
+    <TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc"><TR><TD BGCOLOR="#1d4ed8"><FONT COLOR="white"><B>GiaoVien</B></FONT></TD></TR><TR><TD>loaiGV, quocTich,<BR/>trinhDo, donGiaBuoi<BR/>tinhLuong(thang) – ghi đè</TD></TR></TABLE></TD>
+  </TR></TABLE>
+</TD></TR>
+<TR>
+  <TD VALIGN="TOP"><TABLE BORDER="1" COLOR="#94a3b8" STYLE="rounded" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0">
+    <TR><TD><B>(1) Single table</B><BR/>1 bảng + cột phân loại</TD></TR>
+    <TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#f8fafc">
+      <TR><TD BGCOLOR="#334155"><FONT COLOR="white"><B>NHANVIEN_ALL</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>MaNV</B></TD></TR><TR><TD ALIGN="LEFT">HoTen</TD></TR><TR><TD ALIGN="LEFT">ChucVu</TD></TR>
+      <TR><TD ALIGN="LEFT">LuongCoBan</TD></TR><TR><TD ALIGN="LEFT">Loai ('NV' / 'GV')</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#fde68a">LoaiGV</TD></TR><TR><TD ALIGN="LEFT" BGCOLOR="#fde68a">QuocTich</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#fde68a">TrinhDo</TD></TR><TR><TD ALIGN="LEFT" BGCOLOR="#fde68a">DonGiaBuoi</TD></TR></TABLE></TD></TR>
+    <TR><TD BGCOLOR="#fef3c7"><FONT POINT-SIZE="12">10 NV không dạy × 4 cột<BR/>= <B>40 / 80 ô NULL</B></FONT></TD></TR>
+  </TABLE></TD>
+  <TD VALIGN="TOP"><TABLE BORDER="2" COLOR="#16a34a" STYLE="rounded" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0">
+    <TR><TD COLSPAN="2"><B>(2) Joined – ECMS đang dùng</B><BR/>mỗi lớp một bảng, PK = FK</TD></TR>
+    <TR><TD VALIGN="TOP"><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#f8fafc" FIXEDSIZE="TRUE" WIDTH="104" HEIGHT="120">
+      <TR><TD BGCOLOR="#1d4ed8"><FONT COLOR="white"><B>NHANVIEN</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>MaNV</B></TD></TR><TR><TD ALIGN="LEFT">HoTen</TD></TR><TR><TD ALIGN="LEFT">ChucVu</TD></TR>
+      <TR><TD ALIGN="LEFT">LuongCoBan</TD></TR></TABLE></TD>
+      <TD VALIGN="TOP"><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#f8fafc">
+      <TR><TD BGCOLOR="#1d4ed8"><FONT COLOR="white"><B>GIAOVIEN</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>MaGV</B> (PK, FK)</TD></TR><TR><TD ALIGN="LEFT">LoaiGV</TD></TR><TR><TD ALIGN="LEFT">QuocTich</TD></TR>
+      <TR><TD ALIGN="LEFT">TrinhDo</TD></TR><TR><TD ALIGN="LEFT">DonGiaBuoi</TD></TR></TABLE></TD></TR>
+    <TR><TD COLSPAN="2" BGCOLOR="#dcfce7"><FONT POINT-SIZE="12">MaGV → MaNV (1 – 0..1)<BR/>không NULL, không lặp cột<BR/>đa hình cần LEFT JOIN</FONT></TD></TR>
+  </TABLE></TD>
+  <TD VALIGN="TOP"><TABLE BORDER="1" COLOR="#94a3b8" STYLE="rounded" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0">
+    <TR><TD COLSPAN="2"><B>(3) Concrete table</B><BR/>mỗi lớp cụ thể một bảng</TD></TR>
+    <TR><TD VALIGN="TOP"><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#f8fafc" FIXEDSIZE="TRUE" WIDTH="104" HEIGHT="120">
+      <TR><TD BGCOLOR="#334155"><FONT COLOR="white"><B>NV_KHAC</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>MaNV</B></TD></TR><TR><TD ALIGN="LEFT">HoTen</TD></TR><TR><TD ALIGN="LEFT">ChucVu</TD></TR>
+      <TR><TD ALIGN="LEFT">LuongCoBan</TD></TR></TABLE></TD>
+      <TD VALIGN="TOP"><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#f8fafc">
+      <TR><TD BGCOLOR="#334155"><FONT COLOR="white"><B>GV_DAYDU</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>MaNV</B></TD></TR><TR><TD ALIGN="LEFT" BGCOLOR="#fecaca">HoTen</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#fecaca">ChucVu</TD></TR><TR><TD ALIGN="LEFT" BGCOLOR="#fecaca">LuongCoBan</TD></TR>
+      <TR><TD ALIGN="LEFT">LoaiGV</TD></TR><TR><TD ALIGN="LEFT">QuocTich</TD></TR>
+      <TR><TD ALIGN="LEFT">TrinhDo</TD></TR><TR><TD ALIGN="LEFT">DonGiaBuoi</TD></TR></TABLE></TD></TR>
+    <TR><TD COLSPAN="2" BGCOLOR="#fee2e2"><FONT POINT-SIZE="12">4 cột lớp cha lặp lại<BR/>đa hình cần UNION ALL</FONT></TD></TR>
+  </TABLE></TD>
+</TR>
+</TABLE>>];
+}

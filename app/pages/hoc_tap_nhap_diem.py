@@ -7,15 +7,19 @@ import streamlit as st
 from core import auth, db, lop, ui
 
 user = auth.require_role("GiaoVien", "QuanLy")
-ui.header("💯 Nhập điểm", "Điểm 0–10, bước 0,25. Điểm TB = 0,4·GK + 0,6·CK; Đạt khi TB ≥ 5 (trigger trg_DangKy_KetQua).")
+ui.header("💯 Nhập điểm", "Điểm 0–10, bước 0,25. Điểm TB = 0,4·GK + 0,6·CK; Đạt khi TB ≥ 5 (hệ thống tự xếp loại và tính kết quả). "
+                         "Xoá trắng một ô rồi lưu để huỷ điểm nhập nhầm.")
 ui.show_flash()
 
 ma_lop = lop.chon_lop(user, chi_dang_hoc=False, key="nd_lop")
 if ma_lop:
     bd = db.query("""SELECT MaDK, MaHV, HoTen, DiemGK, DiemCK, DiemTB, XepLoai, ChuyenCan, KetQua
                      FROM vw_BangDiem WHERE MaLop = ? ORDER BY HoTen""", [ma_lop])
-    for c in ("DiemGK", "DiemCK", "DiemTB", "ChuyenCan"):
-        bd[c] = pd.to_numeric(bd[c]).astype("float64")      # ô trống hiển thị rỗng thay vì "None"
+    for c in ("DiemGK", "DiemCK", "ChuyenCan"):
+        bd[c] = pd.to_numeric(bd[c]).astype("float64")
+    # Cột chỉ đọc: Streamlit vẽ ô NULL thành chữ "None" → đổi sang chuỗi rỗng (cột điểm sửa được giữ kiểu số để
+    # kiểm tra 0–10, bước 0,25; ô chưa có điểm hiện mờ chữ "None")
+    bd["DiemTB"] = pd.to_numeric(bd["DiemTB"]).map(lambda v: "" if pd.isna(v) else f"{v:.2f}")
     for c in ("XepLoai", "KetQua"):
         bd[c] = bd[c].fillna("")
     diem = st.column_config.NumberColumn(min_value=0.0, max_value=10.0, step=0.25, format="%.2f")
@@ -24,7 +28,7 @@ if ma_lop:
         column_config={"MaDK": None, "MaHV": "Mã HV", "HoTen": "Họ tên",
                        "DiemGK": st.column_config.NumberColumn("Giữa kỳ", min_value=0.0, max_value=10.0, step=0.25, format="%.2f"),
                        "DiemCK": st.column_config.NumberColumn("Cuối kỳ", min_value=0.0, max_value=10.0, step=0.25, format="%.2f"),
-                       "DiemTB": st.column_config.NumberColumn("TB", format="%.2f"), "XepLoai": "Xếp loại",
+                       "DiemTB": st.column_config.TextColumn("TB"), "XepLoai": "Xếp loại",
                        "ChuyenCan": st.column_config.ProgressColumn("Chuyên cần", min_value=0, max_value=100, format="%.0f%%"),
                        "KetQua": "Kết quả"})
     thay_doi = sua[(sua.DiemGK.fillna(-1) != bd.DiemGK.fillna(-1)) | (sua.DiemCK.fillna(-1) != bd.DiemCK.fillna(-1))]

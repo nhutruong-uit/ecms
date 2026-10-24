@@ -1,10 +1,15 @@
 # MongoDB cho demo Chương 5 (T27):  docker compose -f nosql/docker-compose.yml up -d
+# Bật xác thực (tài khoản root tạo ở lần khởi động đầu) và chỉ mở cổng cho máy này (127.0.0.1) – trước đây
+# MongoDB mở 0.0.0.0 không mật khẩu. Chuỗi kết nối: MONGO_URI trong .env.
 services:
   mongo:
     image: mongo:7
     container_name: ecms-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-ecms}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-Ecms@Mongo2026}
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo-data:/data/db
 volumes:

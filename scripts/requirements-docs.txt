@@ -3,3 +3,6 @@ python-docx>=1.1
 markdown-it-py>=3.0
 Pillow>=10.0
 python-pptx>=1.0
+matplotlib>=3.8                # chỉ để vẽ lại biểu đồ report/images/ch3/bieu-do.py
+playwright>=1.45                # scripts/chup_anh.py – chụp ảnh màn hình (sau đó: python -m playwright install chromium)
+pypdfium2>=4.30                 # scripts/chup_anh.py – kết xuất trang PDF thành ảnh

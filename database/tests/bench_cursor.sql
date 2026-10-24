@@ -46,29 +46,31 @@ BEGIN
 END
 INSERT @KQ VALUES (N'Bảng lương 12 tháng 2025 (tổng ' + FORMAT(@L1, 'N0') + N')', @ms1 / @N, @ms2 / @N, @ms1 / NULLIF(@ms2, 0), IIF(@L1 = @L2, N'Có', N'Không'));
 
-/* 3. Sinh buổi học cho một lớp 30 buổi: cursor (sp_SinhBuoiHoc) vs một câu SELECT dùng bảng số */
+/* 3. Sinh buổi học cho một lớp 30 buổi: sp_SinhBuoiHoc (cursor) vs sp_SinhBuoiHoc_SetBased (INSERT … SELECT).
+      Hai bản làm CÙNG một việc (xoá buổi cũ, ghi 30 buổi, cập nhật ngày kết thúc lớp) nên so sánh công bằng;
+      kết quả được đối chiếu từng buổi bằng EXCEPT hai chiều. */
 DECLARE @Lop VARCHAR(10) = (SELECT TOP 1 l.MaLop FROM LOPHOC l JOIN KHOAHOC k ON k.MaKH = l.MaKH
-                            WHERE k.SoBuoi = 30 AND NOT EXISTS (SELECT 1 FROM DIEMDANH d WHERE d.MaLop = l.MaLop) ORDER BY l.MaLop);
-DECLARE @Ngay1 DATE, @Ngay2 DATE;
+                            WHERE k.SoBuoi = 30 AND EXISTS (SELECT 1 FROM LICHHOC x WHERE x.MaLop = l.MaLop)
+                              AND NOT EXISTS (SELECT 1 FROM DIEMDANH d WHERE d.MaLop = l.MaLop) ORDER BY l.MaLop);
+DECLARE @B1 TABLE (STT INT, NgayHoc DATE, MaCa TINYINT, MaPhong VARCHAR(5), NoiDung NVARCHAR(200));
+DECLARE @B2 TABLE (STT INT, NgayHoc DATE, MaCa TINYINT, MaPhong VARCHAR(5), NoiDung NVARCHAR(200));
 SELECT @i = 0, @ms1 = 0, @ms2 = 0;
 WHILE @i < @N
 BEGIN
     BEGIN TRAN; SET @t0 = SYSDATETIME();
     EXEC dbo.sp_SinhBuoiHoc @MaLop = @Lop, @SinhLai = 1, @SoBuoiTao = @x OUTPUT;
     SET @ms1 += DATEDIFF(MICROSECOND, @t0, SYSDATETIME()) / 1000.0;
-    SET @Ngay1 = (SELECT MAX(NgayHoc) FROM BUOIHOC WHERE MaLop = @Lop); ROLLBACK;
+    DELETE @B1; INSERT @B1 SELECT STT, NgayHoc, MaCa, MaPhong, NoiDung FROM BUOIHOC WHERE MaLop = @Lop; ROLLBACK;
 
-    SET @t0 = SYSDATETIME();
-    WITH So AS (SELECT TOP (400) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n FROM sys.all_objects),
-    Ngay AS (SELECT DATEADD(DAY, s.n, l.NgayKhaiGiang) AS NgayHoc FROM LOPHOC l CROSS JOIN So s WHERE l.MaLop = @Lop),
-    Buoi AS (SELECT n.NgayHoc, lh.MaCa, lh.MaPhong, ROW_NUMBER() OVER (ORDER BY n.NgayHoc, lh.MaCa) AS STT
-             FROM Ngay n JOIN LICHHOC lh ON lh.MaLop = @Lop AND lh.Thu = DATEDIFF(DAY, '19000101', n.NgayHoc) % 7 + 2
-             WHERE NOT EXISTS (SELECT 1 FROM NGAYLE h WHERE h.Ngay = n.NgayHoc))
-    SELECT @Ngay2 = MAX(NgayHoc) FROM Buoi WHERE STT <= 30;
+    BEGIN TRAN; SET @t0 = SYSDATETIME();
+    EXEC dbo.sp_SinhBuoiHoc_SetBased @MaLop = @Lop, @SinhLai = 1, @SoBuoiTao = @x OUTPUT;
     SET @ms2 += DATEDIFF(MICROSECOND, @t0, SYSDATETIME()) / 1000.0;
+    DELETE @B2; INSERT @B2 SELECT STT, NgayHoc, MaCa, MaPhong, NoiDung FROM BUOIHOC WHERE MaLop = @Lop; ROLLBACK;
     SET @i += 1;
 END
-INSERT @KQ VALUES (N'Sinh 30 buổi học lớp ' + @Lop, @ms1 / @N, @ms2 / @N, @ms1 / NULLIF(@ms2, 0), IIF(@Ngay1 = @Ngay2, N'Có', N'Không'));
+INSERT @KQ VALUES (N'Sinh 30 buổi học lớp ' + @Lop, @ms1 / @N, @ms2 / @N, @ms1 / NULLIF(@ms2, 0),
+    IIF(NOT EXISTS (SELECT * FROM @B1 EXCEPT SELECT * FROM @B2) AND NOT EXISTS (SELECT * FROM @B2 EXCEPT SELECT * FROM @B1)
+        AND (SELECT COUNT(*) FROM @B1) = 30, N'Có', N'Không'));
 
 SELECT * FROM @KQ;
 GO

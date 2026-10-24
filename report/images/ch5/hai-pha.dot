@@ -1,0 +1,41 @@
+// Cam kết hai pha (2PC) khi chuyển lớp CN02 → CN01 (T30) – database/13_distributed.sql mục 9
+//   dot -Tpng -Gdpi=200 hai-pha.dot -o hai-pha.png
+// Cột giữa là bộ điều phối, hai bên là hai trạm tham gia; mỗi hàng là một bước, nét chấm là đường đời của từng bên.
+digraph HaiPha {
+  rankdir=TB; nodesep=0.25; ranksep=0.3; fontname="Arial"; bgcolor="white"; newrank=true;
+  node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc", width=1.8];
+  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.8];
+
+  H2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Trạm CN02</B></TD></TR><TR><TD CELLPADDING="1">UPDATE DANGKY</TD></TR><TR><TD CELLPADDING="1">→ 'Đã chuyển lớp'</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+  H1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Bộ điều phối</B></TD></TR><TR><TD CELLPADDING="1">SQL Server (1 máy)</TD></TR><TR><TD CELLPADDING="1">MSDTC (nhiều máy)</TD></TR></TABLE>>, fillcolor="#dbeafe", color="#1d4ed8"];
+  H3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Trạm CN01</B></TD></TR><TR><TD CELLPADDING="1">INSERT DANGKY mới</TD></TR><TR><TD CELLPADDING="1">→ 'Đang học'</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+  { rank=same; H2; H1; H3; }
+
+  subgraph cluster_p1 {
+    label=<<B>Pha 1 – chuẩn bị</B>>; fontsize=12; style="rounded,dashed"; color="#7c3aed";
+    P2 [label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
+    P1 [label="gửi PREPARE\ntới mọi trạm,\nchờ trả lời"];
+    P3 [label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
+    { rank=same; P2; P1; P3; }
+  }
+  subgraph cluster_p2 {
+    label=<<B>Pha 2 – cam kết (kịch bản a)</B>>; fontsize=12; style="rounded,dashed"; color="#16a34a";
+    C2 [label="LOP_COMMIT_XACT\nnhả khoá"];
+    C1 [label="mọi trạm sẵn sàng\n→ gửi COMMIT"];
+    C3 [label="LOP_COMMIT_XACT\nnhả khoá"];
+    { rank=same; C2; C1; C3; }
+  }
+  subgraph cluster_p3 {
+    label=<<B>Kịch bản lỗi (b)</B>>; fontsize=12; style="rounded,dashed"; color="#dc2626";
+    R2 [label="huỷ UPDATE 'Bảo lưu'\n→ vẫn là\n'Đã chuyển lớp'", fillcolor="#fee2e2", color="#dc2626"];
+    R1 [label="một trạm lỗi\n→ gửi ROLLBACK\ncho mọi trạm", fillcolor="#fee2e2", color="#dc2626"];
+    R3 [label="INSERT vi phạm\nCHECK MaCN\n→ lỗi 547, 0 dòng", fillcolor="#fee2e2", color="#dc2626"];
+    { rank=same; R2; R1; R3; }
+  }
+  H2 -> P2 -> C2 -> R2 [style=dotted, arrowhead=none];
+  H1 -> P1 -> C1 -> R1 [style=dotted, arrowhead=none];
+  H3 -> P3 -> C3 -> R3 [style=dotted, arrowhead=none];
+  P1 -> P2 [constraint=false, color="#7c3aed", label="PREPARE"]; P1 -> P3 [constraint=false, color="#7c3aed", label="PREPARE"];
+  C1 -> C2 [constraint=false, color="#16a34a", label="COMMIT"];   C1 -> C3 [constraint=false, color="#16a34a", label="COMMIT"];
+  R3 -> R1 [constraint=false, color="#dc2626", label="lỗi"];      R1 -> R2 [constraint=false, color="#dc2626", label="ROLLBACK"];
+}
