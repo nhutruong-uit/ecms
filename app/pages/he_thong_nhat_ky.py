@@ -7,10 +7,13 @@ import streamlit as st
 from core import auth, db, ui
 
 auth.require_role("QuanLy")
-ui.header("🕑 Nhật ký hệ thống", "Mọi thay đổi trên đăng ký, phiếu thu và lương nhân viên – chỉ được thêm, không sửa / xoá.")
+ui.header("🕑 Nhật ký hệ thống", "Mọi thay đổi trên đăng ký, phiếu thu và chi tiết phiếu thu, tài khoản, hồ sơ học viên, lương "
+                                 "nhân viên – nhật ký chỉ được thêm, không sửa / xoá.")
 
 c1, c2, c3, c4 = st.columns(4)
-bang = c1.selectbox("Bảng", [None, "DANGKY", "PHIEUTHU", "NHANVIEN"], format_func=lambda v: v or "— tất cả —")
+BANG = {"DANGKY": "Đăng ký", "PHIEUTHU": "Phiếu thu", "CT_PHIEUTHU": "Chi tiết phiếu thu", "TAIKHOAN": "Tài khoản",
+        "HOCVIEN": "Hồ sơ học viên", "NHANVIEN": "Lương nhân viên"}
+bang = c1.selectbox("Bảng", [None, *BANG], format_func=lambda v: BANG.get(v, "— tất cả —"))
 tt = c2.selectbox("Thao tác", [None, "INSERT", "UPDATE", "DELETE"], format_func=lambda v: v or "— tất cả —")
 tu = c3.date_input("Từ ngày", date.today() - timedelta(days=30), format="DD/MM/YYYY")
 den = c4.date_input("Đến ngày", date.today(), format="DD/MM/YYYY")

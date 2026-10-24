@@ -34,7 +34,7 @@ with tab_ct:
                 ui.run(lambda: db.call_proc("sp_LuuChuongTrinh", {"MaCT": ma.strip().upper(), "TenCT": ten.strip(),
                                                                   "DoiTuong": dt.strip(), "MoTa": mt.strip() or None}),
                        "Đã lưu chương trình.")
-    if sel and st.button(f"Xoá chương trình {r['MaCT']}", icon=":material/delete:"):
+    if sel and ui.nut_xoa(f"Xoá chương trình {r['MaCT']}", key=f"x_ct_{r['MaCT']}"):
         ui.run(lambda: db.call_proc("sp_XoaChuongTrinh", {"MaCT": r["MaCT"]}), "Đã xoá chương trình.")
 
 with tab_kh:
@@ -54,7 +54,8 @@ with tab_kh:
     with st.form("f_kh", clear_on_submit=not sel):
         fe = ui.FieldErrors()
         c1, c2, c4 = st.columns([1, 2.4, 0.8])
-        ma = c1.text_input("Mã khoá *", r.get("MaKH", ""), disabled=bool(sel), max_chars=6)
+        # tối đa 5 ký tự: mã lớp tự sinh <MaKH>-<yy><stt> phải vừa 10 ký tự (CHECK CK_KHOAHOC_MaKH)
+        ma = c1.text_input("Mã khoá *", r.get("MaKH", ""), disabled=bool(sel), max_chars=5, help="2–5 chữ in hoa / số, VD IE55")
         with c1: fe.slot("ma")
         ten = c2.text_input("Tên khoá học *", r.get("TenKH", ""))
         with c2: fe.slot("ten")
@@ -70,7 +71,7 @@ with tab_kh:
         tq = ui.pick("Khoá tiên quyết (cùng chương trình)", "SELECT MaKH, TenKH FROM vw_DM_KhoaHoc WHERE MaCT = ? ORDER BY CapDo",
                      r.get("MaKHTienQuyet"), allow_empty=True, key="kh_tq", params=(ct,))
         if st.form_submit_button("Lưu", type="primary"):
-            fe.check("ma", re.fullmatch(r"[A-Z0-9]{2,6}", ma.strip().upper()) is not None, "2–6 ký tự chữ in hoa / số")
+            fe.check("ma", re.fullmatch(r"[A-Z0-9]{2,5}", ma.strip().upper()) is not None, "2–5 ký tự chữ in hoa / số")
             fe.check("ten", ten.strip() != "", "Không được để trống")
             fe.check("den", tu <= den, "Điểm 'đến' phải lớn hơn hoặc bằng điểm 'từ'")
             fe.check("dr", dr.strip() != "", "Không được để trống")
@@ -82,5 +83,5 @@ with tab_kh:
                         "MaKH": ma.strip().upper(), "TenKH": ten.strip(), "MaCT": ct, "CapDo": cap, "DiemDauVaoTu": tu,
                         "DiemDauVaoDen": den, "MucTieuDauRa": dr.strip(), "SoBuoi": sb, "HocPhi": hp, "MaKHTienQuyet": tq}),
                         "Đã lưu khoá học.")
-    if sel and st.button(f"Xoá khoá học {r['MaKH']}", icon=":material/delete:"):
+    if sel and ui.nut_xoa(f"Xoá khoá học {r['MaKH']}", key=f"x_kh_{r['MaKH']}"):
         ui.run(lambda: db.call_proc("sp_XoaKhoaHoc", {"MaKH": r["MaKH"]}), "Đã xoá khoá học.")

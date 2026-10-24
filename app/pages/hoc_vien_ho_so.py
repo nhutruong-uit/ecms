@@ -7,7 +7,7 @@ import streamlit as st
 from core import auth, db, ui
 
 user = auth.require_role("QuanLy", "GiaoVu")
-ui.header("🔎 Hồ sơ học viên", "Danh sách tự giới hạn theo chi nhánh của người đăng nhập (row-level security).")
+ui.header("🔎 Hồ sơ học viên", "Danh sách chỉ gồm học viên thuộc chi nhánh của người đăng nhập (quản lý trung tâm thấy tất cả).")
 ui.show_flash()
 
 SO_DONG = 15

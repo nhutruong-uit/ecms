@@ -7,7 +7,8 @@ import streamlit as st
 from core import auth, db, lop, ui
 
 user = auth.require_role("GiaoVien", "QuanLy")
-ui.header("💯 Nhập điểm", "Điểm 0–10, bước 0,25. Điểm TB = 0,4·GK + 0,6·CK; Đạt khi TB ≥ 5 (trigger trg_DangKy_KetQua).")
+ui.header("💯 Nhập điểm", "Điểm 0–10, bước 0,25. Điểm TB = 0,4·GK + 0,6·CK; Đạt khi TB ≥ 5 (hệ thống tự xếp loại và tính kết quả). "
+                         "Xoá trắng một ô rồi lưu để huỷ điểm nhập nhầm.")
 ui.show_flash()
 
 ma_lop = lop.chon_lop(user, chi_dang_hoc=False, key="nd_lop")

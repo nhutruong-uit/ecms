@@ -8,7 +8,8 @@ import streamlit as st
 from core import auth, db, ui
 
 user = auth.require_role("QuanLy", "KeToan")
-ui.header("📊 Dashboard", "Thông tin tổng hợp phục vụ ra quyết định (tầng Knowledge trong mô hình DIKW).")
+ui.header("📊 Dashboard", "Chỉ số tổng hợp so với kỳ trước, cùng kỳ năm trước hoặc mục tiêu; xu hướng theo tháng và các lớp cần chú ý.")
+MUC_TIEU_LAP_DAY, MUC_TIEU_CHUYEN_CAN = 80, 80          # % – mục tiêu vận hành để so sánh trên ô KPI
 
 pham_vi = user["pham_vi_cn"] == "ALL"
 c1, c2 = st.columns([1, 3])
@@ -20,29 +21,38 @@ nam = c2.radio("Năm", [date.today().year, date.today().year - 1], horizontal=Tr
 hom_nay = date.today()
 dau_thang = hom_nay.replace(day=1)
 thang_truoc = (pd.Timestamp(dau_thang) - pd.DateOffset(months=1)).date()
+thang_cuoi = hom_nay.month if nam == hom_nay.year else 12      # doanh thu năm so cùng kỳ: tới cùng tháng của năm trước
 # vw_HocVien_ChiNhanh lọc theo phạm vi người dùng; lọc thêm chi nhánh đang chọn
 k = db.query("""
 SELECT (SELECT COUNT(*) FROM vw_HocVien_ChiNhanh WHERE NgayTao >= ? AND (? IS NULL OR MaCN = ?)) AS HVMoi,
        (SELECT COUNT(*) FROM vw_HocVien_ChiNhanh WHERE NgayTao >= ? AND NgayTao < ? AND (? IS NULL OR MaCN = ?)) AS HVMoiTruoc,
        (SELECT ISNULL(SUM(DoanhThu), 0) FROM vw_DoanhThuThang WHERE Nam = ? AND Thang = ? AND (? IS NULL OR MaCN = ?)) AS DTThang,
        (SELECT ISNULL(SUM(DoanhThu), 0) FROM vw_DoanhThuThang WHERE Nam = ? AND Thang = ? AND (? IS NULL OR MaCN = ?)) AS DTTruoc,
-       (SELECT ISNULL(SUM(DoanhThu), 0) FROM vw_DoanhThuThang WHERE Nam = ? AND (? IS NULL OR MaCN = ?)) AS DTNam,
+       (SELECT ISNULL(SUM(DoanhThu), 0) FROM vw_DoanhThuThang WHERE Nam = ? AND Thang <= ? AND (? IS NULL OR MaCN = ?)) AS DTNam,
+       (SELECT ISNULL(SUM(DoanhThu), 0) FROM vw_DoanhThuThang WHERE Nam = ? AND Thang <= ? AND (? IS NULL OR MaCN = ?)) AS DTNamTruoc,
        (SELECT 100.0 * SUM(SiSoHienTai) / NULLIF(SUM(SiSoToiDa), 0) FROM vw_SiSoLop
          WHERE TrangThai IN (N'Đang học', N'Sắp mở') AND (? IS NULL OR MaCN = ?)) AS LapDay,
        (SELECT AVG(b.ChuyenCan) FROM vw_BangDiem b JOIN vw_SiSoLop l ON l.MaLop = b.MaLop
          WHERE l.TrangThai = N'Đang học' AND (? IS NULL OR l.MaCN = ?)) AS ChuyenCan,
-       (SELECT ISNULL(SUM(ConNo), 0) FROM vw_CongNoHocVien WHERE ? IS NULL OR MaCN = ?) AS CongNo
+       (SELECT ISNULL(SUM(ConNo), 0) FROM vw_CongNoHocVien WHERE ? IS NULL OR MaCN = ?) AS CongNo,
+       (SELECT ISNULL(SUM(ConNo), 0) FROM vw_CongNoHocVien WHERE QuaHan = 1 AND (? IS NULL OR MaCN = ?)) AS CongNoQuaHan
 """, [dau_thang, cn, cn, thang_truoc, dau_thang, cn, cn, hom_nay.year, hom_nay.month, cn, cn,
-      thang_truoc.year, thang_truoc.month, cn, cn, nam, cn, cn, cn, cn, cn, cn, cn, cn]).iloc[0]
+      thang_truoc.year, thang_truoc.month, cn, cn,
+      nam, thang_cuoi, cn, cn, nam - 1, thang_cuoi, cn, cn,
+      cn, cn, cn, cn, cn, cn, cn, cn]).iloc[0]
 
 m1, m2, m3 = st.columns(3)
 m4, m5, m6 = st.columns(3)
 m1.metric("Học viên mới tháng này", int(k.HVMoi), int(k.HVMoi - k.HVMoiTruoc))
 m2.metric("Doanh thu tháng này", ui.money_short(k.DTThang), ui.money_short(float(k.DTThang) - float(k.DTTruoc)))
-m3.metric(f"Doanh thu năm {nam}", ui.money_short(k.DTNam))
-m4.metric("Lấp đầy lớp đang mở", f"{float(k.LapDay or 0):.1f}%")
-m5.metric("Chuyên cần lớp đang học", f"{float(k.ChuyenCan or 0):.1f}%")
-m6.metric("Công nợ hiện tại", ui.money_short(k.CongNo), help=ui.money(k.CongNo))
+m3.metric(f"Doanh thu năm {nam} (đến T{thang_cuoi:02d})", ui.money_short(k.DTNam),
+          f"{ui.money_short(float(k.DTNam) - float(k.DTNamTruoc))} so với cùng kỳ {nam - 1}")
+lap_day, chuyen_can = float(k.LapDay or 0), float(k.ChuyenCan or 0)
+m4.metric("Lấp đầy lớp đang mở", f"{lap_day:.1f}%", f"{lap_day - MUC_TIEU_LAP_DAY:+.1f} điểm % so với mục tiêu {MUC_TIEU_LAP_DAY}%")
+m5.metric("Chuyên cần lớp đang học", f"{chuyen_can:.1f}%",
+          f"{chuyen_can - MUC_TIEU_CHUYEN_CAN:+.1f} điểm % so với mục tiêu {MUC_TIEU_CHUYEN_CAN}%")
+m6.metric("Công nợ hiện tại", ui.money_short(k.CongNo), f"{ui.money_short(k.CongNoQuaHan)} đã quá hạn", delta_color="inverse",
+          help=ui.money(k.CongNo))
 
 dt = db.query("""SELECT TenCN, Nam, Thang, SUM(SoTien) AS DoanhThu FROM vw_BaoCaoDoanhThu
                  WHERE Nam = ? AND (? IS NULL OR MaCN = ?) GROUP BY TenCN, Nam, Thang""", [nam, cn, cn])
