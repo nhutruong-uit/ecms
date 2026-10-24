@@ -21,6 +21,13 @@ if ($Only.Count -gt 0) { $files = $Only }
 
 $auth = if ($SqlLogin) { @("-U", $SqlLogin, "-P", $Password) } else { @("-E") }
 $sw = [Diagnostics.Stopwatch]::StartNew()
+# Chờ SQL Server sẵn sàng (tối đa 2 phút) – cần khi chạy ngay sau khi khởi động dịch vụ / container
+$ready = $false
+for ($i = 0; $i -lt 60 -and -not $ready; $i++) {
+  & sqlcmd -S $Server @auth -C -b -f 65001 -i (Join-Path $root "database\healthcheck.sql") -o NUL 2>$null
+  if ($LASTEXITCODE -eq 0) { $ready = $true } else { Start-Sleep -Seconds 2 }
+}
+if (-not $ready) { throw "SQL Server chưa sẵn sàng sau 2 phút" }
 foreach ($p in $files) {
   $matches = Get-ChildItem -Path (Join-Path $root "database") -Filter "$p*.sql" | Sort-Object Name
   if (-not $matches) { Write-Host "· bỏ qua $p (chưa có file)"; continue }
