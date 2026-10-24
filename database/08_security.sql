@@ -94,18 +94,11 @@ GO
 
 /* ---------------------------------------------------------------------
    4. BĂM MẬT KHẨU TÀI KHOẢN ỨNG DỤNG
-   MatKhauHash = SHA2_256(Salt ‖ mật khẩu dạng UTF-16LE), Salt ngẫu nhiên 16 byte cho từng tài khoản
-   → hai người cùng mật khẩu vẫn có hash khác nhau, chống tra bảng băm có sẵn (rainbow table).
+   dbo.fn_BamMatKhau (định nghĩa ở 01_schema.sql, cạnh bảng TAIKHOAN, vì dữ liệu mẫu cũng dùng):
+   MatKhauHash = 10.000 vòng SHA2_256 trên (Salt ‖ mật khẩu UTF-16LE), Salt ngẫu nhiên 16 byte cho từng tài khoản
+   → hai người cùng mật khẩu vẫn có hash khác nhau (chống bảng băm có sẵn – rainbow table) và mỗi lần đoán thử
+   tốn 10.000 lần băm (kéo dãn khoá – key stretching, cùng ý tưởng với PBKDF2 / bcrypt).
    --------------------------------------------------------------------- */
-CREATE OR ALTER FUNCTION dbo.fn_BamMatKhau (@MatKhau NVARCHAR(100), @Salt VARBINARY(16))
-RETURNS VARBINARY(32)
-WITH SCHEMABINDING
-AS
-BEGIN
-    RETURN HASHBYTES('SHA2_256', @Salt + CAST(@MatKhau AS VARBINARY(200)));
-END
-GO
-
 -- Mật khẩu đủ mạnh: ≥ 8 ký tự, có chữ hoa, chữ thường, chữ số, ký tự đặc biệt
 CREATE OR ALTER FUNCTION dbo.fn_MatKhauHopLe (@MatKhau NVARCHAR(100))
 RETURNS BIT
@@ -126,7 +119,12 @@ GO
 
 -- Đăng nhập: trả 1 dòng thông tin người dùng nếu đúng; sai thì không trả dòng nào và @ThongBao cho biết lý do.
 -- Không THROW khi sai mật khẩu để việc tăng SoLanSai không bị rollback theo lỗi.
--- Sai 5 lần liên tiếp → khoá tài khoản.
+-- Chống dò tài khoản và dò mật khẩu:
+--   • Sai mật khẩu và tài khoản không tồn tại trả CÙNG một thông báo, cùng thời gian xử lý (vẫn băm một lần),
+--     không báo số lần thử còn lại → không đoán được tên đăng nhập nào có thật.
+--   • Sai 5 lần liên tiếp → TẠM KHOÁ 15 phút (KhoaDen), không khoá vĩnh viễn: người khác gõ sai cố ý
+--     cũng không khoá hẳn được tài khoản của quản lý (tấn công từ chối dịch vụ).
+--   • Trạng thái khoá chỉ được báo khi mật khẩu ĐÚNG: người đang dò mật khẩu không biết tài khoản đã bị khoá.
 CREATE OR ALTER PROCEDURE dbo.sp_DangNhap
     @TenDangNhap VARCHAR(30),
     @MatKhau     NVARCHAR(100),
@@ -134,30 +132,40 @@ CREATE OR ALTER PROCEDURE dbo.sp_DangNhap
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @Hash VARBINARY(32), @Salt VARBINARY(16), @TrangThai BIT, @SoLanSai TINYINT;
-    SELECT @Hash = MatKhauHash, @Salt = Salt, @TrangThai = TrangThai, @SoLanSai = SoLanSai
+    DECLARE @Hash VARBINARY(32), @Salt VARBINARY(16), @TrangThai BIT, @KhoaDen DATETIME2(0),
+            @Luc DATETIME2(0) = SYSDATETIME(), @SaiChung NVARCHAR(200) = N'Sai tên đăng nhập hoặc mật khẩu.';
+    SELECT @Hash = MatKhauHash, @Salt = Salt, @TrangThai = TrangThai, @KhoaDen = KhoaDen
     FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap;
 
     IF @Hash IS NULL
     BEGIN
-        SET @ThongBao = N'Sai tên đăng nhập hoặc mật khẩu.';        -- không tiết lộ tài khoản có tồn tại hay không
+        SET @Hash = dbo.fn_BamMatKhau(@MatKhau, 0x00);   -- băm "giả" để thời gian phản hồi như tài khoản có thật
+        SET @ThongBao = @SaiChung;
         RETURN 1;
+    END
+    IF dbo.fn_BamMatKhau(@MatKhau, @Salt) <> @Hash
+    BEGIN
+        -- đang tạm khoá thì không cộng dồn; đủ 5 lần sai thì tạm khoá 15 phút và đếm lại từ đầu
+        UPDATE dbo.TAIKHOAN
+        SET KhoaDen  = IIF(SoLanSai + 1 >= 5, DATEADD(MINUTE, 15, @Luc), KhoaDen),
+            SoLanSai = IIF(SoLanSai + 1 >= 5, 0, SoLanSai + 1)
+        WHERE TenDangNhap = @TenDangNhap AND (KhoaDen IS NULL OR KhoaDen <= @Luc);
+        SET @ThongBao = @SaiChung;
+        RETURN 3;
     END
     IF @TrangThai = 0
     BEGIN
         SET @ThongBao = N'Tài khoản đã bị khoá. Liên hệ quản trị viên.';
         RETURN 2;
     END
-    IF dbo.fn_BamMatKhau(@MatKhau, @Salt) <> @Hash
+    IF @KhoaDen > @Luc
     BEGIN
-        UPDATE dbo.TAIKHOAN SET SoLanSai = SoLanSai + 1, TrangThai = IIF(SoLanSai + 1 >= 5, 0, 1)
-        WHERE TenDangNhap = @TenDangNhap;
-        SET @ThongBao = IIF(@SoLanSai + 1 >= 5, N'Sai mật khẩu 5 lần, tài khoản đã bị khoá.',
-                            CONCAT(N'Sai tên đăng nhập hoặc mật khẩu (còn ', 4 - @SoLanSai, N' lần thử).'));
-        RETURN 3;
+        SET @ThongBao = CONCAT(N'Tài khoản tạm khoá đến ', FORMAT(@KhoaDen, 'HH:mm'),
+                               N' do nhập sai mật khẩu 5 lần liên tiếp. Thử lại sau hoặc liên hệ quản trị viên.');
+        RETURN 4;
     END
 
-    UPDATE dbo.TAIKHOAN SET SoLanSai = 0, LanDangNhapCuoi = SYSDATETIME() WHERE TenDangNhap = @TenDangNhap;
+    UPDATE dbo.TAIKHOAN SET SoLanSai = 0, KhoaDen = NULL, LanDangNhapCuoi = @Luc WHERE TenDangNhap = @TenDangNhap;
     SET @ThongBao = N'Đăng nhập thành công.';
     -- PhamViCN: chi nhánh dùng cho SESSION_CONTEXT 'ma_cn'; quản lý cấp cao nhất (không có người quản lý) xem tất cả
     SELECT t.TenDangNhap, t.VaiTro, t.MaNV, t.MaHV,
@@ -172,22 +180,51 @@ BEGIN
 END
 GO
 
+-- Đổi mật khẩu của chính mình. Sai mật khẩu hiện tại cũng tính vào số lần sai (không dò mật khẩu qua trang này được).
+-- Giống sp_DangNhap: sai mật khẩu không THROW (để số lần sai vừa tăng không bị rollback theo lỗi) mà trả
+-- @ThongBao; @ThongBao = N'Đã đổi mật khẩu.' nghĩa là thành công.
 CREATE OR ALTER PROCEDURE dbo.sp_DoiMatKhau
     @TenDangNhap VARCHAR(30),
     @MatKhauCu   NVARCHAR(100),
-    @MatKhauMoi  NVARCHAR(100)
+    @MatKhauMoi  NVARCHAR(100),
+    @ThongBao    NVARCHAR(200) = NULL OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap AND TrangThai = 1
-                   AND MatKhauHash = dbo.fn_BamMatKhau(@MatKhauCu, Salt))
+    -- kết nối của ứng dụng chỉ đổi được mật khẩu của tài khoản đang đăng nhập
+    IF IS_ROLEMEMBER('r_App') = 1 AND ISNULL(CAST(SESSION_CONTEXT(N'app_user') AS VARCHAR(30)), '') <> @TenDangNhap
         THROW 50090, N'Mật khẩu hiện tại không đúng.', 1;
+    DECLARE @Luc DATETIME2(0) = SYSDATETIME();
+    IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap AND TrangThai = 1
+                   AND (KhoaDen IS NULL OR KhoaDen <= @Luc) AND MatKhauHash = dbo.fn_BamMatKhau(@MatKhauCu, Salt))
+    BEGIN
+        UPDATE dbo.TAIKHOAN
+        SET KhoaDen  = IIF(SoLanSai + 1 >= 5, DATEADD(MINUTE, 15, @Luc), KhoaDen),
+            SoLanSai = IIF(SoLanSai + 1 >= 5, 0, SoLanSai + 1)
+        WHERE TenDangNhap = @TenDangNhap AND (KhoaDen IS NULL OR KhoaDen <= @Luc);
+        SET @ThongBao = N'Mật khẩu hiện tại không đúng.';
+        RETURN 1;
+    END
     IF dbo.fn_MatKhauHopLe(@MatKhauMoi) = 0
         THROW 50091, N'Mật khẩu mới phải từ 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.', 1;
     IF @MatKhauMoi = @MatKhauCu THROW 50092, N'Mật khẩu mới phải khác mật khẩu cũ.', 1;
     DECLARE @Salt VARBINARY(16) = CRYPT_GEN_RANDOM(16);     -- đổi mật khẩu thì sinh salt mới
-    UPDATE dbo.TAIKHOAN SET Salt = @Salt, MatKhauHash = dbo.fn_BamMatKhau(@MatKhauMoi, @Salt)
+    UPDATE dbo.TAIKHOAN SET Salt = @Salt, MatKhauHash = dbo.fn_BamMatKhau(@MatKhauMoi, @Salt), SoLanSai = 0
     WHERE TenDangNhap = @TenDangNhap;
+    SET @ThongBao = N'Đã đổi mật khẩu.';
+    RETURN 0;
+END
+GO
+
+-- Vai trò tài khoản phải khớp chức vụ của nhân viên (học viên → HocVien): quyền luôn đi theo chức vụ thật
+CREATE OR ALTER FUNCTION dbo.fn_VaiTroTheoChucVu (@MaNV CHAR(6), @MaHV CHAR(6))
+RETURNS VARCHAR(10)
+AS
+BEGIN
+    IF @MaHV IS NOT NULL RETURN 'HocVien';
+    RETURN (SELECT CASE ChucVu WHEN N'Quản lý' THEN 'QuanLy' WHEN N'Giáo vụ' THEN 'GiaoVu'
+                               WHEN N'Kế toán' THEN 'KeToan' WHEN N'Giáo viên' THEN 'GiaoVien' END
+            FROM dbo.NHANVIEN WHERE MaNV = @MaNV);
 END
 GO
 
@@ -200,12 +237,19 @@ CREATE OR ALTER PROCEDURE dbo.sp_TaoTaiKhoan
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF @TenDangNhap NOT LIKE '[a-z0-9]%' OR @TenDangNhap LIKE '%[^a-z0-9._]%' OR LEN(@TenDangNhap) < 4
-        THROW 50093, N'Tên đăng nhập từ 4 ký tự, chỉ gồm chữ thường không dấu, số, dấu chấm, gạch dưới.', 1;
+    -- kết nối của ứng dụng: chỉ quản lý được tạo tài khoản
+    IF IS_ROLEMEMBER('r_App') = 1 AND ISNULL(CAST(SESSION_CONTEXT(N'vai_tro') AS VARCHAR(10)), '') <> 'QuanLy'
+        THROW 50096, N'Chỉ quản lý được tạo hoặc cập nhật tài khoản.', 1;
+    -- so khớp theo collation nhị phân: với Vietnamese_CI_AS, [a-z] khớp cả chữ hoa
+    IF LEN(@TenDangNhap) < 4 OR @TenDangNhap COLLATE Latin1_General_BIN NOT LIKE '[a-z0-9]%'
+       OR @TenDangNhap COLLATE Latin1_General_BIN LIKE '%[^a-z0-9._]%'
+        THROW 50093, N'Tên đăng nhập 4–30 ký tự, bắt đầu bằng chữ thường hoặc số, chỉ gồm chữ thường không dấu, số, dấu chấm, gạch dưới.', 1;
     IF EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap)
         THROW 50094, N'Tên đăng nhập đã tồn tại.', 1;
     IF dbo.fn_MatKhauHopLe(@MatKhau) = 0
         THROW 50091, N'Mật khẩu phải từ 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.', 1;
+    IF ISNULL(dbo.fn_VaiTroTheoChucVu(@MaNV, @MaHV), '') <> @VaiTro
+        THROW 50098, N'Vai trò tài khoản không khớp chức vụ của nhân viên (hoặc mã nhân viên / học viên không tồn tại).', 1;
     DECLARE @Salt VARBINARY(16) = CRYPT_GEN_RANDOM(16);
     INSERT dbo.TAIKHOAN (TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV)
     VALUES (@TenDangNhap, dbo.fn_BamMatKhau(@MatKhau, @Salt), @Salt, @VaiTro, @MaNV, @MaHV);
@@ -214,20 +258,29 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_CapNhatTaiKhoan
     @TenDangNhap  VARCHAR(30),
-    @TrangThai    BIT = NULL,              -- 0 khoá, 1 mở khoá (mở khoá thì xoá số lần sai)
+    @TrangThai    BIT = NULL,              -- 0 khoá, 1 mở khoá (mở khoá thì xoá số lần sai và tạm khoá)
     @VaiTro       VARCHAR(10) = NULL,
-    @MatKhauMoi   NVARCHAR(100) = NULL     -- quản trị đặt lại mật khẩu
+    @MatKhauMoi   NVARCHAR(100) = NULL     -- quản trị đặt lại mật khẩu (đồng thời gỡ tạm khoá do nhập sai)
 AS
 BEGIN
     SET NOCOUNT ON;
+    IF IS_ROLEMEMBER('r_App') = 1 AND ISNULL(CAST(SESSION_CONTEXT(N'vai_tro') AS VARCHAR(10)), '') <> 'QuanLy'
+        THROW 50096, N'Chỉ quản lý được tạo hoặc cập nhật tài khoản.', 1;
     IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap)
         THROW 50095, N'Tài khoản không tồn tại.', 1;
+    -- không tự khoá / tự hạ quyền tài khoản đang dùng (tránh mất quyền quản trị)
+    IF @TenDangNhap = CAST(SESSION_CONTEXT(N'app_user') AS VARCHAR(30)) AND (@TrangThai = 0 OR @VaiTro <> 'QuanLy')
+        THROW 50099, N'Không thể tự khoá hoặc đổi vai trò của tài khoản đang đăng nhập.', 1;
+    IF @VaiTro IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = @TenDangNhap
+                                      AND ISNULL(dbo.fn_VaiTroTheoChucVu(MaNV, MaHV), '') <> @VaiTro)
+        THROW 50098, N'Vai trò tài khoản phải khớp chức vụ – đổi chức vụ ở trang Nhân viên, vai trò sẽ đổi theo.', 1;
     IF @MatKhauMoi IS NOT NULL AND dbo.fn_MatKhauHopLe(@MatKhauMoi) = 0
         THROW 50091, N'Mật khẩu phải từ 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.', 1;
     DECLARE @Salt VARBINARY(16) = CRYPT_GEN_RANDOM(16);
     UPDATE dbo.TAIKHOAN SET
         TrangThai   = ISNULL(@TrangThai, TrangThai),
         SoLanSai    = IIF(@TrangThai = 1 OR @MatKhauMoi IS NOT NULL, 0, SoLanSai),
+        KhoaDen     = IIF(@TrangThai = 1 OR @MatKhauMoi IS NOT NULL, NULL, KhoaDen),
         VaiTro      = ISNULL(@VaiTro, VaiTro),
         Salt        = IIF(@MatKhauMoi IS NULL, Salt, @Salt),
         MatKhauHash = IIF(@MatKhauMoi IS NULL, MatKhauHash, dbo.fn_BamMatKhau(@MatKhauMoi, @Salt))
@@ -239,7 +292,7 @@ GO
 CREATE OR ALTER VIEW dbo.vw_TaiKhoan
 AS
 SELECT t.TenDangNhap, t.VaiTro, t.MaNV, t.MaHV, COALESCE(nv.HoTen, hv.HoTen) AS HoTen,
-       COALESCE(nv.MaCN, hv.MaCN) AS MaCN, t.TrangThai, t.SoLanSai, t.LanDangNhapCuoi, t.NgayTao
+       COALESCE(nv.MaCN, hv.MaCN) AS MaCN, t.TrangThai, t.SoLanSai, t.KhoaDen, t.LanDangNhapCuoi, t.NgayTao
 FROM dbo.TAIKHOAN t
 LEFT JOIN dbo.NHANVIEN nv ON nv.MaNV = t.MaNV
 LEFT JOIN dbo.HOCVIEN hv ON hv.MaHV = t.MaHV;
@@ -294,8 +347,10 @@ GRANT SELECT ON dbo.vw_LopHoc_DangMo TO r_GiaoVu;
 GRANT SELECT ON dbo.vw_CongNoHocVien TO r_GiaoVu;
 GRANT SELECT ON dbo.KHOAHOC TO r_GiaoVu;
 GRANT SELECT ON dbo.CHUONGTRINH TO r_GiaoVu;
-GRANT SELECT, INSERT, UPDATE ON dbo.HOCVIEN TO r_GiaoVu;
-GRANT SELECT, INSERT ON dbo.KIEMTRA_DAUVAO TO r_GiaoVu;
+-- Hồ sơ học viên: KHÔNG cấp quyền trên bảng HOCVIEN (sẽ vượt qua lọc chi nhánh của view);
+-- đọc qua vw_HocVien_ChiNhanh, ghi qua sp_LuuHocVien (procedure kiểm tra phạm vi chi nhánh)
+GRANT EXECUTE ON dbo.sp_LuuHocVien TO r_GiaoVu;
+GRANT SELECT ON dbo.KIEMTRA_DAUVAO TO r_GiaoVu;                     -- ghi kết quả qua sp_GhiKetQuaKiemTra (09_xml.sql)
 GRANT SELECT ON dbo.fn_GoiYKhoaHoc TO r_GiaoVu;
 GRANT EXECUTE ON dbo.sp_DangKyHoc TO r_GiaoVu;
 GRANT EXECUTE ON dbo.sp_ChuyenLop TO r_GiaoVu;
@@ -343,5 +398,5 @@ DENY  SELECT ON SCHEMA::dbo TO r_HocVien;                              -- chặn
 REVOKE SELECT ON SCHEMA::dbo FROM r_HocVien;                           -- …rồi REVOKE để minh hoạ: REVOKE gỡ cả GRANT lẫn DENY
 GO
 
-PRINT N'✓ 08_security.sql: 6 login, 6 role, ma trận quyền, băm mật khẩu, procedure đăng nhập.';
+PRINT N'✓ 08_security.sql: 6 login, 6 role, ma trận quyền, chính sách mật khẩu, procedure đăng nhập / tài khoản.';
 GO
