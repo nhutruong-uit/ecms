@@ -633,11 +633,14 @@ GO
     parts.append(inserts("DIEMDANH", ["MaDK", "MaLop", "STT", "TrangThai", "GhiChu"], DIEMDANH, batch=1000))
     parts.append(inserts("PHIEUTHU", ["MaPT", "MaHV", "MaNV", "NgayThu", "HinhThuc", "TongTien", "GhiChu"], PHIEUTHU, identity=True))
     parts.append(inserts("CT_PHIEUTHU", ["MaPT", "MaDK", "SoTien"], CT_PT))
-    parts.append("-- TAIKHOAN: mật khẩu băm SHA2_256(salt + mật khẩu UTF-16), salt ngẫu nhiên 16 byte mỗi tài khoản\n"
-                 "INSERT INTO TAIKHOAN (TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV)\n"
-                 "SELECT v.TenDangNhap, HASHBYTES('SHA2_256', s.Salt + CAST(v.MatKhau AS VARBINARY(200))), s.Salt, v.VaiTro, v.MaNV, v.MaHV\n"
+    # Salt sinh trước vào biến bảng rồi mới băm: bảo đảm hash được tính đúng trên salt được lưu
+    parts.append("-- TAIKHOAN: mật khẩu băm bằng dbo.fn_BamMatKhau (01_schema.sql – 10.000 vòng SHA2_256), salt ngẫu nhiên 16 byte\n"
+                 "DECLARE @tk TABLE (TenDangNhap VARCHAR(30), MatKhau NVARCHAR(100), VaiTro VARCHAR(10), MaNV CHAR(6), MaHV CHAR(6), Salt VARBINARY(16));\n"
+                 "INSERT @tk SELECT v.TenDangNhap, v.MatKhau, v.VaiTro, v.MaNV, v.MaHV, CRYPT_GEN_RANDOM(16)\n"
                  "FROM (VALUES\n" + ",\n".join(f"  ({q(u)}, {q(p)}, {q(r)}, {q(nv)}, {q(hv)})" for u, p, r, nv, hv in TAIKHOAN)
-                 + "\n) v (TenDangNhap, MatKhau, VaiTro, MaNV, MaHV)\nCROSS APPLY (SELECT CRYPT_GEN_RANDOM(16) AS Salt) s;\nGO")
+                 + "\n) v (TenDangNhap, MatKhau, VaiTro, MaNV, MaHV);\n"
+                 "INSERT INTO TAIKHOAN (TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV)\n"
+                 "SELECT TenDangNhap, dbo.fn_BamMatKhau(MatKhau, Salt), Salt, VaiTro, MaNV, MaHV FROM @tk;\nGO")
     parts.append("""-- Bật lại trigger
 DECLARE @sql NVARCHAR(MAX) = N'';
 SELECT @sql += N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(schema_id)) + N'.' + QUOTENAME(name) + N' ENABLE TRIGGER ALL;'
