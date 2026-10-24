@@ -87,7 +87,10 @@ BEGIN TRY
 END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_ThuHocPhi', N'Giáo vụ lập phiếu', N'50011', CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE())); END CATCH;
 
 /* ---------- sp_XepLichLop ---------- */
-DECLARE @L1 VARCHAR(10) = @LopMo, @CN CHAR(4) = (SELECT MaCN FROM LOPHOC WHERE MaLop = @LopMo);
+-- lớp chưa điểm danh (đã điểm danh thì không sửa được lịch cố định – ca riêng bên dưới)
+DECLARE @L1 VARCHAR(10) = (SELECT TOP 1 l.MaLop FROM LOPHOC l WHERE l.TrangThai = N'Sắp mở'
+                           AND NOT EXISTS (SELECT 1 FROM DIEMDANH d WHERE d.MaLop = l.MaLop) ORDER BY l.NgayKhaiGiang, l.MaLop);
+DECLARE @CN CHAR(4) = (SELECT MaCN FROM LOPHOC WHERE MaLop = @L1);
 DECLARE @PhongTrong VARCHAR(5) = (SELECT TOP 1 MaPhong FROM PHONGHOC p WHERE p.MaCN = @CN AND p.SucChua >= 30
     AND NOT EXISTS (SELECT 1 FROM LICHHOC lh WHERE lh.MaCN = p.MaCN AND lh.MaPhong = p.MaPhong AND lh.Thu = 3 AND lh.MaCa = 2) ORDER BY MaPhong);
 BEGIN TRY
@@ -96,13 +99,26 @@ BEGIN TRY
 END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_XepLichLop', N'Thêm lịch phòng trống', N'OK', ERROR_MESSAGE()); END CATCH;
 
 DECLARE @Trung VARCHAR(10), @TThu TINYINT, @TCa TINYINT, @TPhong VARCHAR(5);
+-- lớp khác cùng chi nhánh có thời gian học giao với @L1 (ước lượng như sp_XepLichLop: tối thiểu 1 buổi/tuần)
+DECLARE @L1Tu DATE, @L1Den DATE;
+SELECT @L1Tu = l.NgayKhaiGiang, @L1Den = ISNULL(l.NgayKetThuc, DATEADD(WEEK, k.SoBuoi, l.NgayKhaiGiang))
+FROM LOPHOC l JOIN KHOAHOC k ON k.MaKH = l.MaKH WHERE l.MaLop = @L1;
 SELECT TOP 1 @Trung = lh.MaLop, @TThu = lh.Thu, @TCa = lh.MaCa, @TPhong = lh.MaPhong
 FROM LICHHOC lh JOIN LOPHOC l ON l.MaLop = lh.MaLop
-WHERE l.TrangThai IN (N'Đang học', N'Sắp mở') AND lh.MaCN = @CN AND lh.MaLop <> @L1 ORDER BY l.NgayKhaiGiang DESC;
+WHERE l.TrangThai IN (N'Đang học', N'Sắp mở') AND lh.MaCN = @CN AND lh.MaLop <> @L1
+  AND l.NgayKhaiGiang <= @L1Den AND ISNULL(l.NgayKetThuc, '9999-12-31') >= @L1Tu
+  AND NOT EXISTS (SELECT 1 FROM LICHHOC x WHERE x.MaLop = @L1 AND x.Thu = lh.Thu AND x.MaCa = lh.MaCa)
+ORDER BY l.NgayKhaiGiang DESC;
 BEGIN TRY
     EXEC sp_XepLichLop @L1, @TThu, @TCa, @TPhong;
     INSERT @KQ VALUES ('sp_XepLichLop', N'Trùng phòng / giáo viên với ' + @Trung, N'5002', N'không báo lỗi');
 END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_XepLichLop', N'Trùng lịch với ' + ISNULL(@Trung, N'?'), N'5002', CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE())); END CATCH;
+
+BEGIN TRY
+    DECLARE @LopDaDD VARCHAR(10) = (SELECT TOP 1 MaLop FROM DIEMDANH ORDER BY MaLop);
+    EXEC sp_XepLichLop @LopDaDD, 8, 6, 'P101';
+    INSERT @KQ VALUES ('sp_XepLichLop', N'Sửa lịch lớp đã điểm danh', N'50027', N'không báo lỗi');
+END TRY BEGIN CATCH INSERT @KQ VALUES ('sp_XepLichLop', N'Sửa lịch lớp đã điểm danh', N'50027', CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE())); END CATCH;
 
 BEGIN TRY
     DECLARE @PhongCNKhac VARCHAR(5) = 'P999';
