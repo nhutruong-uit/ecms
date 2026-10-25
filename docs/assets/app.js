@@ -204,6 +204,93 @@
     }
   }
 
+  // ---------- dropdown ----------
+  // Danh sách của <select> do trình duyệt vẽ (macOS: menu hệ thống) nên không theo màu của trang. Giữ <select> gốc
+  // để lưu giá trị và phát sự kiện change như cũ; nút + listbox bên cạnh chỉ thay phần hiển thị (style.css: .dd-*).
+  const dropdowns = [];
+
+  function dropdown(sel) {
+    const name = sel.getAttribute('aria-label') || '';
+    const label = h('span', {});
+    const btn = h('button', { type: 'button', class: 'dd-btn', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-label': name }, label);
+    const menu = h('ul', { class: 'dd-menu', id: `${sel.id}-list`, role: 'listbox', tabindex: '-1', 'aria-label': name, hidden: true });
+    const wrap = h('div', { class: 'dd' }, btn, menu);
+    btn.setAttribute('aria-controls', menu.id);
+    sel.classList.add('dd-native');
+    sel.after(wrap);
+    let active = -1;
+
+    function sync() {
+      const cur = sel.options[sel.selectedIndex];
+      label.textContent = cur ? cur.textContent : '';
+      btn.title = label.textContent;
+      btn.classList.toggle('on', Boolean(sel.value));
+      menu.replaceChildren(...[...sel.options].map((o, i) =>
+        h('li', { role: 'option', id: `${menu.id}-${i}`, 'aria-selected': String(i === sel.selectedIndex),
+                  onclick: () => pick(i), onpointermove: () => setActive(i) }, o.textContent)));
+    }
+    function setActive(i) {
+      if (i < 0 || i >= menu.children.length) return;
+      if (menu.children[active]) menu.children[active].classList.remove('active');
+      active = i;
+      const li = menu.children[i];
+      li.classList.add('active');
+      menu.setAttribute('aria-activedescendant', li.id);
+      li.scrollIntoView({ block: 'nearest' });
+    }
+    function open() {
+      for (const d of dropdowns) if (d.wrap !== wrap) d.close(false);
+      sync();
+      menu.hidden = false;
+      menu.classList.toggle('right', wrap.getBoundingClientRect().left + menu.offsetWidth > document.documentElement.clientWidth - 8);
+      btn.setAttribute('aria-expanded', 'true');
+      setActive(sel.selectedIndex);
+      menu.focus();
+    }
+    function close(focusBtn = true) {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus();
+    }
+    function pick(i) {
+      if (i !== sel.selectedIndex) {
+        sel.selectedIndex = i;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      sync();
+      close();
+    }
+
+    btn.addEventListener('click', () => (menu.hidden ? open() : close()));
+    btn.addEventListener('keydown', (e) => {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); open(); }
+    });
+    menu.addEventListener('keydown', (e) => {
+      const last = menu.children.length - 1;
+      const moves = { ArrowDown: active + 1, ArrowUp: active - 1, Home: 0, End: last, PageDown: last, PageUp: 0 };
+      if (e.key in moves) { e.preventDefault(); setActive(Math.max(0, Math.min(last, moves[e.key]))); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'Tab') close(false);
+      else if (e.key.length === 1) {               // gõ chữ cái đầu để nhảy tới mục
+        const k = e.key.toLowerCase();
+        const items = [...menu.children];
+        const next = items.findIndex((li, i) => i > active && li.textContent.toLowerCase().startsWith(k));
+        const i = next >= 0 ? next : items.findIndex((li) => li.textContent.toLowerCase().startsWith(k));
+        if (i >= 0) setActive(i);
+      }
+    });
+    menu.addEventListener('focusout', (e) => { if (!wrap.contains(e.relatedTarget)) close(false); });
+
+    sync();
+    dropdowns.push({ wrap, sync, close });
+  }
+
+  document.addEventListener('pointerdown', (e) => {
+    for (const d of dropdowns) if (!d.wrap.contains(e.target)) d.close(false);
+  });
+
   // ---------- filters ----------
   function setOwner(id) {
     state.filters.owner = id;
@@ -228,6 +315,7 @@
     ch.addEventListener('change', (e) => { state.filters.chapter = e.target.value; renderTasks(); });
     $('#statusFilter').addEventListener('change', (e) => { state.filters.status = e.target.value; renderTasks(); });
     $('#searchBox').addEventListener('input', (e) => { state.filters.q = e.target.value.trim().toLowerCase(); renderTasks(); });
+    for (const sel of document.querySelectorAll('.filters select')) dropdown(sel);
   }
 
   function matches(t) {
@@ -311,6 +399,7 @@
     if (!matches(t)) {
       state.filters = { owner: '', sprint: '', chapter: '', status: '', q: '' };
       $('#sprintFilter').value = ''; $('#chapterFilter').value = ''; $('#statusFilter').value = ''; $('#searchBox').value = '';
+      for (const d of dropdowns) d.sync();          // đặt .value không phát sự kiện change
       setOwner('');
     }
     const el = document.getElementById(`task-${id}`);

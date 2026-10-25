@@ -271,7 +271,7 @@ erDiagram
       <div class="section-head">
         <div>
           <h2>Quy ước làm việc</h2>
-          <p>Nhóm uỷ quyền cho Như thực hiện phần code. Mỗi commit vẫn ghi tên thành viên phụ trách phần đó, để lịch sử git thể hiện đúng phân công.</p>
+          <p>Mỗi thành viên phụ trách trọn các task của mình, từ phân tích, thiết kế, viết mã đến phần báo cáo tương ứng. Như (nhóm trưởng) review, tích hợp mã của các thành viên vào repo và chạy kiểm thử chung; mỗi commit ghi tên thành viên phụ trách phần đó (<code>scripts/commit-as.sh</code>), để lịch sử git thể hiện đúng phân công.</p>
         </div>
       </div>
       <div class="grid-2">
@@ -281,7 +281,7 @@ erDiagram
             <li><div>Tạo nhánh theo task: <code>t11-stored-procedure</code></div></li>
             <li><div>Commit bằng tên người phụ trách: <code>scripts/commit-as.sh phu -m "feat(db): sp_DangKyHoc (#11)"</code></div></li>
             <li><div>Mở Pull Request, mô tả có <code>Closes #11</code>, đính kèm ảnh kết quả</div></li>
-            <li><div>Người phụ trách xem lại → merge vào <code>main</code> → issue tự đóng, Project tự chuyển sang Done</div></li>
+            <li><div>Nhóm trưởng review → merge vào <code>develop</code> → tick checklist, đóng issue, chuyển thẻ Project sang Done</div></li>
           </ol>
         </div>
         <div class="card pad">
