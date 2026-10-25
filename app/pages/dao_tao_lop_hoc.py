@@ -10,11 +10,11 @@ ui.header("👥 Lớp học", "Mở lớp cho một khoá học tại một chi 
 ui.show_flash()
 
 TRANG_THAI = ["Sắp mở", "Đang học", "Đã kết thúc", "Huỷ"]
-cn_mac_dinh = None if user["pham_vi_cn"] == "ALL" else user["ma_cn"]
+st.caption("Vòng đời lớp: **Sắp mở** → **Đang học** (tự chuyển khi tới ngày khai giảng và đã có học viên – trang Điểm danh "
+           "chỉ hiện lớp Đang học) → **Đã kết thúc** (giáo vụ chọn sau khi chốt điểm). Lớp Sắp mở có thể huỷ.")
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    f_cn = ui.pick("Chi nhánh", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", cn_mac_dinh, allow_empty=True,
-                   empty_label="— tất cả —", key="l_cn")
+    f_cn = ui.chon_chi_nhanh(user, key="l_cn")
 with c2:
     f_kh = ui.pick("Khoá học", "SELECT MaKH, TenKH FROM vw_DM_KhoaHoc ORDER BY MaCT, CapDo", allow_empty=True,
                    empty_label="— tất cả —", key="l_kh")
@@ -38,8 +38,8 @@ with c1:
     kh = ui.pick("Khoá học *", "SELECT MaKH, TenKH FROM vw_DM_KhoaHoc ORDER BY MaCT, CapDo", r.get("MaKH") or f_kh,
                  key=f"f_kh_{r.get('MaLop', 'moi')}", disabled=bool(sel) and r.get("SiSoHienTai", 0) > 0)
 with c2:
-    cn = ui.pick("Chi nhánh *", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", r.get("MaCN") or f_cn or user["ma_cn"],
-                 key=f"f_cn_{r.get('MaLop', 'moi')}", disabled=bool(sel) and r.get("SiSoHienTai", 0) > 0)
+    cn = ui.chon_chi_nhanh(user, "Chi nhánh *", r.get("MaCN") or f_cn or user["ma_cn"], allow_all=False,
+                           key=f"f_cn_{r.get('MaLop', 'moi')}", disabled=bool(sel) and r.get("SiSoHienTai", 0) > 0)
 ten_kh = next((t for m, t in ui.options("SELECT MaKH, TenKH FROM vw_DM_KhoaHoc") if m == kh), "")
 
 with st.form("f_lop", clear_on_submit=not sel):
@@ -71,7 +71,8 @@ with st.form("f_lop", clear_on_submit=not sel):
                 st.rerun()
 
 if sel and r.get("TrangThai") in ("Sắp mở",):
-    if st.button(f"Xoá / huỷ lớp {r['MaLop']}", icon=":material/cancel:"):
+    if ui.nut_xoa(f"Xoá / huỷ lớp {r['MaLop']}", key=f"x_lop_{r['MaLop']}", icon=":material/cancel:",
+                  canh_bao="Lớp chưa có học viên sẽ bị xoá hẳn; lớp đã có học viên ghi danh được chuyển sang Huỷ."):
         res = ui.run(lambda: db.call_proc("sp_XoaLopHoc", {"MaLop": r["MaLop"]}, fetch=True), rerun=False)
         if res is not None:
             ui.flash(res[0].iloc[0]["ThongBao"], "info")

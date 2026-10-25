@@ -134,6 +134,65 @@ END TRY BEGIN CATCH SET @s = CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE()); END 
 IF @@TRANCOUNT > 0 ROLLBACK;
 INSERT @R VALUES ('trg_vwDangKyChiTiet_Insert', N'INSERT qua view vào lớp đã kết thúc', N'50075', @s);
 
+/* --- 9. INSTEAD OF INSERT qua view: cùng luật khoá tiên quyết với sp_DangKyHoc --- */
+DECLARE @LopTQ VARCHAR(10) = (SELECT TOP 1 l.MaLop FROM LOPHOC l JOIN KHOAHOC k ON k.MaKH = l.MaKH
+                              WHERE l.TrangThai IN (N'Sắp mở', N'Đang học') AND k.MaKHTienQuyet IS NOT NULL AND l.SiSoHienTai < l.SiSoToiDa
+                              ORDER BY k.CapDo DESC, l.MaLop);
+DECLARE @HVYeu CHAR(6) = (SELECT TOP 1 h.MaHV FROM HOCVIEN h CROSS JOIN (SELECT k.MaKHTienQuyet, k.DiemDauVaoTu FROM LOPHOC l
+                          JOIN KHOAHOC k ON k.MaKH = l.MaKH WHERE l.MaLop = @LopTQ) c
+                          WHERE NOT EXISTS (SELECT 1 FROM KIEMTRA_DAUVAO t WHERE t.MaHV = h.MaHV AND t.DiemTong >= c.DiemDauVaoTu)
+                            AND NOT EXISTS (SELECT 1 FROM DANGKY d JOIN LOPHOC l2 ON l2.MaLop = d.MaLop
+                                            WHERE d.MaHV = h.MaHV AND ((l2.MaKH = c.MaKHTienQuyet AND d.KetQua = N'Đạt') OR d.MaLop = @LopTQ))
+                          ORDER BY h.MaHV);
+BEGIN TRAN;
+BEGIN TRY INSERT vw_DangKyChiTiet (MaHV, MaLop) VALUES (@HVYeu, @LopTQ); SET @s = N'không báo lỗi'; END TRY
+BEGIN CATCH SET @s = CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE()); END CATCH;
+IF @@TRANCOUNT > 0 ROLLBACK;
+INSERT @R VALUES ('trg_vwDangKyChiTiet_Insert', CONCAT(N'INSERT qua view khi chưa đủ khoá tiên quyết (', @HVYeu, N' → ', @LopTQ, N')'), N'50078', @s);
+
+/* --- 10. INSTEAD OF DELETE qua view: học viên đã đi học thì không huỷ được --- */
+DECLARE @DKDaHoc INT = (SELECT TOP 1 d.MaDK FROM DANGKY d WHERE d.TrangThai = N'Đang học'
+                        AND EXISTS (SELECT 1 FROM DIEMDANH x WHERE x.MaDK = d.MaDK) ORDER BY d.MaDK);
+BEGIN TRAN;
+BEGIN TRY
+    DELETE CT_PHIEUTHU WHERE MaDK = @DKDaHoc;             -- bỏ điều kiện "đã đóng tiền" để thấy đúng luật "đã đi học"
+    DELETE vw_DangKyChiTiet WHERE MaDK = @DKDaHoc;
+    SET @s = N'không báo lỗi';
+END TRY BEGIN CATCH SET @s = CONCAT(ERROR_NUMBER(), N' ', ERROR_MESSAGE()); END CATCH;
+IF @@TRANCOUNT > 0 ROLLBACK;
+INSERT @R VALUES ('trg_vwDangKyChiTiet_Delete', N'DELETE qua view đăng ký đã điểm danh', N'50079', @s);
+
+/* --- 11. trg_NhatKy_TaiKhoan: khoá tài khoản ghi 1 dòng (không có hash); chỉ đổi số lần sai thì không ghi --- */
+BEGIN TRAN;
+SET @NK = (SELECT ISNULL(MAX(MaNK), 0) FROM NHATKY);
+UPDATE TAIKHOAN SET TrangThai = 0 WHERE TenDangNhap = 'ketoan';
+UPDATE TAIKHOAN SET SoLanSai = 1 WHERE TenDangNhap = 'ketoan';
+SET @s = (SELECT CONCAT(N'OK ', COUNT(*), N' dòng: ', MAX(DuLieuCu), N' → ', MAX(DuLieuMoi),
+                        IIF(MAX(DuLieuMoi) LIKE N'%Hash%' OR MAX(DuLieuMoi) LIKE N'%Salt%', N' – LỘ HASH', N''))
+          FROM NHATKY WHERE MaNK > @NK AND TenBang = 'TAIKHOAN');
+ROLLBACK;
+INSERT @R VALUES ('trg_NhatKy_TaiKhoan', N'Khoá tài khoản (ghi) rồi tăng số lần sai (không ghi)', N'OK 1 dòng', @s);
+
+/* --- 12. trg_NhatKy_CTPhieuThu: xoá một dòng chi tiết phiếu thu --- */
+DECLARE @ctPT INT, @ctDK INT;
+SELECT TOP 1 @ctPT = MaPT, @ctDK = MaDK FROM CT_PHIEUTHU ORDER BY MaPT DESC;
+BEGIN TRAN;
+SET @NK = (SELECT ISNULL(MAX(MaNK), 0) FROM NHATKY);
+DELETE CT_PHIEUTHU WHERE MaPT = @ctPT AND MaDK = @ctDK;
+SET @s = (SELECT CONCAT(N'OK ', ThaoTac, N' ', KhoaChinh, N' ', DuLieuCu, N' bởi ', NguoiDungUD)
+          FROM NHATKY WHERE MaNK > @NK AND TenBang = 'CT_PHIEUTHU');
+ROLLBACK;
+INSERT @R VALUES ('trg_NhatKy_CTPhieuThu', N'Xoá chi tiết phiếu thu được ghi nhật ký kèm người dùng ứng dụng', N'OK DELETE', @s);
+
+/* --- 13. trg_NhatKy_HocVien: UPDATE không đổi giá trị thì không ghi, đổi địa chỉ thì ghi --- */
+BEGIN TRAN;
+SET @NK = (SELECT ISNULL(MAX(MaNK), 0) FROM NHATKY);
+UPDATE HOCVIEN SET Email = Email WHERE MaHV = 'HV0001';
+UPDATE HOCVIEN SET SoNha = N'99 Đường Thử' WHERE MaHV = 'HV0001';
+SET @s = (SELECT CONCAT(N'OK ', COUNT(*), N' dòng') FROM NHATKY WHERE MaNK > @NK AND TenBang = 'HOCVIEN');
+ROLLBACK;
+INSERT @R VALUES ('trg_NhatKy_HocVien', N'UPDATE giữ nguyên (không ghi) + đổi địa chỉ (ghi)', N'OK 1 dòng', @s);
+
 EXEC sp_set_session_context N'app_user', NULL;
 INSERT #KQ (TenTrigger, Ca, MongDoi, ThucTe) SELECT TenTrigger, Ca, MongDoi, ThucTe FROM @R ORDER BY STT;
 GO

@@ -6,10 +6,14 @@
 
 Thiết kế document (nhúng hay tham chiếu – xem report mục 5.3):
   khoa_hoc   : danh mục nhỏ; tien_quyet tham chiếu _id khoá khác (đồ thị tiên quyết)
-  lop_hoc    : NHÚNG lich (thứ – ca – phòng), giao_vien (bản tóm tắt); TRAM CHIẾU khoa_hoc
+  lop_hoc    : NHÚNG lich (thứ – ca – phòng), giao_vien (bản tóm tắt); THAM CHIẾU khoa_hoc
   hoc_vien   : NHÚNG dia_chi, kiem_tra[] (kết quả 4 kỹ năng – vốn là XML bán cấu trúc),
                dang_ky[] (điểm, học phí, diem_danh[] từng buổi) → đọc hồ sơ học viên bằng 1 truy vấn
-  phieu_thu  : NHÚNG chi_tiet[] (master–detail); THAM CHIẾU hoc_vien
+  phieu_thu  : NHÚNG chi_tiet[] (master–detail, mỗi dòng ghi chi nhánh của LỚP để tính doanh thu như vw_DoanhThuThang);
+               THAM CHIẾU hoc_vien
+Chuyển 14 bảng nghiệp vụ thành 4 collection; 8 bảng còn lại (CHINHANH, PHONGHOC, CHUNGCHI_GV, NGAYLE, TAIKHOAN,
+NHATKY, CANHBAO_CHUYENCAN, BANGLUONG) là danh mục / hệ thống / kết quả tính toán – giữ ở SQL Server.
+Tiền lưu Decimal128 (không dùng double: 0,1 + 0,2 ≠ 0,3). $jsonSchema kiểm tra cấu trúc document khi ghi.
 """
 import os
 import sys
@@ -21,6 +25,7 @@ from pathlib import Path
 
 import pyodbc
 from dotenv import load_dotenv
+from bson.decimal128 import Decimal128
 from pymongo import ASCENDING, MongoClient
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,20 +33,37 @@ load_dotenv(ROOT / ".env")
 
 
 def sql_conn():
-    return pyodbc.connect(
-        f"DRIVER={{{os.getenv('DB_DRIVER', 'ODBC Driver 18 for SQL Server')}}};"
-        f"SERVER={os.getenv('DB_SERVER', 'localhost')},{os.getenv('DB_PORT', '1433')};DATABASE=ECMS;"
-        f"UID=sa;PWD={os.getenv('SA_PASSWORD', 'Ecms@12345')};TrustServerCertificate=yes")
+    """sa + SA_PASSWORD; SA_TRUSTED=yes → Windows Authentication (máy Windows tắt login sa)."""
+    if os.getenv("SA_TRUSTED", "no").strip().lower() in ("1", "yes", "true"):
+        xac_thuc = "Trusted_Connection=yes"
+    else:
+        mk = os.getenv("SA_PASSWORD")
+        if not mk:
+            sys.exit("Thiếu SA_PASSWORD trong .env (xem .env.example).")
+        xac_thuc = f"UID=sa;PWD={mk}"
+    port = os.getenv("DB_PORT", "1433").strip()
+    server = os.getenv("DB_SERVER", "localhost") + (f",{port}" if port else "")
+    return pyodbc.connect(f"DRIVER={{{os.getenv('DB_DRIVER', 'ODBC Driver 18 for SQL Server')}}};SERVER={server};"
+                          f"DATABASE=ECMS;{xac_thuc};Encrypt=yes;TrustServerCertificate=yes")
 
 
 def mongo_db():
-    return MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))["ecms"]
+    """MONGO_URI trong .env (có tài khoản – nosql/docker-compose.yml bật xác thực)."""
+    uri = os.getenv("MONGO_URI")
+    if not uri:
+        sys.exit("Thiếu MONGO_URI trong .env (xem .env.example).")
+    return MongoClient(uri)["ecms"]
+
+
+def so(v) -> float:
+    """Decimal128 / int / float → float để so sánh, in kết quả."""
+    return float(v.to_decimal()) if isinstance(v, Decimal128) else float(v or 0)
 
 
 def conv(v):
-    """Kiểu SQL → kiểu BSON."""
+    """Kiểu SQL → kiểu BSON. DECIMAL → Decimal128 (giữ đúng tiền đồng, không sai số dấu phẩy động)."""
     if isinstance(v, Decimal):
-        return float(v)
+        return Decimal128(v)
     if isinstance(v, date) and not isinstance(v, datetime):
         return datetime(v.year, v.month, v.day)
     if isinstance(v, dtime):
@@ -61,6 +83,26 @@ def main():
     cn, db = sql_conn(), mongo_db()
     for c in ("khoa_hoc", "lop_hoc", "hoc_vien", "phieu_thu"):
         db[c].drop()
+    # $jsonSchema: MongoDB không có khoá ngoại / CHECK, nhưng kiểm tra được cấu trúc và kiểu khi ghi
+    tien = {"bsonType": "decimal"}
+    db.create_collection("hoc_vien", validator={"$jsonSchema": {
+        "bsonType": "object", "required": ["_id", "ho_ten", "sdt", "chi_nhanh", "dang_ky"],
+        "properties": {
+            "_id": {"bsonType": "string", "pattern": "^HV[0-9]{4}$"},
+            "ho_ten": {"bsonType": "object", "required": ["ho", "ten"]},
+            "sdt": {"bsonType": "string", "pattern": "^[0-9]{9,11}$"},
+            "chi_nhanh": {"enum": ["CN01", "CN02", "CN03"]},
+            "dang_ky": {"bsonType": "array", "items": {
+                "bsonType": "object", "required": ["ma_dk", "lop", "hoc_phi", "trang_thai"],
+                "properties": {"hoc_phi": {"bsonType": "object", "required": ["thanh_tien", "da_thu"],
+                                           "properties": {"thanh_tien": tien, "da_thu": tien}},
+                               "diem_danh": {"bsonType": "array", "items": {
+                                   "bsonType": "object", "required": ["buoi", "trang_thai"],
+                                   "properties": {"trang_thai": {"enum": ["Có mặt", "Vắng", "Muộn", "Có phép"]}}}}}}}}}})
+    db.create_collection("phieu_thu", validator={"$jsonSchema": {
+        "bsonType": "object", "required": ["_id", "hoc_vien", "ngay_thu", "tong_tien", "chi_tiet"],
+        "properties": {"tong_tien": tien, "chi_tiet": {"bsonType": "array", "minItems": 1, "items": {
+            "bsonType": "object", "required": ["ma_dk", "so_tien", "chi_nhanh"], "properties": {"so_tien": tien}}}}}})
 
     # ---------------- khoa_hoc
     kh = rows(cn, "SELECT k.*, ct.TenCT FROM KHOAHOC k JOIN CHUONGTRINH ct ON ct.MaCT = k.MaCT")
@@ -89,7 +131,8 @@ def main():
     for r in rows(cn, "SELECT d.*, l.MaKH, l.MaCN AS CNLop FROM DANGKY d JOIN LOPHOC l ON l.MaLop = d.MaLop"):
         dk[r["MaHV"]].append({
             "ma_dk": r["MaDK"], "lop": r["MaLop"], "khoa_hoc": r["MaKH"], "chi_nhanh": r["CNLop"], "ngay_dk": r["NgayDK"],
-            "hoc_phi": {"goc": r["HocPhi"], "giam_gia": r["GiamGia"], "thanh_tien": r["ThanhTien"], "da_thu": da_thu.get(r["MaDK"], 0.0),
+            "hoc_phi": {"goc": r["HocPhi"], "giam_gia": r["GiamGia"], "thanh_tien": r["ThanhTien"],
+                        "da_thu": da_thu.get(r["MaDK"], Decimal128("0")),
                         "trang_thai": r["TrangThaiHP"]},
             "diem": {"gk": r["DiemGK"], "ck": r["DiemCK"], "tb": r["DiemTB"]}, "ket_qua": r["KetQua"], "trang_thai": r["TrangThai"],
             "diem_danh": sorted(dd[r["MaDK"]], key=lambda x: x["buoi"])})
@@ -113,11 +156,12 @@ def main():
 
     # ---------------- phieu_thu (master–detail nhúng)
     ct = defaultdict(list)
-    for r in rows(cn, "SELECT c.MaPT, c.MaDK, c.SoTien, d.MaLop FROM CT_PHIEUTHU c JOIN DANGKY d ON d.MaDK = c.MaDK"):
-        ct[r["MaPT"]].append({"ma_dk": r["MaDK"], "lop": r["MaLop"], "so_tien": r["SoTien"]})
+    for r in rows(cn, """SELECT c.MaPT, c.MaDK, c.SoTien, d.MaLop, l.MaCN FROM CT_PHIEUTHU c
+                         JOIN DANGKY d ON d.MaDK = c.MaDK JOIN LOPHOC l ON l.MaLop = d.MaLop"""):
+        ct[r["MaPT"]].append({"ma_dk": r["MaDK"], "lop": r["MaLop"], "chi_nhanh": r["MaCN"], "so_tien": r["SoTien"]})
     pt = rows(cn, "SELECT p.*, n.MaCN FROM PHIEUTHU p JOIN NHANVIEN n ON n.MaNV = p.MaNV")
     db.phieu_thu.insert_many([{
-        "_id": r["SoPhieu"], "hoc_vien": r["MaHV"], "nguoi_lap": r["MaNV"], "chi_nhanh": r["MaCN"], "ngay_thu": r["NgayThu"],
+        "_id": r["SoPhieu"], "hoc_vien": r["MaHV"], "nguoi_lap": r["MaNV"], "chi_nhanh_lap": r["MaCN"], "ngay_thu": r["NgayThu"],
         "hinh_thuc": r["HinhThuc"], "tong_tien": r["TongTien"], "chi_tiet": ct[r["MaPT"]]} for r in pt])
 
     # ---------------- chỉ mục
@@ -147,6 +191,16 @@ def main():
         print(f"{m:<34}{s_:<16}{n:>8}{so:>8}  {'✓' if so == n else '✗'}")
     size = db.command("dbstats")["dataSize"] / 1024
     print(f"→ {'Đầy đủ' if ok else 'THIẾU DỮ LIỆU'} · {size:,.0f} KB dữ liệu BSON · {time.perf_counter() - t0:.1f} s")
+    # $jsonSchema chặn document sai cấu trúc (số điện thoại chữ, trạng thái điểm danh lạ, thiếu trường bắt buộc)
+    from pymongo.errors import WriteError
+    for mo_ta, doc in [("SĐT có chữ", {"_id": "HV9999", "ho_ten": {"ho": "A", "ten": "B"}, "sdt": "09ab", "chi_nhanh": "CN01", "dang_ky": []}),
+                       ("thiếu chi_nhanh", {"_id": "HV9998", "ho_ten": {"ho": "A", "ten": "B"}, "sdt": "0901234567", "dang_ky": []})]:
+        try:
+            db.hoc_vien.insert_one(doc)
+            db.hoc_vien.delete_one({"_id": doc["_id"]})
+            print(f"  $jsonSchema – {mo_ta}: KHÔNG chặn")
+        except WriteError as e:
+            print(f"  $jsonSchema – {mo_ta}: bị chặn (mã {e.code} Document failed validation)")
     return 0 if ok else 1
 
 

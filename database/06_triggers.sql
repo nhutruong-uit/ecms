@@ -48,6 +48,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM inserted) AND NOT EXISTS (SELECT 1 FROM deleted) RETURN;
+    -- UPDATE không đụng tới lớp / trạng thái (VD nhập điểm, đóng học phí) thì sĩ số không đổi: bỏ qua
+    IF EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted) AND NOT (UPDATE(MaLop) OR UPDATE(TrangThai)) RETURN;
     UPDATE l
     SET SiSoHienTai = (SELECT COUNT(*) FROM dbo.DANGKY d
                        WHERE d.MaLop = l.MaLop AND d.TrangThai IN (N'Đang học', N'Hoàn thành'))
@@ -150,7 +152,8 @@ GO
 
 /* ---------------------------------------------------------------------
    4. NHẬT KÝ KIỂM TOÁN (NHATKY): ghi dữ liệu cũ / mới dạng JSON,
-      login SQL Server (SUSER_SNAME) và tài khoản ứng dụng (SESSION_CONTEXT 'app_user')
+      login SQL Server (SUSER_SNAME) và tài khoản ứng dụng (dbo.fn_NguoiDungHienTai: SESSION_CONTEXT
+      'app_user' read-only của ứng dụng, hoặc tài khoản cùng tên với login minh hoạ – không tự khai được)
    --------------------------------------------------------------------- */
 CREATE OR ALTER TRIGGER dbo.trg_NhatKy_DangKy
 ON dbo.DANGKY
@@ -168,7 +171,7 @@ BEGIN
             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER, INCLUDE_NULL_VALUES),
            (SELECT i.MaHV, i.MaLop, i.HocPhi, i.GiamGia, i.TrangThaiHP, i.DiemGK, i.DiemCK, i.KetQua, i.TrangThai
             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER, INCLUDE_NULL_VALUES),
-           CAST(SESSION_CONTEXT(N'app_user') AS NVARCHAR(30))
+           (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
     FROM inserted i FULL OUTER JOIN deleted d ON d.MaDK = i.MaDK
     -- UPDATE không đổi giá trị nào (VD trigger khác cập nhật lại cùng giá trị) thì bỏ qua
     WHERE @op <> 'UPDATE' OR EXISTS (
@@ -192,7 +195,7 @@ BEGIN
     SELECT 'PHIEUTHU', @op, COALESCE(i.SoPhieu, d.SoPhieu),
            (SELECT d.MaHV, d.MaNV, d.NgayThu, d.HinhThuc, d.TongTien, d.GhiChu FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
            (SELECT i.MaHV, i.MaNV, i.NgayThu, i.HinhThuc, i.TongTien, i.GhiChu FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-           CAST(SESSION_CONTEXT(N'app_user') AS NVARCHAR(30))
+           (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
     FROM inserted i FULL OUTER JOIN deleted d ON d.MaPT = i.MaPT;
 END
 GO
@@ -210,13 +213,89 @@ BEGIN
            (SELECT d.LuongCoBan FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
            (SELECT i.LuongCoBan, CAST(100.0 * (i.LuongCoBan - d.LuongCoBan) / NULLIF(d.LuongCoBan, 0) AS DECIMAL(6,2)) AS PhanTramThayDoi
             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-           CAST(SESSION_CONTEXT(N'app_user') AS NVARCHAR(30))
+           (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
     FROM inserted i JOIN deleted d ON d.MaNV = i.MaNV
     WHERE i.LuongCoBan <> d.LuongCoBan;
 END
 GO
 
--- Nhật ký là bằng chứng kiểm toán: không cho sửa / xoá (kể cả db_owner phải tắt trigger mới xoá được)
+-- Chi tiết phiếu thu: tiền đã thu của từng đăng ký – ghi cả khi chuyển khoản sang đăng ký mới (sp_ChuyenLop)
+CREATE OR ALTER TRIGGER dbo.trg_NhatKy_CTPhieuThu
+ON dbo.CT_PHIEUTHU
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @op VARCHAR(6) = CASE WHEN EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted) THEN 'UPDATE'
+                                  WHEN EXISTS (SELECT 1 FROM inserted) THEN 'INSERT'
+                                  WHEN EXISTS (SELECT 1 FROM deleted) THEN 'DELETE' END;
+    IF @op IS NULL RETURN;
+    -- UPDATE đổi MaDK (một phần khoá chính) nên không ghép inserted – deleted theo khoá được: ghi hai vế riêng
+    INSERT dbo.NHATKY (TenBang, ThaoTac, KhoaChinh, DuLieuCu, DuLieuMoi, NguoiDungUD)
+    SELECT 'CT_PHIEUTHU', @op, CONCAT(x.MaPT, N'/', x.MaDK), x.Cu, x.Moi, (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
+    FROM (SELECT d.MaPT, d.MaDK, (SELECT d.MaPT, d.MaDK, d.SoTien FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS Cu, CAST(NULL AS NVARCHAR(MAX)) AS Moi
+          FROM deleted d
+          UNION ALL
+          SELECT i.MaPT, i.MaDK, NULL, (SELECT i.MaPT, i.MaDK, i.SoTien FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) FROM inserted i) x;
+END
+GO
+
+-- Tài khoản ứng dụng: ghi tạo / xoá, đổi vai trò, khoá – mở khoá, đổi mật khẩu (KHÔNG ghi hash, salt)
+CREATE OR ALTER TRIGGER dbo.trg_NhatKy_TaiKhoan
+ON dbo.TAIKHOAN
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @op VARCHAR(6) = CASE WHEN EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted) THEN 'UPDATE'
+                                  WHEN EXISTS (SELECT 1 FROM inserted) THEN 'INSERT'
+                                  WHEN EXISTS (SELECT 1 FROM deleted) THEN 'DELETE' END;
+    IF @op IS NULL RETURN;
+    INSERT dbo.NHATKY (TenBang, ThaoTac, KhoaChinh, DuLieuCu, DuLieuMoi, NguoiDungUD)
+    SELECT 'TAIKHOAN', @op, COALESCE(i.TenDangNhap, d.TenDangNhap),
+           (SELECT d.VaiTro, d.TrangThai, d.KhoaDen FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+           (SELECT i.VaiTro, i.TrangThai, i.KhoaDen,
+                   CASE WHEN i.MatKhauHash <> d.MatKhauHash THEN CAST(1 AS BIT) END AS DoiMatKhau
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+           (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
+    FROM inserted i FULL OUTER JOIN deleted d ON d.TenDangNhap = i.TenDangNhap
+    -- đăng nhập thành công / sai chỉ đổi SoLanSai, LanDangNhapCuoi: không ghi để nhật ký không bị nhiễu
+    WHERE @op <> 'UPDATE' OR i.VaiTro <> d.VaiTro OR i.TrangThai <> d.TrangThai OR i.MatKhauHash <> d.MatKhauHash
+       OR ISNULL(i.KhoaDen, '19000101') <> ISNULL(d.KhoaDen, '19000101');
+END
+GO
+
+-- Hồ sơ học viên là dữ liệu cá nhân: ghi mọi thay đổi để truy vết ai sửa, sửa gì
+CREATE OR ALTER TRIGGER dbo.trg_NhatKy_HocVien
+ON dbo.HOCVIEN
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @op VARCHAR(6) = CASE WHEN EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted) THEN 'UPDATE'
+                                  WHEN EXISTS (SELECT 1 FROM inserted) THEN 'INSERT'
+                                  WHEN EXISTS (SELECT 1 FROM deleted) THEN 'DELETE' END;
+    IF @op IS NULL RETURN;
+    INSERT dbo.NHATKY (TenBang, ThaoTac, KhoaChinh, DuLieuCu, DuLieuMoi, NguoiDungUD)
+    SELECT 'HOCVIEN', @op, COALESCE(i.MaHV, d.MaHV),
+           (SELECT d.HoTen, d.NgaySinh, d.SoDienThoai, d.Email, d.SoNha, d.PhuongXa, d.QuanHuyen, d.TinhTP, d.HoTenPhuHuynh,
+                   d.MaCN, d.TrangThai FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+           (SELECT i.HoTen, i.NgaySinh, i.SoDienThoai, i.Email, i.SoNha, i.PhuongXa, i.QuanHuyen, i.TinhTP, i.HoTenPhuHuynh,
+                   i.MaCN, i.TrangThai FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+           (SELECT TOP 1 TenDangNhap FROM dbo.fn_NguoiDungHienTai())
+    FROM inserted i FULL OUTER JOIN deleted d ON d.MaHV = i.MaHV
+    WHERE @op <> 'UPDATE' OR EXISTS (
+        SELECT i.HoHV, i.TenHV, i.NgaySinh, i.GioiTinh, i.SoDienThoai, i.Email, i.SoNha, i.PhuongXa, i.QuanHuyen, i.TinhTP,
+               i.HoTenPhuHuynh, i.MaCN, i.TrangThai
+        EXCEPT
+        SELECT d.HoHV, d.TenHV, d.NgaySinh, d.GioiTinh, d.SoDienThoai, d.Email, d.SoNha, d.PhuongXa, d.QuanHuyen, d.TinhTP,
+               d.HoTenPhuHuynh, d.MaCN, d.TrangThai);
+END
+GO
+
+-- Nhật ký là bằng chứng kiểm toán: không cho UPDATE / DELETE. Giới hạn: TRUNCATE TABLE không kích hoạt trigger
+-- (cần quyền ALTER – chỉ db_owner), DISABLE TRIGGER cũng vậy; muốn chống cả quản trị viên thì dùng
+-- ledger table chỉ-ghi-thêm (SQL Server 2022: WITH (LEDGER = ON (APPEND_ONLY = ON))) hoặc SQL Server Audit.
 CREATE OR ALTER TRIGGER dbo.trg_NhatKy_ChiDoc
 ON dbo.NHATKY
 INSTEAD OF UPDATE, DELETE
@@ -240,8 +319,18 @@ BEGIN
     IF EXISTS (SELECT 1 FROM inserted i LEFT JOIN dbo.LOPHOC l ON l.MaLop = i.MaLop
                WHERE l.MaLop IS NULL OR l.TrangThai NOT IN (N'Sắp mở', N'Đang học'))
         THROW 50075, N'Lớp không tồn tại hoặc không còn nhận ghi danh.', 1;
+    IF EXISTS (SELECT 1 FROM inserted WHERE ISNULL(GiamGia, 0) NOT BETWEEN 0 AND 50)
+        THROW 50077, N'Giảm giá phải từ 0 đến 50%.', 1;
+    -- Cùng luật khoá tiên quyết với sp_DangKyHoc (viết theo tập hợp): đã Đạt khoá tiên quyết HOẶC điểm đầu vào đủ
+    IF EXISTS (SELECT 1 FROM inserted i JOIN dbo.LOPHOC l ON l.MaLop = i.MaLop JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH
+               WHERE k.MaKHTienQuyet IS NOT NULL
+                 AND NOT EXISTS (SELECT 1 FROM dbo.DANGKY d JOIN dbo.LOPHOC l2 ON l2.MaLop = d.MaLop
+                                 WHERE d.MaHV = i.MaHV AND l2.MaKH = k.MaKHTienQuyet AND d.KetQua = N'Đạt')
+                 AND NOT EXISTS (SELECT 1 FROM dbo.KIEMTRA_DAUVAO t WHERE t.MaHV = i.MaHV AND t.DiemTong >= k.DiemDauVaoTu))
+        THROW 50078, N'Có học viên chưa đủ điều kiện khoá tiên quyết.', 1;
+    -- Ngày đăng ký luôn là hôm nay (không nhận giá trị từ client – tránh lùi hạn đóng học phí)
     INSERT dbo.DANGKY (MaHV, MaLop, NgayDK, HocPhi, GiamGia)
-    SELECT i.MaHV, i.MaLop, ISNULL(i.NgayDK, CAST(GETDATE() AS DATE)), k.HocPhi, ISNULL(i.GiamGia, 0)
+    SELECT i.MaHV, i.MaLop, CAST(GETDATE() AS DATE), k.HocPhi, ISNULL(i.GiamGia, 0)
     FROM inserted i JOIN dbo.LOPHOC l ON l.MaLop = i.MaLop JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH;
 END
 GO
@@ -254,10 +343,14 @@ BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM deleted d JOIN dbo.CT_PHIEUTHU c ON c.MaDK = d.MaDK)
         THROW 50076, N'Đăng ký đã có phiếu thu, không thể huỷ (cần hoàn tiền trước).', 1;
+    -- Cùng luật với sp_HuyDangKy: học viên đã đi học thì không huỷ, chỉ huỷ đăng ký đang học
+    IF EXISTS (SELECT 1 FROM deleted d JOIN dbo.DIEMDANH dd ON dd.MaDK = d.MaDK)
+        THROW 50079, N'Học viên đã đi học – không huỷ được đăng ký (dùng chuyển lớp).', 1;
     UPDATE dk SET TrangThai = N'Huỷ'
-    FROM dbo.DANGKY dk JOIN deleted d ON d.MaDK = dk.MaDK;
+    FROM dbo.DANGKY dk JOIN deleted d ON d.MaDK = dk.MaDK
+    WHERE dk.TrangThai = N'Đang học';
 END
 GO
 
-PRINT N'✓ 06_triggers.sql: 11 trigger (8 AFTER, 3 INSTEAD OF trên bảng / view).';
+PRINT N'✓ 06_triggers.sql: 14 trigger (11 AFTER, 3 INSTEAD OF trên bảng / view).';
 GO

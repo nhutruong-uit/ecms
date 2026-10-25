@@ -4,7 +4,7 @@ import streamlit as st
 from core import auth, db, ui
 
 user = auth.require_role("QuanLy", "GiaoVu")
-ui.header("📝 Kiểm tra đầu vào", "Kết quả lưu dạng XML có XML Schema (T10): điểm ngoài 0–10 hoặc thiếu kỹ năng bị CSDL từ chối.")
+ui.header("📝 Kiểm tra đầu vào", "Nhập điểm 4 kỹ năng (0–10). Hệ thống từ chối bài thiếu kỹ năng hoặc điểm sai và gợi ý khoá học phù hợp.")
 ui.show_flash()
 
 
@@ -53,7 +53,7 @@ with tab_nhap:
     if st.session_state.get("kt_vua_luu"):
         hv0, ma_kt, kh = st.session_state["kt_vua_luu"]
         tong = db.scalar("SELECT DiemTong FROM vw_KiemTraChiTiet WHERE MaKT = ?", [ma_kt])
-        st.markdown(f"**Gợi ý khoá học cho điểm {tong}** (`fn_GoiYKhoaHoc`)")
+        st.markdown(f"**Gợi ý khoá học cho điểm {tong}**")
         gy = db.query("SELECT * FROM dbo.fn_GoiYKhoaHoc(?, NULL) ORDER BY MaCT", [tong])
         ui.table(gy, {"MaKH": "Mã", "TenKH": "Khoá học", "MaCT": "Chương trình", "MucTieuDauRa": "Đầu ra", "HocPhi": "Học phí",
                       "SoLopConCho": "Lớp còn chỗ"}, key="t_gy", select=False, money_cols=("HocPhi",))
@@ -70,12 +70,12 @@ with tab_xem:
                              expanded=r.Index == 0):
                 c1, c2 = st.columns([1.2, 1])
                 with c1:
-                    st.caption("Tách bằng `.nodes()` (fn_KyNangKiemTra)")
+                    st.caption("Điểm từng kỹ năng")
                     kn = db.query("SELECT * FROM dbo.fn_KyNangKiemTra(?)", [r.MaKT])
                     st.bar_chart(kn.set_index("KyNang")["Diem"], height=180, y_label="Điểm", x_label="")
                     ui.table(kn, {"KyNang": "Kỹ năng", "Diem": "Điểm", "NhanXet": "Nhận xét"}, key=f"kn_{r.MaKT}", select=False)
                     if r.NhanXetChung:
                         st.markdown(f"**Nhận xét chung:** {r.NhanXetChung}")
                 with c2:
-                    st.caption("XML gốc lưu trong cột KetQuaChiTiet")
-                    st.code(r.XmlGoc.replace("><", ">\n<"), language="xml")
+                    with st.expander("Dữ liệu gốc (XML)"):          # cho quản trị / kỹ thuật đối chiếu, người dùng không cần xem
+                        st.code(r.XmlGoc.replace("><", ">\n<"), language="xml")

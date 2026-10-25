@@ -1,0 +1,28 @@
+# Trạm CN02 cho demo cam kết hai pha qua MSDTC giữa HAI MÁY (database/13b_2pc_msdtc.sql) – chạy trên máy thứ hai
+# (VD macOS cùng mạng Wi-Fi với máy Windows). Xem database/tram_cn02/README.md.
+#
+#   WIN_HOST=NHUTRUONG WIN_IP=192.168.1.169 docker compose -f database/tram_cn02/docker-compose.yml up -d
+#
+# MSDTC của SQL Server trên Linux nghe ở cổng RPC 135 (bộ ánh xạ điểm cuối) và cổng giao tác cố định 51000 – cả hai phải
+# mở ra mạng, cùng cổng SQL 1433 (ở đây 14335 để không trùng container ECMS chính).
+services:
+  tram-cn02:
+    image: mcr.microsoft.com/mssql/server:${MSSQL_IMAGE_TAG:-2025-latest}
+    platform: linux/amd64                    # Apple Silicon chạy qua Rosetta
+    container_name: ecms-tram-cn02
+    # Tên máy MSDTC của trạm này: máy Windows phải phân giải được tên này ra IP máy chạy container (file hosts)
+    hostname: ecms-tram-cn02
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Ecms@12345}
+      MSSQL_COLLATION: Vietnamese_CI_AS
+      MSSQL_RPC_PORT: "135"
+      MSSQL_DTC_TCP_PORT: "51000"
+      TZ: Asia/Ho_Chi_Minh
+    # MSDTC của trạm này gọi ngược về MSDTC của máy Windows theo TÊN máy Windows
+    extra_hosts:
+      - "${WIN_HOST:-NHUTRUONG}:${WIN_IP:?Đặt WIN_IP = địa chỉ IP của máy Windows}"
+    ports:
+      - "14335:1433"
+      - "135:135"
+      - "51000:51000"

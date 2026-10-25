@@ -2,6 +2,7 @@
 Master: học viên, hình thức, ghi chú. Detail: lưới các đăng ký còn nợ, chọn nhiều dòng → sp_ThuHocPhi.
 Tổng tiền phiếu và trạng thái học phí do trigger trg_CTPhieuThu_TongTien cập nhật."""
 import json
+import uuid
 from datetime import date, timedelta
 
 import pandas as pd
@@ -26,8 +27,9 @@ tab_lap, tab_tra = st.tabs(["Lập phiếu thu", "Tra cứu phiếu thu"], key="
 
 with tab_lap:
     if st.session_state.get("pt_vua_lap"):
-        st.success(f"Đã lập phiếu thu. Tổng {ui.money(st.session_state['pt_vua_lap'][1])}.")
-        nut_in(st.session_state["pt_vua_lap"][0], "in_moi")
+        ma_pt, tong_pt = st.session_state["pt_vua_lap"]
+        st.success(f"Đã lập phiếu thu PT{ma_pt:06d}. Tổng {ui.money(tong_pt)}.")
+        nut_in(ma_pt, "in_moi")
     st.markdown("##### 1. Thông tin phiếu (master)")
     q = st.text_input("Tìm học viên (tên, SĐT hoặc mã)", placeholder="VD: HV0019")
     hv = None
@@ -47,7 +49,8 @@ with tab_lap:
         if no.empty:
             st.info("Học viên không còn khoản nào phải đóng.")
         else:
-            st.markdown("##### 2. Chi tiết – chọn các đăng ký cần thu (detail)")
+            st.markdown("##### 2. Chi tiết – các đăng ký cần thu (detail)")
+            st.caption("Mặc định thu tất cả khoản còn nợ: bỏ tích khoản chưa thu, sửa cột *Thu lần này* nếu học viên đóng một phần.")
             no.insert(0, "Thu", True)
             no["SoTien"] = no["ConNo"].astype("int64")
             for c in ("ThanhTien", "DaThu", "ConNo"):
@@ -75,11 +78,19 @@ with tab_lap:
                 if st.form_submit_button("Lập phiếu thu", type="primary", icon=":material/receipt_long:",
                                          disabled=chon.empty or not loi.empty):
                     ct_json = json.dumps([{"MaDK": int(r.MaDK), "SoTien": int(r.SoTien)} for r in chon.itertuples()])
+                    # Mã yêu cầu gắn với NỘI DUNG phiếu (học viên + các khoản thu): gửi lại đúng phiếu đó (bấm hai lần, lần
+                    # trước mất kết nối sau khi máy chủ đã ghi) → sp_ThuHocPhi trả phiếu đã lập, không lập thêm; đổi học viên
+                    # hoặc khoản thu là một yêu cầu mới → mã mới (không bao giờ nhận nhầm phiếu của học viên trước)
+                    noi_dung = (hv, ct_json)
+                    if st.session_state.get("pt_yeu_cau", (None, None))[0] != noi_dung:
+                        st.session_state["pt_yeu_cau"] = (noi_dung, str(uuid.uuid4()))
                     out = ui.run(lambda: db.call_proc("sp_ThuHocPhi", {"MaHV": hv, "MaNV": user["ma_nv"], "HinhThuc": ht,
-                                                                       "ChiTiet": ct_json, "GhiChu": gc.strip() or None},
+                                                                       "ChiTiet": ct_json, "GhiChu": gc.strip() or None,
+                                                                       "MaYeuCau": st.session_state["pt_yeu_cau"][1]},
                                                       outputs={"MaPT": "INT", "TongTien": "DECIMAL(12,0)"}), rerun=False)
                     if out is not None:
                         st.session_state["pt_vua_lap"] = (int(out["MaPT"]), out["TongTien"])
+                        st.session_state.pop("pt_yeu_cau", None)                   # phiếu tiếp theo dùng mã mới
                         st.rerun()
 
 with tab_tra:
@@ -98,6 +109,6 @@ with tab_tra:
     if sel:
         ct = db.query("SELECT MaLop, TenKH, ThanhTien, SoTien, ConNo FROM vw_CTPhieuThu WHERE MaPT = ?", [sel["MaPT"]])
         st.markdown(f"**Chi tiết phiếu {sel['SoPhieu']}**")
-        ui.table(ct, {"MaLop": "Lớp", "TenKH": "Khoá học", "ThanhTien": "Phải đóng", "SoTien": "Thu", "ConNo": "Còn nợ hiện tại"},
+        ui.table(ct, {"MaLop": "Lớp", "TenKH": "Khoá học", "ThanhTien": "Phải đóng", "SoTien": "Thu", "ConNo": "Còn nợ sau phiếu"},
                  key="t_ct", select=False, money_cols=("ThanhTien", "SoTien", "ConNo"))
         nut_in(int(sel["MaPT"]), "in_cu")

@@ -4,8 +4,10 @@ import streamlit as st
 from core import auth, db, ui
 
 user = auth.require_role("QuanLy", "GiaoVu")
-ui.header("✍️ Ghi danh", "CSDL kiểm tra lớp còn chỗ, đăng ký trùng và khoá tiên quyết (sp_DangKyHoc, trigger sĩ số).")
+ui.header("✍️ Ghi danh", "Chọn học viên, xem kết quả kiểm tra đầu vào rồi ghi danh vào lớp còn chỗ. Hệ thống tự kiểm tra "
+                         "lớp đầy, đăng ký trùng và điều kiện khoá tiên quyết.")
 ui.show_flash()
+cn = None if user["pham_vi_cn"] == "ALL" else user["ma_cn"]     # tài khoản chi nhánh chỉ ghi danh / chuyển vào lớp chi nhánh mình
 
 q = st.text_input("Tìm học viên (tên, SĐT hoặc mã)", placeholder="VD: 0901 hoặc Lan")
 if not q.strip():
@@ -35,10 +37,15 @@ dsel = ui.table(dk, {"MaLop": "Lớp", "TenKH": "Khoá học", "NgayDK": "Ngày 
                      "TrangThaiHP": "Học phí", "TrangThai": "Trạng thái", "KetQua": "Kết quả"}, key="t_dk", money_cols=("ThanhTien",))
 if dsel and dsel["TrangThai"] in ("Đang học", "Bảo lưu"):
     c1, c2, c3 = st.columns([1, 2, 1])
-    if c1.button("Huỷ đăng ký", icon=":material/cancel:"):
+    with c1:
+        huy = ui.nut_xoa("Huỷ đăng ký", key=f"x_dk_{dsel['MaDK']}", icon=":material/cancel:",
+                         canh_bao="Chỉ huỷ được đăng ký chưa đóng tiền và học viên chưa đi buổi nào (ghi danh nhầm). "
+                                  "Học viên đã đi học thì dùng Chuyển lớp.")
+    if huy:
         ui.run(lambda: db.call_proc("sp_HuyDangKy", {"MaDK": int(dsel["MaDK"])}), f"Đã huỷ đăng ký lớp {dsel['MaLop']}.")
     cung_khoa = db.query("""SELECT MaLop, TenLop, ConCho FROM vw_SiSoLop WHERE MaKH = ? AND MaLop <> ?
-                            AND TrangThai IN (N'Sắp mở', N'Đang học') AND ConCho > 0""", [dsel["MaKH"], dsel["MaLop"]])
+                            AND TrangThai IN (N'Sắp mở', N'Đang học') AND ConCho > 0 AND (? IS NULL OR MaCN = ?)""",
+                         [dsel["MaKH"], dsel["MaLop"], cn, cn])
     if not cung_khoa.empty:
         dich = c2.selectbox("Chuyển sang lớp cùng khoá", cung_khoa.MaLop.tolist(),
                             format_func=lambda m: f"{m} (còn {cung_khoa.set_index('MaLop').loc[m, 'ConCho']} chỗ)")
@@ -48,7 +55,6 @@ if dsel and dsel["TrangThai"] in ("Đang học", "Bảo lưu"):
 
 st.subheader("Ghi danh lớp mới")
 chi_de_xuat = st.toggle("Chỉ hiện lớp của khoá đề xuất", value=bool(de_xuat), disabled=not de_xuat)
-cn = None if user["pham_vi_cn"] == "ALL" else user["ma_cn"]
 lop = db.query("""SELECT MaLop, TenLop, TenKH, MaKH, TenCN, GiaoVien, NgayKhaiGiang, Lich, SiSoHienTai, SiSoToiDa, ConCho, TrangThai
                   FROM vw_SiSoLop WHERE TrangThai IN (N'Sắp mở', N'Đang học') AND (? IS NULL OR MaCN = ?)
                     AND (? = 0 OR MaKH = ?) ORDER BY ConCho DESC, NgayKhaiGiang""",

@@ -13232,9 +13232,9 @@ INSERT INTO CT_PHIEUTHU (MaPT, MaDK, SoTien) VALUES
   (501, 531, 4500000.0);
 GO
 
--- TAIKHOAN: mật khẩu băm SHA2_256(salt + mật khẩu UTF-16), salt ngẫu nhiên 16 byte mỗi tài khoản
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV)
-SELECT v.TenDangNhap, HASHBYTES('SHA2_256', s.Salt + CAST(v.MatKhau AS VARBINARY(200))), s.Salt, v.VaiTro, v.MaNV, v.MaHV
+-- TAIKHOAN: mật khẩu băm bằng dbo.fn_BamMatKhau (01_schema.sql – 10.000 vòng SHA2_256), salt ngẫu nhiên 16 byte
+DECLARE @tk TABLE (TenDangNhap VARCHAR(30), MatKhau NVARCHAR(100), VaiTro VARCHAR(10), MaNV CHAR(6), MaHV CHAR(6), Salt VARBINARY(16));
+INSERT @tk SELECT v.TenDangNhap, v.MatKhau, v.VaiTro, v.MaNV, v.MaHV, CRYPT_GEN_RANDOM(16)
 FROM (VALUES
   (N'quanly', N'Ecms@2026', N'QuanLy', N'NV0001', NULL),
   (N'trungt02', N'Ecms@2026', N'QuanLy', N'NV0002', NULL),
@@ -13316,8 +13316,9 @@ FROM (VALUES
   (N'hv0058', N'Hocvien@2026', N'HocVien', NULL, N'HV0058'),
   (N'hv0059', N'Hocvien@2026', N'HocVien', NULL, N'HV0059'),
   (N'hv0060', N'Hocvien@2026', N'HocVien', NULL, N'HV0060')
-) v (TenDangNhap, MatKhau, VaiTro, MaNV, MaHV)
-CROSS APPLY (SELECT CRYPT_GEN_RANDOM(16) AS Salt) s;
+) v (TenDangNhap, MatKhau, VaiTro, MaNV, MaHV);
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV)
+SELECT TenDangNhap, dbo.fn_BamMatKhau(MatKhau, Salt), Salt, VaiTro, MaNV, MaHV FROM @tk;
 GO
 
 -- Bật lại trigger

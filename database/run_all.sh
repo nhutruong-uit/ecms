@@ -36,7 +36,26 @@ run_file() {
   fi
 }
 
+# Chờ SQL Server sẵn sàng (tối đa 2 phút): lần đầu khởi động container còn đổi collation máy chủ,
+# tạo CSDL lúc đó làm máy chủ tự tắt – xem database/healthcheck.sql
+wait_ready() {
+  local i
+  for i in $(seq 1 60); do
+    if [[ "$MODE" == "local" ]]; then
+      sqlcmd -S "$SERVER" -U sa -P "$SA_PASSWORD" -C -b -f 65001 -i "$ROOT/database/healthcheck.sql" -o /dev/null 2>/dev/null && return 0
+    else
+      docker exec -i "$CONTAINER" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" \
+        -C -b -f 65001 -i /database/healthcheck.sql -o /dev/null 2>/dev/null && return 0
+    fi
+    [[ $i -eq 1 ]] && echo "… chờ SQL Server sẵn sàng"
+    sleep 2
+  done
+  echo "✗ SQL Server chưa sẵn sàng sau 2 phút" >&2
+  exit 1
+}
+
 start=$(date +%s)
+wait_ready
 for p in "${PREFIXES[@]}"; do
   shopt -s nullglob
   matches=("$ROOT"/database/${p}*.sql)

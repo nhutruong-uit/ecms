@@ -28,8 +28,10 @@ LEFT JOIN dbo.GIAOVIEN gv ON gv.MaGV = nv.MaNV;
 GO
 
 -- Học viên của chi nhánh người dùng đang đăng nhập (giới hạn theo DÒNG – row-level).
--- Ứng dụng gọi sp_set_session_context N'ma_cn' sau khi đăng nhập (T19);
--- giá trị 'ALL' dành cho quản lý trung tâm. Không đặt context → không thấy dòng nào.
+-- Phạm vi chi nhánh lấy từ dbo.fn_NguoiDungHienTai(): kết nối ứng dụng dùng SESSION_CONTEXT 'ma_cn' đặt
+-- read-only sau khi đăng nhập; login minh hoạ (u_giaovu…) dùng chi nhánh của tài khoản cùng tên, tự gọi
+-- sp_set_session_context cũng không mở rộng được. 'ALL' dành cho quản lý trung tâm.
+-- Không xác định được người dùng → không thấy dòng nào.
 CREATE OR ALTER VIEW dbo.vw_HocVien_ChiNhanh
 AS
 SELECT h.MaHV, h.HoHV, h.TenHV, h.HoTen, h.NgaySinh, h.Tuoi, h.GioiTinh, h.SoDienThoai, h.Email,
@@ -38,7 +40,7 @@ SELECT h.MaHV, h.HoHV, h.TenHV, h.HoTen, h.NgaySinh, h.Tuoi, h.GioiTinh, h.SoDie
        h.HoTenPhuHuynh, h.NgayTao, h.MaCN, cn.TenCN, h.TrangThai
 FROM dbo.HOCVIEN h
 JOIN dbo.CHINHANH cn ON cn.MaCN = h.MaCN
-WHERE CAST(SESSION_CONTEXT(N'ma_cn') AS VARCHAR(4)) IN (h.MaCN, 'ALL');
+WHERE EXISTS (SELECT 1 FROM dbo.fn_NguoiDungHienTai() u WHERE u.PhamViCN IN (h.MaCN, 'ALL'));
 GO
 
 -- Lịch dạy của giáo viên: chỉ thông tin lịch, không có học viên, học phí, lương
@@ -261,14 +263,17 @@ JOIN dbo.NHANVIEN nv ON nv.MaNV = p.MaNV
 JOIN dbo.CHINHANH cn ON cn.MaCN = nv.MaCN;
 GO
 
+-- Chi tiết phiếu thu. DaThuTong / ConNo tính TẠI THỜI ĐIỂM LẬP PHIẾU (các khoản thu có MaPT ≤ phiếu này),
+-- nên in lại một phiếu cũ vẫn ra đúng số liệu như lúc in lần đầu, không bị các lần đóng sau làm thay đổi.
 CREATE OR ALTER VIEW dbo.vw_CTPhieuThu
 AS
 SELECT c.MaPT, c.MaDK, d.MaLop, k.TenKH, d.HocPhi, d.GiamGia, d.ThanhTien, c.SoTien,
-       dbo.fn_SoTienDaDong(d.MaDK) AS DaThuTong, d.ThanhTien - dbo.fn_SoTienDaDong(d.MaDK) AS ConNo
+       t.DaThuTong, d.ThanhTien - t.DaThuTong AS ConNo
 FROM dbo.CT_PHIEUTHU c
 JOIN dbo.DANGKY d  ON d.MaDK = c.MaDK
 JOIN dbo.LOPHOC l  ON l.MaLop = d.MaLop
-JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH;
+JOIN dbo.KHOAHOC k ON k.MaKH = l.MaKH
+CROSS APPLY (SELECT SUM(c2.SoTien) AS DaThuTong FROM dbo.CT_PHIEUTHU c2 WHERE c2.MaDK = c.MaDK AND c2.MaPT <= c.MaPT) t;
 GO
 
 /* ---------------------------------------------------------------------

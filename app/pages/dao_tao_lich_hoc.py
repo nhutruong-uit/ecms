@@ -32,7 +32,13 @@ def lich_cua_lop():
 
     st.markdown("#### Lịch cố định trong tuần")
     ui.table(lich, {"TenThu": "Thứ", "TenCa": "Ca", "GioBatDau": "Từ", "GioKetThuc": "Đến", "MaPhong": "Phòng"}, key="t_lh", select=False)
-    if buoi.empty:
+    da_diem_danh = int(buoi["SoDaDiemDanh"].sum()) if len(buoi) else 0
+    if da_diem_danh:
+        st.caption("Lớp đã điểm danh nên không sửa được lịch cố định.")
+    else:
+        if not buoi.empty:
+            st.caption(f"Lớp đã sinh {len(buoi)} buổi theo lịch này. Thêm / bỏ lịch sẽ xoá các buổi đã sinh – "
+                       "sau đó bấm **Sinh buổi học** để tạo lại theo lịch mới.")
         with st.form("f_lh"):
             c1, c2, c3 = st.columns(3)
             thu = c1.selectbox("Thứ", list(THU), format_func=THU.get)

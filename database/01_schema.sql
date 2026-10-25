@@ -61,7 +61,9 @@ CREATE TABLE NHANVIEN (
     CONSTRAINT CK_NHANVIEN_Luong CHECK (LuongCoBan >= 0),
     CONSTRAINT CK_NHANVIEN_Email CHECK (Email LIKE '%_@_%._%'),
     CONSTRAINT CK_NHANVIEN_QuanLy CHECK (MaNVQuanLy IS NULL OR MaNVQuanLy <> MaNV),
-    CONSTRAINT CK_NHANVIEN_Tuoi CHECK (DATEDIFF(YEAR, NgaySinh, NgayVaoLam) >= 18)   -- liên thuộc tính
+    -- liên thuộc tính: đủ 18 tuổi tại ngày vào làm. Không dùng DATEDIFF(YEAR, …) vì hàm này đếm số lần
+    -- qua mốc 1/1 (sinh 31/12/2008 vào làm 01/01/2026 vẫn cho 18) – cộng 18 năm vào ngày sinh mới đúng
+    CONSTRAINT CK_NHANVIEN_Tuoi CHECK (DATEADD(YEAR, 18, NgaySinh) <= NgayVaoLam)
 );
 
 ALTER TABLE CHINHANH ADD CONSTRAINT FK_CHINHANH_QuanLy
@@ -149,6 +151,8 @@ CREATE TABLE KHOAHOC (
     CONSTRAINT FK_KHOAHOC_CHUONGTRINH FOREIGN KEY (MaCT) REFERENCES CHUONGTRINH (MaCT),
     CONSTRAINT FK_KHOAHOC_TienQuyet FOREIGN KEY (MaKHTienQuyet) REFERENCES KHOAHOC (MaKH),
     CONSTRAINT CK_KHOAHOC_TienQuyet CHECK (MaKHTienQuyet IS NULL OR MaKHTienQuyet <> MaKH),
+    -- mã lớp tự sinh = MaKH + '-' + yy + stt (2 số) phải vừa LOPHOC.MaLop VARCHAR(10) → MaKH tối đa 5 ký tự
+    CONSTRAINT CK_KHOAHOC_MaKH CHECK (LEN(MaKH) BETWEEN 2 AND 5 AND MaKH COLLATE Latin1_General_BIN NOT LIKE '%[^A-Z0-9]%'),
     CONSTRAINT CK_KHOAHOC_Diem CHECK (DiemDauVaoTu >= 0 AND DiemDauVaoDen <= 10 AND DiemDauVaoTu <= DiemDauVaoDen),
     CONSTRAINT CK_KHOAHOC_SoBuoi CHECK (SoBuoi BETWEEN 8 AND 60),
     CONSTRAINT CK_KHOAHOC_HocPhi CHECK (HocPhi > 0)
@@ -201,8 +205,11 @@ CREATE TABLE BUOIHOC (
     MaPhong       VARCHAR(5)     NULL,
     NoiDung       NVARCHAR(200)  NULL,
     TrangThai     NVARCHAR(20)   NOT NULL CONSTRAINT DF_BUOIHOC_TrangThai DEFAULT N'Đã lên lịch',
+    MaGVDay       CHAR(6)        NULL,                      -- giáo viên dạy buổi này, ghi khi điểm danh;
+                                                            -- NULL = giáo viên phụ trách lớp (đổi GV giữa khoá không làm sai lương tháng cũ)
     CONSTRAINT PK_BUOIHOC PRIMARY KEY (MaLop, STT),
     CONSTRAINT FK_BUOIHOC_LOPHOC FOREIGN KEY (MaLop) REFERENCES LOPHOC (MaLop) ON DELETE CASCADE,
+    CONSTRAINT FK_BUOIHOC_GIAOVIEN FOREIGN KEY (MaGVDay) REFERENCES GIAOVIEN (MaGV),
     CONSTRAINT FK_BUOIHOC_CAHOC FOREIGN KEY (MaCa) REFERENCES CAHOC (MaCa),
     CONSTRAINT UQ_BUOIHOC_Ngay UNIQUE (MaLop, NgayHoc, MaCa),
     CONSTRAINT CK_BUOIHOC_STT CHECK (STT >= 1),
@@ -339,6 +346,7 @@ CREATE TABLE PHIEUTHU (
     HinhThuc      NVARCHAR(20)   NOT NULL CONSTRAINT DF_PHIEUTHU_HinhThuc DEFAULT N'Tiền mặt',
     TongTien      DECIMAL(12,0)  NOT NULL CONSTRAINT DF_PHIEUTHU_TongTien DEFAULT 0,  -- suy diễn = SUM(CT_PHIEUTHU.SoTien), trigger T13
     GhiChu        NVARCHAR(200)  NULL,
+    MaYeuCau      UNIQUEIDENTIFIER NULL,                   -- ứng dụng sinh mỗi lần mở form; gửi lại cùng mã → không lập phiếu mới
     CONSTRAINT PK_PHIEUTHU PRIMARY KEY (MaPT),
     CONSTRAINT UQ_PHIEUTHU_SoPhieu UNIQUE (SoPhieu),
     CONSTRAINT FK_PHIEUTHU_HOCVIEN FOREIGN KEY (MaHV) REFERENCES HOCVIEN (MaHV),
@@ -346,6 +354,7 @@ CREATE TABLE PHIEUTHU (
     CONSTRAINT CK_PHIEUTHU_HinhThuc CHECK (HinhThuc IN (N'Tiền mặt', N'Chuyển khoản', N'Thẻ')),
     CONSTRAINT CK_PHIEUTHU_TongTien CHECK (TongTien >= 0)
 );
+CREATE UNIQUE INDEX UX_PHIEUTHU_MaYeuCau ON PHIEUTHU (MaYeuCau) WHERE MaYeuCau IS NOT NULL;
 
 CREATE TABLE CT_PHIEUTHU (
     MaPT          INT            NOT NULL,
@@ -367,15 +376,16 @@ CREATE TABLE BANGLUONG (
     TongLuong AS (LuongCoBan + SoBuoiDay * DonGiaBuoi) PERSISTED,
     NgayTinh      DATETIME2(0)   NOT NULL CONSTRAINT DF_BANGLUONG_NgayTinh DEFAULT SYSDATETIME(),
     CONSTRAINT PK_BANGLUONG PRIMARY KEY (Thang, MaGV),
-    CONSTRAINT FK_BANGLUONG_GIAOVIEN FOREIGN KEY (MaGV) REFERENCES GIAOVIEN (MaGV) ON DELETE CASCADE,
-    CONSTRAINT CK_BANGLUONG_Thang CHECK (Thang LIKE '[2][0-9][0-9][0-9]-[01][0-9]')
+    -- NO ACTION (không CASCADE): bảng lương là chứng từ, xoá / đổi chức vụ giáo viên không được làm mất lịch sử lương
+    CONSTRAINT FK_BANGLUONG_GIAOVIEN FOREIGN KEY (MaGV) REFERENCES GIAOVIEN (MaGV),
+    CONSTRAINT CK_BANGLUONG_Thang CHECK (Thang LIKE '[2][0-9][0-9][0-9]-0[1-9]' OR Thang LIKE '[2][0-9][0-9][0-9]-1[0-2]')
 );
 
 /* ---------------------------------------------------------------------
    5. HỆ THỐNG: tài khoản ứng dụng, nhật ký kiểm toán
    --------------------------------------------------------------------- */
 
--- Tài khoản đăng nhập ứng dụng web. Mật khẩu lưu dạng băm SHA2_256 + salt (T15)
+-- Tài khoản đăng nhập ứng dụng web. Mật khẩu lưu dạng băm lặp SHA2_256 + salt (dbo.fn_BamMatKhau, T15)
 CREATE TABLE TAIKHOAN (
     TenDangNhap   VARCHAR(30)    NOT NULL,
     MatKhauHash   VARBINARY(32)  NOT NULL,
@@ -385,6 +395,7 @@ CREATE TABLE TAIKHOAN (
     MaHV          CHAR(6)        NULL,
     TrangThai     BIT            NOT NULL CONSTRAINT DF_TAIKHOAN_TrangThai DEFAULT 1,   -- 0: bị khoá
     SoLanSai      TINYINT        NOT NULL CONSTRAINT DF_TAIKHOAN_SoLanSai DEFAULT 0,
+    KhoaDen       DATETIME2(0)   NULL,                      -- sai 5 lần → tạm khoá 15 phút (TrangThai = 0 là quản lý khoá hẳn)
     LanDangNhapCuoi DATETIME2(0) NULL,
     NgayTao       DATETIME2(0)   NOT NULL CONSTRAINT DF_TAIKHOAN_NgayTao DEFAULT SYSDATETIME(),
     CONSTRAINT PK_TAIKHOAN PRIMARY KEY (TenDangNhap),
@@ -398,6 +409,28 @@ CREATE TABLE TAIKHOAN (
 );
 CREATE UNIQUE INDEX UX_TAIKHOAN_MaNV ON TAIKHOAN (MaNV) WHERE MaNV IS NOT NULL;   -- 1–1
 CREATE UNIQUE INDEX UX_TAIKHOAN_MaHV ON TAIKHOAN (MaHV) WHERE MaHV IS NOT NULL;   -- 1–1
+GO
+
+/* Băm mật khẩu có salt và KÉO DÃN KHOÁ (key stretching): băm lặp 10.000 vòng SHA2_256.
+   h0 = SHA2_256(Salt ‖ mật khẩu UTF-16LE);  h(i) = SHA2_256(h(i-1) ‖ Salt)
+   - Salt ngẫu nhiên 16 byte mỗi tài khoản: cùng mật khẩu vẫn ra hash khác, vô hiệu bảng băm có sẵn.
+   - 10.000 vòng: kiểm tra 1 mật khẩu mất khoảng 30–90 ms – không đáng kể khi đăng nhập, nhưng kẻ tấn công
+     dò mật khẩu từ bản sao CSDL chậm đi 10.000 lần so với một vòng SHA2_256 (cùng ý tưởng PBKDF2/bcrypt).
+   Đặt ở 01 (không ở 08) vì dữ liệu mẫu 02_seed.sql cũng dùng hàm này để băm mật khẩu tài khoản demo. */
+CREATE OR ALTER FUNCTION dbo.fn_BamMatKhau (@MatKhau NVARCHAR(100), @Salt VARBINARY(16))
+RETURNS VARBINARY(32)
+WITH SCHEMABINDING
+AS
+BEGIN
+    DECLARE @h VARBINARY(32) = HASHBYTES('SHA2_256', @Salt + CAST(@MatKhau AS VARBINARY(200))), @i INT = 1;
+    WHILE @i < 10000
+    BEGIN
+        SET @h = HASHBYTES('SHA2_256', @h + @Salt);
+        SET @i += 1;
+    END
+    RETURN @h;
+END
+GO
 
 -- Nhật ký kiểm toán, ghi bởi trigger (T13). Dữ liệu cũ / mới lưu dạng JSON
 CREATE TABLE NHATKY (

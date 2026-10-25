@@ -6,7 +6,7 @@ import streamlit as st
 
 from core import auth, db, ui
 
-auth.require_role("QuanLy")
+user = auth.require_role("QuanLy")
 ui.header("🏢 Chi nhánh, phòng học, ca học", "Danh mục nền của trung tâm. Chọn một dòng trong bảng để sửa.")
 ui.show_flash()
 
@@ -44,13 +44,12 @@ with tab_cn:
                 ui.run(lambda: db.call_proc("sp_LuuChiNhanh", {
                     "MaCN": ma.strip().upper(), "TenCN": ten.strip(), "DiaChi": dc.strip(), "SoDienThoai": sdt.strip(),
                     "NgayThanhLap": ntl, "MaNVQuanLy": ql}), f"Đã lưu chi nhánh {ma.strip().upper()}.")
-    if sel and st.button(f"Xoá chi nhánh {r['MaCN']}", icon=":material/delete:", key="x_cn"):
+    if sel and ui.nut_xoa(f"Xoá chi nhánh {r['MaCN']}", key=f"x_cn_{r['MaCN']}"):
         ui.run(lambda: db.call_proc("sp_XoaChiNhanh", {"MaCN": r["MaCN"]}), f"Đã xoá chi nhánh {r['MaCN']}.")
 
 # ------------------------------------------------------------------ PHÒNG HỌC
 with tab_ph:
-    loc_cn = ui.pick("Chi nhánh", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", allow_empty=True, key="loc_ph",
-                     empty_label="— tất cả —")
+    loc_cn = ui.chon_chi_nhanh(user, key="loc_ph")
     df = db.query("SELECT * FROM vw_DM_PhongHoc WHERE ? IS NULL OR MaCN = ? ORDER BY MaCN, MaPhong", [loc_cn, loc_cn])
     sel = ui.table(df, {"MaCN": "Chi nhánh", "TenCN": "Tên chi nhánh", "MaPhong": "Phòng", "SucChua": "Sức chứa",
                         "LoaiPhong": "Loại", "SoLichDangDung": "Lịch đang dùng"}, key="t_ph")
@@ -60,8 +59,7 @@ with tab_ph:
         fe = ui.FieldErrors()
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            cn = ui.pick("Chi nhánh *", "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN", r.get("MaCN") or loc_cn,
-                         disabled=bool(sel), key="f_ph_cn")
+            cn = ui.chon_chi_nhanh(user, "Chi nhánh *", r.get("MaCN") or loc_cn, allow_all=False, disabled=bool(sel), key="f_ph_cn")
         ph = c2.text_input("Số phòng *", r.get("MaPhong", ""), disabled=bool(sel), help="VD P105")
         with c2: fe.slot("ph")
         sc = c3.number_input("Sức chứa *", 5, 60, int(r.get("SucChua", 25)))
@@ -72,7 +70,7 @@ with tab_ph:
             if fe.ok:
                 ui.run(lambda: db.call_proc("sp_LuuPhongHoc", {"MaCN": cn, "MaPhong": ph.strip().upper(), "SucChua": sc,
                                                                "LoaiPhong": loai}), f"Đã lưu phòng {ph.strip().upper()}.")
-    if sel and st.button(f"Xoá phòng {r['MaPhong']}", icon=":material/delete:", key="x_ph"):
+    if sel and ui.nut_xoa(f"Xoá phòng {r['MaPhong']}", key=f"x_ph_{r['MaCN']}_{r['MaPhong']}"):
         ui.run(lambda: db.call_proc("sp_XoaPhongHoc", {"MaCN": r["MaCN"], "MaPhong": r["MaPhong"]}), "Đã xoá phòng.")
 
 # ------------------------------------------------------------------ CA HỌC
@@ -85,7 +83,8 @@ with tab_ca:
     with st.form("f_ca", clear_on_submit=not sel):
         fe = ui.FieldErrors()
         c1, c2, c3, c4 = st.columns(4)
-        ma = c1.number_input("Mã ca *", 1, 20, int(r.get("MaCa", df["MaCa"].max() + 1 if len(df) else 1)), disabled=bool(sel))
+        ke_tiep = min(int(df["MaCa"].max()) + 1, 99) if len(df) else 1     # mã ca là TINYINT; giới hạn 99 để không vượt khoảng
+        ma = c1.number_input("Mã ca *", 1, 99, int(r.get("MaCa", ke_tiep)), disabled=bool(sel))
         ten = c2.text_input("Tên ca *", r.get("TenCa", ""))
         with c2: fe.slot("ten")
         bd = c3.time_input("Giờ bắt đầu", r.get("GioBatDau", time(18, 0)), step=900)
@@ -97,5 +96,5 @@ with tab_ca:
             if fe.ok:
                 ui.run(lambda: db.call_proc("sp_LuuCaHoc", {"MaCa": int(ma), "TenCa": ten.strip(), "GioBatDau": bd,
                                                             "GioKetThuc": kt}), f"Đã lưu ca {ma}.")
-    if sel and st.button(f"Xoá ca {r['MaCa']}", icon=":material/delete:", key="x_ca"):
+    if sel and ui.nut_xoa(f"Xoá ca {r['MaCa']}", key=f"x_ca_{r['MaCa']}"):
         ui.run(lambda: db.call_proc("sp_XoaCaHoc", {"MaCa": int(r["MaCa"])}), "Đã xoá ca học.")

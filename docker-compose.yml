@@ -14,7 +14,12 @@ services:
       MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Ecms@12345}
       MSSQL_COLLATION: Vietnamese_CI_AS
       MSSQL_BACKUP_DIR: /var/opt/mssql/backup   # thư mục sao lưu mặc định (T17)
-      MSSQL_AGENT_ENABLED: "true"              # SQL Server Agent cho lịch sao lưu tự động
+      # SQL Server Agent TẮT ở lần khởi động đầu: Agent khởi động song song với việc đổi collation máy chủ, bật
+      # 'Agent XPs' đúng lúc đang reindex master → deadlock (Msg 1205) → Msg 3434, máy chủ tự tắt (CI ngày 25/10/2026).
+      # Cần lịch sao lưu bằng Agent (database/11_backup_restore.sql): khi container đã healthy, đặt
+      # MSSQL_AGENT_ENABLED=true trong .env rồi chạy lại `docker compose up -d` (collation đã đổi xong, không còn tranh chấp)
+      MSSQL_AGENT_ENABLED: "${MSSQL_AGENT_ENABLED:-false}"
+      TZ: Asia/Ho_Chi_Minh                     # GETDATE()/SYSDATETIME() theo giờ Việt Nam (mặc định container là UTC)
     ports:
       - "${DB_PORT:-1433}:1433"
     volumes:
@@ -22,11 +27,13 @@ services:
       - ./backups:/var/opt/mssql/backup    # file .bak/.trn của T17 thấy được từ máy thật
       - ./database:/database:ro            # script SQL cho run_all.sh
       - ./data:/data                       # CSV / XML cho BULK INSERT, OPENROWSET (T10, T18)
+    # "healthy" chỉ khi đã đổi xong collation máy chủ (database/healthcheck.sql) – trước đây kiểm tra SELECT 1
+    # nên run_all.sh có thể tạo CSDL giữa lúc đổi collation, máy chủ tự tắt (Msg 3434, CI ngày 20/10/2026)
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null"]
-      interval: 10s
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -i /database/healthcheck.sql -o /dev/null"]
+      interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
       start_period: 20s
 
 volumes:

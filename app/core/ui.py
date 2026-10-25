@@ -1,4 +1,5 @@
 """Thành phần giao diện dùng chung cho các trang (T19)."""
+import hashlib
 from datetime import date
 from typing import Callable, Iterable
 
@@ -64,9 +65,20 @@ def table(df: pd.DataFrame, labels: dict[str, str], key: str, money_cols: Iterab
     if not select:
         st.dataframe(view, hide_index=True, **kw)
         return None
-    ev = st.dataframe(view, hide_index=True, key=key, on_select="rerun", selection_mode="single-row", **kw)
+    # key gắn với tập khoá đang hiển thị (cột đầu): lọc / thêm / xoá làm danh sách đổi thì bỏ chọn, tránh
+    # chỉ số dòng cũ trỏ sang một bản ghi khác
+    sig = hashlib.md5("|".join(map(str, df.iloc[:, 0].tolist())).encode()).hexdigest()[:8] if len(df) else "0"
+    ev = st.dataframe(view, hide_index=True, key=f"{key}_{sig}", on_select="rerun", selection_mode="single-row", **kw)
     rows = ev.selection.rows if ev and ev.selection else []
-    return df.iloc[rows[0]].to_dict() if rows else None
+    return df.iloc[rows[0]].to_dict() if rows and rows[0] < len(df) else None
+
+
+def nut_xoa(label: str, key: str, icon: str = ":material/delete:",
+            canh_bao: str = "Thao tác này không hoàn tác được.") -> bool:
+    """Nút xoá hai bước (Chương 4 – chống thao tác nhầm): bấm nút mở hộp xác nhận, phải bấm "Xác nhận" mới xoá."""
+    with st.popover(label, icon=icon):
+        st.warning(canh_bao, icon="⚠️")
+        return st.button("Xác nhận", key=key, type="primary", icon=":material/check:")
 
 
 class FieldErrors:
@@ -127,6 +139,20 @@ def pick(label: str, sql: str, current=None, allow_empty: bool = False, key: str
     names[None] = empty_label
     idx = values.index(current) if current in values else 0
     return st.selectbox(label, values, index=idx, format_func=lambda v: names.get(v, str(v)), key=key, **kw)
+
+
+SQL_CHI_NHANH = "SELECT MaCN, TenCN FROM vw_DM_ChiNhanh ORDER BY MaCN"
+
+
+def chon_chi_nhanh(user: dict, label: str = "Chi nhánh", current=None, allow_all: bool = True, key: str | None = None,
+                   **kw):
+    """Chọn chi nhánh theo PHẠM VI tài khoản: tài khoản toàn trung tâm ('ALL') chọn tự do (allow_all: có mục
+    "— tất cả —"); tài khoản chi nhánh bị khoá ở chi nhánh mình. Procedure vẫn kiểm tra lại (dbo.fn_TrongPhamVi)."""
+    if user.get("pham_vi_cn") == "ALL":
+        return pick(label, SQL_CHI_NHANH, current, allow_empty=allow_all, key=key, empty_label="— tất cả —", **kw)
+    kw.pop("disabled", None)
+    pick(label, SQL_CHI_NHANH, user["ma_cn"], key=key, disabled=True, help="Tài khoản chỉ thao tác trên chi nhánh của mình", **kw)
+    return user["ma_cn"]
 
 
 def to_date(v, default: date | None = None) -> date | None:

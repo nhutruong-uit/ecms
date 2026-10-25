@@ -1,0 +1,10 @@
+# Cấu hình Streamlit cho ECMS (đọc khi chạy `streamlit run app/main.py` từ thư mục gốc repo).
+
+[client]
+# Ẩn nút Deploy và các mục dành cho nhà phát triển trên thanh công cụ – giao diện người dùng cuối và ảnh chụp
+# màn hình (scripts/chup_anh.py) không còn chi tiết kỹ thuật thừa.
+toolbarMode = "minimal"
+
+[browser]
+# Không gửi số liệu sử dụng về Streamlit.
+gatherUsageStats = false
