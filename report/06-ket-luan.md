@@ -109,7 +109,7 @@ Trong quá trình thực hiện, nhóm gặp một số khó khăn về môi tr�
 1. **Quy mô và tải.** Dữ liệu mẫu có khoảng 350 học viên; thao tác tra cứu đã được đo trên bản sao 10.121 học viên, nhưng hệ thống chưa được kiểm thử tải với nhiều người dùng đồng thời.
 2. **Giao diện.** Streamlit tải lại toàn trang sau mỗi tương tác, chưa tối ưu cho điện thoại và không hỗ trợ phím tắt tuỳ biến cho các thao tác nhập liệu lặp lại.
 3. **Bảo mật khi triển khai.** Ứng dụng web chưa chạy HTTPS và chưa có xác thực hai lớp. Kết nối tới CSDL đã mã hoá TLS nhưng máy phát triển tin chứng chỉ tự ký. TDE, mã hoá cột, che dữ liệu, SQL Server Audit và ledger mới được chạy thử trên CSDL demo, chưa bật trên CSDL ECMS chính.
-4. **CSDL phân tán** mới được mô phỏng bằng nhiều CSDL trên cùng một máy chủ: chưa có độ trễ mạng thật, và giao tác phân tán qua MSDTC giữa hai máy chủ mới có script, chưa chạy được trong môi trường Docker. Lược đồ toàn cục chưa chịu được sự cố của một trạm.
+4. **CSDL phân tán** phần lớn mới được mô phỏng bằng nhiều CSDL trên cùng một máy chủ. Giao tác phân tán qua MSDTC đã chạy thật giữa hai máy (Windows và macOS cùng mạng Wi-Fi), nhưng chỉ cho kịch bản chuyển lớp; phân mảnh, nửa kết và truy vấn toàn cục chưa đo trên mạng thật. Lược đồ toàn cục chưa chịu được sự cố của một trạm.
 5. **NoSQL** dừng ở bản sao một chiều từ SQL Server sang MongoDB, chưa đồng bộ liên tục.
 6. **Kiểm thử tự động và quy trình.** CI chạy trên Linux và chỉ cho nhánh `main`; nhánh `main` chưa bật branch protection. Script dựng CSDL cho Windows, các tính năng chỉ có trên Windows (MSDTC, SQL Server Agent trên bản không phải Express, TDE trên bản Developer trở lên) và việc chụp ảnh màn hình minh hoạ được kiểm tra thủ công trên máy Windows có SQL Server và SSMS.
 

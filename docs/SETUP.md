@@ -56,7 +56,7 @@ Khác biệt theo bản SQL Server:
 |---|---|
 | Express | Không có SQL Server Agent: phần tạo job ở `11_backup_restore.sql` tự bỏ qua, sao lưu định kỳ chạy bằng Task Scheduler + `sqlcmd`. Không có TDE: mục 2–3 của `14_encryption_audit.sql` tự bỏ qua. |
 | Developer / Standard / Enterprise | Chạy đủ mọi kịch bản demo, kể cả Agent job, TDE, SQL Server Audit. |
-| Hai instance (ví dụ `localhost` và `localhost\SQLEXPRESS`) | Thử cam kết hai pha thật qua MSDTC ở mục 11 của `13_distributed.sql` (bật dịch vụ *Distributed Transaction Coordinator*, tạo linked server). |
+| Hai máy cùng mạng (Windows + máy có Docker) | Cam kết hai pha thật qua MSDTC: `database/13b_2pc_msdtc.sql`, dựng trạm CN02 và cấu hình MSDTC / tường lửa theo `database/tram_cn02/README.md`. |
 
 ## 3. Dựng CSDL
 

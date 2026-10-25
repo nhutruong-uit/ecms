@@ -295,7 +295,7 @@ table(s, L, T + Cm(0.2), CW, [
     ["Báo cáo thống kê", "Mạnh nhất", "Yếu (N+1)", "Tốt nếu cục bộ", "Khá (aggregation)"],
     ["Đọc 1 hồ sơ trọn vẹn", "Nhiều JOIN", "Duyệt đối tượng", "Như quan hệ", "Nhanh nhất – 1 document"],
     ["Mở rộng", "Dọc", "Dọc", "Ngang theo chi nhánh", "Ngang (sharding)"],
-    ["Demo", "–", "ODL 16 lớp, OID, 3 cách ánh xạ kế thừa", "3 trạm, nửa kết −73% byte, 2PC", "4 collection, 6 đọc + 3 ghi"]],
+    ["Demo", "–", "ODL 16 lớp, OID, 3 cách ánh xạ kế thừa", "3 trạm, nửa kết −73% byte, 2PC qua MSDTC 2 máy", "4 collection, 6 đọc + 3 ghi"]],
       [2.6, 2.3, 2.3, 3, 3], 15, Cm(1.25))
 text(s, L, T + Cm(9.6), CW, Cm(2), "Kết luận: quan hệ tập trung là lựa chọn chính; phân tán khi mở rộng nhiều tỉnh; NoSQL làm kho phụ "
      "(polyglot persistence).", 17, True, NAVY)
@@ -341,7 +341,7 @@ bullets(s, L, T, Cm(15.5), CH, [
     "Đạt được: đủ 22 yêu cầu chức năng, đi qua đủ quy trình QLTT",
     ("Thu thập → Tổ chức → Chuyển đổi → Trình bày → An toàn", 1), ("Luật nghiệp vụ nằm trong CSDL, không thể bị bỏ qua", 1),
     ("Tái lập từ đầu bằng một lệnh, CI tự động", 1),
-    "Hạn chế: dữ liệu nhỏ, chưa có phím tắt và giao diện di động, phân tán mô phỏng trên 1 máy (MSDTC 2 máy chạy trên Windows)"], 19)
+    "Hạn chế: dữ liệu nhỏ, chưa có phím tắt và giao diện di động, phân tán phần lớn mô phỏng trên 1 máy (2PC qua MSDTC đã chạy thật giữa Windows và macOS)"], 19)
 bullets(s, Cm(17.6), T, Cm(15.2), CH, [
     "Hướng phát triển:",
     ("Cổng học viên / phụ huynh, thanh toán online, thông báo vắng học", 1),

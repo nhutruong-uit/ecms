@@ -17,6 +17,7 @@ Script SQL Server, đánh số theo **thứ tự chạy**. Mỗi file chạy l�
 | `11_backup_restore.sql` | Kịch bản sao lưu / phục hồi (demo) | T17 | Giang |
 | `12_import_export.sql` | BULK INSERT, OPENROWSET, FOR JSON (demo) | T18 | Dương |
 | `13_distributed.sql` | CSDL phân tán theo chi nhánh (demo) | T26 | Phú |
+| `13b_2pc_msdtc.sql` | Cam kết hai pha qua MSDTC giữa hai máy: trạm CN01 trên Windows, trạm CN02 trên máy thứ hai (`tram_cn02/`) (demo) | T30 | Như |
 | `14_encryption_audit.sql` | TLS, TDE, mã hoá cột, Dynamic Data Masking, SQL Server Audit, ledger (demo) | T30 | Như |
 | `healthcheck.sql` | SQL Server đã sẵn sàng chưa (chờ đổi collation xong) – dùng bởi Docker healthcheck và `run_all` | T30 | Như |
 
