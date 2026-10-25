@@ -158,18 +158,18 @@ Số liệu dưới đây được thống kê tự động bằng `scripts/thon
 
 | Thành viên | Số công việc | Số commit | Tỷ lệ commit | Dòng thêm / xoá (mọi tệp) | Dòng tự viết | Tỷ lệ dòng tự viết |
 |---|:-:|--:|--:|--:|--:|--:|
-| Đỗ Phạm Minh Trâm | 6 | 17 | 13% | +2.470 / −8 | 2.403 | 11% |
-| Trương Quang Như | 7 | 49 | 39% | +12.356 / −2.432 | 12.333 | 57% |
-| Nguyễn Việt Phú | 6 | 18 | 14% | +2.382 / −9 | 2.378 | 11% |
-| Đỗ Bình Dương | 6 | 26 | 20% | +73.293 / −44.443 | 2.883 | 13% |
-| Nguyễn Bảo Giang | 5 | 17 | 13% | +1.679 / −6 | 1.657 | 8% |
-| **Tổng** | **30** | **127** | **100%** | | **21.654** | **100%** |
+| Đỗ Phạm Minh Trâm | 6 | 17 | 12% | +2.470 / −8 | 2.403 | 9% |
+| Trương Quang Như | 7 | 63 | 45% | +16.439 / −3.751 | 16.416 | 64% |
+| Nguyễn Việt Phú | 6 | 18 | 13% | +2.382 / −9 | 2.378 | 9% |
+| Đỗ Bình Dương | 6 | 26 | 18% | +73.293 / −44.443 | 2.883 | 11% |
+| Nguyễn Bảo Giang | 5 | 17 | 12% | +1.679 / −6 | 1.657 | 6% |
+| **Tổng** | **30** | **141** | **100%** | | **25.737** | **100%** |
 
-Số liệu được tính trên nhánh `t30-khac-phuc-sau-review` tại commit `cdfd654`, gồm toàn bộ lịch sử của nhánh `develop` (117 commit) cộng 10 commit sửa mã nguồn của công việc T30, chưa gồm các commit cập nhật tài liệu sau đó. Khi phát hành, bảng được tạo lại bằng cùng script trên nhánh `main`.
+Số liệu được tạo lại khi phát hành bản v1.0.0, tính trên nhánh `develop` tại commit `5564f37` – mã nguồn của bản phát hành, sau khi gộp toàn bộ 30 công việc – gồm 141 commit; không tính các commit hợp nhất nhánh và commit cập nhật chính bảng này.
 
 ### 6.6.3 Đánh giá mức độ đóng góp
 
-Về **phân công**, mỗi thành viên phụ trách năm đến bảy công việc trải đủ các mảng thiết kế CSDL, xử lý thông tin, giao diện và CSDL tiên tiến, và đều hoàn thành phần việc được giao. Về **khối lượng mã nguồn**, đóng góp không đồng đều: nhóm trưởng chiếm 39% số commit và 57% số dòng tự viết, vì ngoài phần việc như các thành viên khác còn đảm nhận hạ tầng dùng chung (Docker, khung ứng dụng, kiểm thử tự động, công cụ dựng báo cáo) và toàn bộ đợt khắc phục sau rà soát (T30) ở giai đoạn cuối. Số dòng mã cũng không phản ánh hết phần thiết kế, phân tích và viết báo cáo của từng thành viên. Trên cơ sở mức độ hoàn thành phần việc được giao, nhóm thống nhất đánh giá mức độ đóng góp như sau:
+Về **phân công**, mỗi thành viên phụ trách năm đến bảy công việc trải đủ các mảng thiết kế CSDL, xử lý thông tin, giao diện và CSDL tiên tiến, và đều hoàn thành phần việc được giao. Về **khối lượng mã nguồn**, đóng góp không đồng đều: nhóm trưởng chiếm 45% số commit và 64% số dòng tự viết, vì ngoài phần việc như các thành viên khác còn đảm nhận hạ tầng dùng chung (Docker, khung ứng dụng, kiểm thử tự động, công cụ dựng báo cáo) và toàn bộ đợt khắc phục sau rà soát (T30) ở giai đoạn cuối. Số dòng mã cũng không phản ánh hết phần thiết kế, phân tích và viết báo cáo của từng thành viên. Trên cơ sở mức độ hoàn thành phần việc được giao, nhóm thống nhất đánh giá mức độ đóng góp như sau:
 
 *Bảng 6.9 – Đánh giá mức độ đóng góp do nhóm thống nhất*
 

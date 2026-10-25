@@ -65,6 +65,8 @@ ecms/
 
 ## Sản phẩm nộp (v1.0.0)
 
+Bản phát hành: [**v1.0.0**](https://github.com/nhutruong-uit/ecms/releases/tag/v1.0.0) – đính kèm báo cáo, hướng dẫn sử dụng (Word + PDF) và slide; mã nguồn đúng với nhánh `main` tại tag `v1.0.0`.
+
 | Tài liệu | File | Nguồn |
 |---|---|---|
 | Báo cáo đồ án | [`report/BaoCao_IE103_Nhom1.docx`](report/BaoCao_IE103_Nhom1.docx) · [`.pdf`](report/BaoCao_IE103_Nhom1.pdf) | `report/01-…07-*.md` |
