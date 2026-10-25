@@ -14,7 +14,11 @@ services:
       MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Ecms@12345}
       MSSQL_COLLATION: Vietnamese_CI_AS
       MSSQL_BACKUP_DIR: /var/opt/mssql/backup   # thư mục sao lưu mặc định (T17)
-      MSSQL_AGENT_ENABLED: "true"              # SQL Server Agent cho lịch sao lưu tự động
+      # SQL Server Agent TẮT ở lần khởi động đầu: Agent khởi động song song với việc đổi collation máy chủ, bật
+      # 'Agent XPs' đúng lúc đang reindex master → deadlock (Msg 1205) → Msg 3434, máy chủ tự tắt (CI ngày 25/10/2026).
+      # Cần lịch sao lưu bằng Agent (database/11_backup_restore.sql): khi container đã healthy, đặt
+      # MSSQL_AGENT_ENABLED=true trong .env rồi chạy lại `docker compose up -d` (collation đã đổi xong, không còn tranh chấp)
+      MSSQL_AGENT_ENABLED: "${MSSQL_AGENT_ENABLED:-false}"
       TZ: Asia/Ho_Chi_Minh                     # GETDATE()/SYSDATETIME() theo giờ Việt Nam (mặc định container là UTC)
     ports:
       - "${DB_PORT:-1433}:1433"

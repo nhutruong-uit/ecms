@@ -152,7 +152,7 @@ WHERE bs.database_name = 'ECMS' ORDER BY bs.backup_finish_date DESC;
 GO
 
 /* ---------------------------------------------------------------------
-   4. Lịch sao lưu tự động bằng SQL Server Agent (bản Developer/Standard; Docker: MSSQL_AGENT_ENABLED=true)
+   4. Lịch sao lưu tự động bằng SQL Server Agent (bản Developer/Standard; Docker: đặt MSSQL_AGENT_ENABLED=true trong .env sau lần khởi động đầu)
       Full: Chủ nhật 01:00 · Diff: 01:00 thứ Hai – thứ Bảy · Log: mỗi 15 phút.
       Job được tạo ở trạng thái TẮT (@enabled = 0) để máy demo không sinh file sao lưu liên tục; chạy thử job Log
       MỘT lần bằng sp_start_job rồi xem kết quả trong lịch sử job. Bật lịch thật: sp_update_job @enabled = 1.
@@ -198,7 +198,7 @@ BEGIN
     WHERE j.name LIKE N'ECMS – %' ORDER BY j.name;
 END
 ELSE
-    PRINT N'SQL Server Agent không chạy (bản Express, Docker thiếu MSSQL_AGENT_ENABLED, hoặc dịch vụ SQL Server Agent '
+    PRINT N'SQL Server Agent không chạy (bản Express, Docker chưa đặt MSSQL_AGENT_ENABLED=true, hoặc dịch vụ SQL Server Agent '
         + N'đang dừng – bật trong SQL Server Configuration Manager) – bỏ qua phần lập lịch.';
 GO
 

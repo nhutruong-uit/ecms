@@ -726,7 +726,7 @@ Tệp `.env` chứa thông tin kết nối (Bảng A.2). Giá trị mặc địn
 docker compose up -d --wait   # lần đầu tải image khoảng 1,5 GB, chờ trạng thái "healthy"
 ```
 
-Trên máy Mac dùng chip Apple Silicon, cần bật **Settings → General → Use Rosetta for x86/amd64 emulation** trong Docker Desktop trước khi chạy lệnh trên. Container chỉ báo *healthy* khi SQL Server đã đổi xong bảng mã tiếng Việt (khoảng 15 – 20 giây ở lần đầu), chạy theo giờ Việt Nam và đã bật sẵn SQL Server Agent.
+Trên máy Mac dùng chip Apple Silicon, cần bật **Settings → General → Use Rosetta for x86/amd64 emulation** trong Docker Desktop trước khi chạy lệnh trên. Container chỉ báo *healthy* khi SQL Server đã đổi xong bảng mã tiếng Việt (khoảng 15 – 20 giây ở lần đầu), chạy theo giờ Việt Nam. SQL Server Agent tắt ở lần khởi động đầu (để không tranh chấp với việc đổi bảng mã); muốn dùng lịch sao lưu bằng Agent, khi container đã *healthy* hãy đặt `MSSQL_AGENT_ENABLED=true` trong tệp `.env` rồi chạy lại `docker compose up -d`.
 
 **Trên Windows:**
 
@@ -741,7 +741,7 @@ Trên máy Mac dùng chip Apple Silicon, cần bật **Settings → General → 
 | Bản | Ảnh hưởng |
 |---|---|
 | Express | Không có SQL Server Agent: sao lưu định kỳ chạy bằng Task Scheduler (mục B.1). Không có mã hoá TDE: phần TDE của kịch bản mã hoá tự bỏ qua |
-| Developer, Standard, Enterprise, Docker | Chạy đủ mọi chức năng, kể cả lịch sao lưu bằng Agent |
+| Developer, Standard, Enterprise, Docker (đã bật `MSSQL_AGENT_ENABLED`) | Chạy đủ mọi chức năng, kể cả lịch sao lưu bằng Agent |
 
 ## A.4 Dựng cơ sở dữ liệu
 
@@ -787,7 +787,7 @@ Lịch sao lưu khuyến nghị như Bảng B.1.
 | Vi sai (DIFF) | Thứ Hai đến thứ Bảy 01:00 | 1 tuần |
 | Nhật ký (LOG) | Mỗi 15 phút | 2 tuần |
 
-**Có SQL Server Agent** (bản Developer, Standard, Enterprise và bản Docker của dự án): chạy script `database/11_backup_restore.sql` một lần. Script tạo ba job *ECMS – Full hằng tuần*, *ECMS – Diff hằng ngày*, *ECMS – Log 15 phút* ở trạng thái **tắt** và chạy thử job Log một lần. Để bật lịch thật, mở SSMS → **SQL Server Agent → Jobs**, nhấp phải từng job → **Enable**.
+**Có SQL Server Agent** (bản Developer, Standard, Enterprise và bản Docker của dự án khi đã bật `MSSQL_AGENT_ENABLED=true`): chạy script `database/11_backup_restore.sql` một lần. Script tạo ba job *ECMS – Full hằng tuần*, *ECMS – Diff hằng ngày*, *ECMS – Log 15 phút* ở trạng thái **tắt** và chạy thử job Log một lần. Để bật lịch thật, mở SSMS → **SQL Server Agent → Jobs**, nhấp phải từng job → **Enable**.
 
 **Không có Agent** (bản Express): đặt lịch chạy định kỳ (Task Scheduler trên Windows, cron trên macOS, Linux) cho lệnh:
 
