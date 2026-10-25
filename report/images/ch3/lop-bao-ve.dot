@@ -1,0 +1,19 @@
+// Các lớp bảo vệ dữ liệu của ECMS (Chương 3, mục 3.2) – nguồn sinh lop-bao-ve.png:
+//   dot -Tpng -Gdpi=200 lop-bao-ve.dot -o lop-bao-ve.png
+// Đi từ ngoài vào trong: mỗi lớp chặn một nhóm mối đe doạ; lớp trong vẫn có tác dụng khi lớp ngoài bị vượt qua.
+digraph LopBaoVe {
+  rankdir=TB; nodesep=0.15; ranksep=0.08; fontname="Arial"; bgcolor="white";
+  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fontcolor="#0f172a",
+        width=7.0, height=0.62, fixedsize=true];
+  edge [style=invis];
+
+  L1 [fillcolor="#e0f2fe", label="1. Đường truyền – TLS (ODBC Driver 18: Encrypt = yes)\nchống nghe lén, sửa gói tin giữa ứng dụng và máy chủ"];
+  L2 [fillcolor="#dbeafe", label="2. Xác thực – băm lặp SHA2_256 + salt, tạm khoá 15 phút, thông báo chung\nchống dò mật khẩu, dò tài khoản, lộ bảng mật khẩu"];
+  L3 [fillcolor="#e0e7ff", label="3. Quyền trên đối tượng – role, GRANT / DENY, chuỗi sở hữu\nứng dụng chỉ gọi view, procedure; DENY mọi bảng"];
+  L4 [fillcolor="#ede9fe", label="4. Quyền trên dòng – SESSION_CONTEXT read-only, fn_TrongPhamVi\nmỗi người chỉ thao tác trong chi nhánh, lớp của mình; thiếu ngữ cảnh → từ chối"];
+  L5 [fillcolor="#fae8ff", label="5. Quyền trên cột – view ẩn cột, DENY mức cột, Dynamic Data Masking\nẩn lương, giá trị băm, số điện thoại với người không cần xem"];
+  L6 [fillcolor="#fce7f3", label="6. Dữ liệu lưu trữ – TDE, mã hoá cột lương, sao lưu mã hoá AES-256\nlấy được file .mdf, .bak cũng không đọc được"];
+  L7 [fillcolor="#fef3c7", label="7. Kiểm toán – trigger NHATKY, SQL Server Audit, bảng ledger\nbiết ai đã đọc, sửa gì; nhật ký không sửa, xoá được"];
+
+  L1 -> L2 -> L3 -> L4 -> L5 -> L6 -> L7;
+}

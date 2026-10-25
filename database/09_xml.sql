@@ -19,8 +19,9 @@ GO
 /* =====================================================================
    1. XML SCHEMA COLLECTION và typed XML
    ===================================================================== */
--- Gỡ các đối tượng phụ thuộc schema (khi chạy lại)
+-- Gỡ các đối tượng phụ thuộc schema (khi chạy lại): view, chỉ mục XML (xoá primary thì secondary mất theo)
 DROP VIEW IF EXISTS dbo.vw_KiemTraChiTiet;
+DROP INDEX IF EXISTS PXML_KIEMTRA_KetQua ON dbo.KIEMTRA_DAUVAO;
 IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON t.object_id = c.object_id
            WHERE t.name = 'KIEMTRA_DAUVAO' AND c.name = 'KetQuaChiTiet' AND c.xml_collection_id <> 0)
     ALTER TABLE dbo.KIEMTRA_DAUVAO ALTER COLUMN KetQuaChiTiet XML NOT NULL;
@@ -69,6 +70,10 @@ GO
 -- Gắn schema vào cột (typed XML, DOCUMENT = phải có đúng 1 phần tử gốc). Dữ liệu cũ được kiểm tra lại toàn bộ.
 ALTER TABLE dbo.KIEMTRA_DAUVAO ALTER COLUMN KetQuaChiTiet XML(DOCUMENT dbo.XSC_KetQuaKiemTra) NOT NULL;
 GO
+-- Không tạo chỉ mục XML cố định. Phép đo X18 (điều kiện Speaking >= 7, khớp 14,6% số bài):
+--   357 bài   : chỉ mục giảm số trang đọc 1.969 → 707 (tính cả lượt đọc LOB) nhưng chiếm 1,09 MB – gấp 3,3 lần dữ liệu XML;
+--   10.710 bài: kế hoạch dùng chỉ mục tra 10.712 lần, đọc 40.490 trang so với 1.956 trang khi quét thẳng.
+-- Chỉ mục XML chỉ đáng giá khi điều kiện chọn lọc cao (ít bài khớp) và XML được truy vấn thường xuyên (xem X18).
 
 /* =====================================================================
    2. ĐỐI TƯỢNG CHO ỨNG DỤNG WEB (T21)
@@ -220,6 +225,10 @@ DECLARE @kt INT = (SELECT MIN(MaKT) FROM KIEMTRA_DAUVAO);
 PRINT N'--- X09. .modify(replace value of): chấm phúc khảo – sửa điểm Writing';
 UPDATE KIEMTRA_DAUVAO SET KetQuaChiTiet.modify('replace value of (/KetQua/KyNang[@Ten="Writing"]/@Diem)[1] with ("5.5" cast as Diem?)')   -- typed XML: giá trị mới phải đúng kiểu Diem
 WHERE MaKT = @kt;
+-- DiemTong là thuộc tính suy diễn từ XML (trung bình 4 kỹ năng): sửa điểm trong XML thì phải tính lại cột này
+UPDATE KIEMTRA_DAUVAO
+SET DiemTong = (SELECT CAST(AVG(k.n.value('@Diem', 'DECIMAL(3,1)')) AS DECIMAL(3,1)) FROM KetQuaChiTiet.nodes('/KetQua/KyNang') k(n))
+WHERE MaKT = @kt;
 PRINT N'--- X10. .modify(insert): thêm nhận xét chung khi chưa có';
 UPDATE KIEMTRA_DAUVAO SET KetQuaChiTiet.modify('insert <NhanXetChung>Đã phúc khảo phần Writing</NhanXetChung> after (/KetQua/KyNang)[4]')
 WHERE MaKT = @kt AND KetQuaChiTiet.exist('/KetQua/NhanXetChung') = 0;
@@ -315,5 +324,45 @@ SELECT ts.n.value('@SDT', 'VARCHAR(15)') AS SDT, ts.n.value('@HoTen', 'NVARCHAR(
 FROM @x.nodes('/DanhSachThi/ThiSinh') ts(n);
 GO
 
-PRINT N'✓ 09_xml.sql: XML Schema đã gắn vào KIEMTRA_DAUVAO.KetQuaChiTiet; 17 truy vấn XML.';
+/* =====================================================================
+   6. CHỈ MỤC XML (X18) – khi nào nên dùng?
+   Không có chỉ mục, mỗi lần .exist() / .value() SQL Server phải phân tích lại (shred) từng tài liệu.
+   - PRIMARY XML INDEX: lưu sẵn mọi nút của mọi tài liệu thành bảng nội bộ (bảng cần khoá chính clustered).
+   - Secondary PATH: chỉ mục trên (đường dẫn, giá trị) – hợp với điều kiện /KetQua/KyNang[@Ten="…"][@Diem …].
+   Đo cùng một truy vấn ở hai quy mô (dữ liệu thật ~360 bài và bảng tạm nhân 30 lần ~10.700 bài),
+   chỉ mục tạo trong transaction rồi ROLLBACK nên không để lại gì. Số trang đọc xem ở tab Messages (STATISTICS IO).
+   ===================================================================== */
+PRINT N'--- X18. Chỉ mục XML: số trang đọc và dung lượng ở hai quy mô dữ liệu';
+DROP TABLE IF EXISTS #KT;
+CREATE TABLE #KT (Id INT IDENTITY PRIMARY KEY CLUSTERED, KetQua XML NOT NULL);   -- tempdb không thấy XML Schema của ECMS
+INSERT #KT (KetQua) SELECT t.KetQuaChiTiet FROM dbo.KIEMTRA_DAUVAO t CROSS JOIN (SELECT TOP 30 1 AS x FROM sys.all_objects) n;
+DECLARE @Q TABLE (QuyMo NVARCHAR(30), ChiMuc NVARCHAR(10), SoBai INT, KetQua INT, DungLuongChiMuc_MB DECIMAL(8,2));
+SET STATISTICS IO ON;
+PRINT N'(a) ~360 bài, KHÔNG chỉ mục';
+INSERT @Q SELECT N'Dữ liệu thật', N'Không', (SELECT COUNT(*) FROM dbo.KIEMTRA_DAUVAO), COUNT(*), 0
+FROM dbo.KIEMTRA_DAUVAO WHERE KetQuaChiTiet.exist('/KetQua/KyNang[@Ten="Speaking"][@Diem >= 7]') = 1;
+PRINT N'(b) ~10.700 bài, KHÔNG chỉ mục';
+INSERT @Q SELECT N'Nhân 30 lần', N'Không', (SELECT COUNT(*) FROM #KT), COUNT(*), 0
+FROM #KT WHERE KetQua.exist('/KetQua/KyNang[@Ten="Speaking"][@Diem >= 7]') = 1;
+BEGIN TRANSACTION;
+CREATE PRIMARY XML INDEX PXML_KIEMTRA_KetQua ON dbo.KIEMTRA_DAUVAO (KetQuaChiTiet);
+CREATE XML INDEX SXML_KIEMTRA_KetQua_Path ON dbo.KIEMTRA_DAUVAO (KetQuaChiTiet) USING XML INDEX PXML_KIEMTRA_KetQua FOR PATH;
+CREATE PRIMARY XML INDEX PXML_KT ON #KT (KetQua);
+CREATE XML INDEX SXML_KT_Path ON #KT (KetQua) USING XML INDEX PXML_KT FOR PATH;
+PRINT N'(c) ~360 bài, CÓ chỉ mục PRIMARY + PATH';
+INSERT @Q SELECT N'Dữ liệu thật', N'Có', (SELECT COUNT(*) FROM dbo.KIEMTRA_DAUVAO), COUNT(*),
+       (SELECT CAST(SUM(ps.used_page_count) * 8 / 1024.0 AS DECIMAL(8,2)) FROM sys.dm_db_partition_stats ps
+        JOIN sys.internal_tables it ON it.object_id = ps.object_id
+        WHERE it.parent_object_id = OBJECT_ID(N'dbo.KIEMTRA_DAUVAO') AND it.internal_type_desc = N'XML_INDEX_NODES')
+FROM dbo.KIEMTRA_DAUVAO WHERE KetQuaChiTiet.exist('/KetQua/KyNang[@Ten="Speaking"][@Diem >= 7]') = 1;
+PRINT N'(d) ~10.700 bài, CÓ chỉ mục PRIMARY + PATH';
+INSERT @Q SELECT N'Nhân 30 lần', N'Có', (SELECT COUNT(*) FROM #KT), COUNT(*), NULL
+FROM #KT WHERE KetQua.exist('/KetQua/KyNang[@Ten="Speaking"][@Diem >= 7]') = 1;
+ROLLBACK TRANSACTION;
+SET STATISTICS IO OFF;
+SELECT q.*, (SELECT CAST(SUM(DATALENGTH(KetQuaChiTiet)) / 1048576.0 AS DECIMAL(8,2)) FROM dbo.KIEMTRA_DAUVAO) AS DuLieuXML_MB FROM @Q q;
+DROP TABLE #KT;
+GO
+
+PRINT N'✓ 09_xml.sql: XML Schema đã gắn vào KIEMTRA_DAUVAO.KetQuaChiTiet; 18 truy vấn XML (X18 đo hiệu quả chỉ mục XML).';
 GO

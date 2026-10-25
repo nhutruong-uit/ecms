@@ -27,8 +27,12 @@ with t2:
                   "XepLoai": "Xếp loại", "ChuyenCan": "Chuyên cần %", "KetQua": "Kết quả", "TrangThai": "Trạng thái"},
              key="t_bd", select=False)
 with t3:
-    hp = db.query("SELECT MaLop, TenKH, ThanhTien, TrangThaiHP, HanDongHP FROM vw_DangKyChiTiet WHERE MaHV = ? ORDER BY NgayDK", [ma_hv])
-    no = db.scalar("SELECT ISNULL(SUM(ConNo), 0) FROM vw_CongNoHocVien WHERE MaHV = ?", [ma_hv])
-    st.metric("Còn phải đóng", ui.money(no))
-    ui.table(hp, {"MaLop": "Lớp", "TenKH": "Khoá học", "ThanhTien": "Học phí", "TrangThaiHP": "Trạng thái", "HanDongHP": "Hạn đóng"},
-             key="t_hp", select=False, money_cols=("ThanhTien",))
+    # từng đăng ký còn hiệu lực: đã đóng, còn nợ (đăng ký huỷ / đã chuyển lớp không còn khoản phải đóng)
+    hp = db.query("""SELECT d.MaLop, d.TenKH, d.ThanhTien, d.ThanhTien - ISNULL(c.ConNo, 0) AS DaDong, ISNULL(c.ConNo, 0) AS ConNo,
+                            d.TrangThaiHP, d.HanDongHP
+                     FROM vw_DangKyChiTiet d LEFT JOIN vw_CongNoHocVien c ON c.MaDK = d.MaDK
+                     WHERE d.MaHV = ? AND d.TrangThai NOT IN (N'Huỷ', N'Đã chuyển lớp') ORDER BY d.NgayDK""", [ma_hv])
+    st.metric("Còn phải đóng", ui.money(hp.ConNo.sum() if len(hp) else 0))
+    ui.table(hp, {"MaLop": "Lớp", "TenKH": "Khoá học", "ThanhTien": "Học phí", "DaDong": "Đã đóng", "ConNo": "Còn nợ",
+                  "TrangThaiHP": "Trạng thái", "HanDongHP": "Hạn đóng"},
+             key="t_hp", select=False, money_cols=("ThanhTien", "DaDong", "ConNo"))

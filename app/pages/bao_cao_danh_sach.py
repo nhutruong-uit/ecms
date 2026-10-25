@@ -1,5 +1,5 @@
-"""Báo cáo & xuất file (T24, Lab 5): 6 báo cáo thuộc 3 loại – định kỳ, theo yêu cầu (có tham số), tổng hợp.
-Mỗi báo cáo xem trên màn hình và tải PDF (Page X / Y, tổng phụ, tổng cộng) hoặc Excel."""
+"""Báo cáo & xuất file (T24, Lab 4): 7 báo cáo thuộc 3 loại – định kỳ, theo yêu cầu (có tham số), tổng hợp.
+Mỗi báo cáo xem trên màn hình và tải PDF (Trang X / Y, tổng phụ, tổng cộng), Excel (công thức) hoặc Word."""
 from datetime import date
 
 import pandas as pd
@@ -34,13 +34,30 @@ def lop_cho_chon(trang_thai):
     return df[df.TrangThai.isin(trang_thai)].sort_values("MaLop")
 
 
-def tai(ten_file: str, pdf_bytes: bytes | None, xlsx_bytes: bytes | None):
-    c1, c2, _ = st.columns([1, 1, 3])
+def tai(ten_file: str, pdf_bytes: bytes | None, xlsx_bytes: bytes | None, docx_bytes: bytes | None = None):
+    c1, c2, c3, _ = st.columns([1, 1, 1, 2])
     if pdf_bytes:
         c1.download_button("Tải PDF", pdf_bytes, f"{ten_file}.pdf", "application/pdf", icon=":material/picture_as_pdf:")
     if xlsx_bytes:
         c2.download_button("Tải Excel", xlsx_bytes, f"{ten_file}.xlsx",
                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", icon=":material/table_view:")
+    if docx_bytes:
+        c3.download_button("Tải Word", docx_bytes, f"{ten_file}.docx",
+                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document", icon=":material/description:")
+
+
+def mau_diem(r: dict) -> str | None:
+    """Định dạng có điều kiện cho điểm: đỏ = Không đạt hoặc chuyên cần dưới 80%, xanh = Giỏi / Xuất sắc."""
+    cc = r.get("ChuyenCan")
+    if r.get("KetQua") == "Không đạt" or (cc is not None and not pd.isna(cc) and float(cc) < 80):
+        return "do"
+    return "xanh" if r.get("XepLoai") in ("Xuất sắc", "Giỏi") else None
+
+
+def mau_no(r: dict) -> str | None:
+    """Đỏ: khoản nợ đã quá hạn đóng."""
+    q = r.get("QuaHanNgay", r.get("SoNgayQuaHan"))
+    return "do" if q is not None and not pd.isna(q) and int(q) > 0 else None
 
 
 # ------------------------------------------------------------------ 1. Danh sách học viên theo lớp (phẳng)
@@ -62,9 +79,11 @@ if ma == "ds_lop":
                ("ThanhTien", "Thành tiền (sau giảm)", 32, "money"), ("TrangThaiHP", "TT học phí", 26, None), ("TrangThai", "Trạng thái", 25, None)]
         if la_gv:      # giáo viên không cần thông tin tài chính
             cot = [c for c in cot if c[0] not in ("HocPhi", "GiamGia", "ThanhTien", "TrangThaiHP")]
-        tai(f"DanhSach_{lop}", bao_cao.pdf("Danh sách học viên", tham, df, cot, tong=[] if la_gv else ["ThanhTien"]),
+        tong = [] if la_gv else ["ThanhTien"]
+        tai(f"DanhSach_{lop}", bao_cao.pdf("Danh sách học viên", tham, df, cot, tong=tong),
             bao_cao.excel({"DanhSach": (f"Danh sách học viên lớp {lop}", df, {c[0]: c[1] for c in cot})},
-                          tong=None if la_gv else {"DanhSach": ["ThanhTien"]}))
+                          tong=None if la_gv else {"DanhSach": ["ThanhTien"]}, tham_so=tham),
+            bao_cao.word("Danh sách học viên", tham, df, cot, tong=tong))
 
 # ------------------------------------------------------------------ 2. Doanh thu chi nhánh → tháng (phân nhóm)
 elif ma == "doanh_thu":
@@ -83,9 +102,11 @@ elif ma == "doanh_thu":
     st.markdown(f"### Tổng cộng: {ui.money(df.DoanhThu.sum() if len(df) else 0)}")
     cot = [("KyThang", "Tháng", 45, None), ("SoPhieu", "Số phiếu", 40, "num"), ("SoHocVien", "Số học viên", 40, "num"),
            ("DoanhThu", "Doanh thu", 60, "money")]
-    tai("DoanhThu", bao_cao.pdf("Báo cáo doanh thu theo chi nhánh", tham, df, cot, nhom="TenCN", tong=["DoanhThu"], ngang=False),
+    tai("DoanhThu", bao_cao.pdf("Báo cáo doanh thu theo chi nhánh", tham, df, cot, nhom="TenCN", tong=["DoanhThu"], ngang=False,
+                                thong_ke={"DoanhThu": ("avg", "max")}),
         bao_cao.excel({"DoanhThu": ("Doanh thu theo chi nhánh – tháng", df, {"TenCN": "Chi nhánh"} | {c[0]: c[1] for c in cot})},
-                      tong={"DoanhThu": ["DoanhThu"]}))
+                      tong={"DoanhThu": ["DoanhThu"]}, tham_so=tham, thong_ke={"DoanhThu": {"DoanhThu": ("avg", "max")}}),
+        bao_cao.word("Báo cáo doanh thu theo chi nhánh", tham, df, [("TenCN", "Chi nhánh", 40, None)] + cot, tong=["DoanhThu"]))
 
 # ------------------------------------------------------------------ 3. Bảng điểm lớp (tham số) + định dạng có điều kiện
 elif ma == "bang_diem":
@@ -95,19 +116,22 @@ elif ma == "bang_diem":
         df = db.query("SELECT * FROM dbo.fn_BangDiemLop(?) ORDER BY ISNULL(Hang, 999), HoTen", [lop])
         view = df[["Hang", "MaHV", "HoTen", "DiemGK", "DiemCK", "DiemTB", "XepLoai", "ChuyenCan", "KetQua", "GhiChu"]].rename(columns={
             "Hang": "Hạng", "MaHV": "Mã HV", "HoTen": "Họ tên", "DiemGK": "GK", "DiemCK": "CK", "DiemTB": "TB", "XepLoai": "Xếp loại",
-            "ChuyenCan": "Chuyên cần %", "KetQua": "Kết quả", "GhiChu": "Ghi chú"})
+            "ChuyenCan": "Chuyên cần %", "KetQua": "Kết quả", "GhiChu": "Ghi chú"}).fillna({"Xếp loại": "", "Kết quả": "", "Ghi chú": ""})
 
-        def mau(row):
-            m = "background-color:#fee2e2;color:#991b1b" if row["Kết quả"] == "Không đạt" or (row["Chuyên cần %"] or 100) < 80 else (
-                "background-color:#dcfce7;color:#14532d" if row["Xếp loại"] in ("Xuất sắc", "Giỏi") else "")
-            return [m] * len(row)
-        st.dataframe(view.style.apply(mau, axis=1).format(precision=2, na_rep=""), hide_index=True)
-        st.caption("Xanh: Giỏi / Xuất sắc · Đỏ: Không đạt hoặc chuyên cần dưới 80%")
+        css = {"do": "background-color:#fee2e2;color:#991b1b", "xanh": "background-color:#dcfce7;color:#14532d"}
+        mau_dong = [css.get(mau_diem(r), "") for r in df.to_dict("records")]       # cùng quy tắc với file PDF / Excel / Word
+        st.dataframe(view.style.apply(lambda row: [mau_dong[row.name]] * len(row), axis=1).format(precision=2, na_rep=""),
+                     hide_index=True)
+        st.caption("Xanh: Giỏi / Xuất sắc · Đỏ: Không đạt hoặc chuyên cần dưới 80% (giữ nguyên màu khi xuất PDF, Excel, Word)")
         cot = [("Hang", "Hạng", 12, None), ("MaHV", "Mã HV", 18, None), ("HoTen", "Họ tên", 50, None), ("DiemGK", "GK", 15, "num"),
                ("DiemCK", "CK", 15, "num"), ("DiemTB", "TB", 15, "num"), ("XepLoai", "Xếp loại", 25, None),
                ("ChuyenCan", "Chuyên cần %", 25, "num"), ("KetQua", "Kết quả", 22, None), ("GhiChu", "Ghi chú", 70, None)]
-        tai(f"BangDiem_{lop}", bao_cao.pdf("Bảng điểm lớp", f"Lớp {lop} – {ds.set_index('MaLop').loc[lop, 'TenKH']}", df, cot),
-            bao_cao.excel({"BangDiem": (f"Bảng điểm lớp {lop}", df, {c[0]: c[1] for c in cot})}))
+        tham = f"Lớp {lop} – {ds.set_index('MaLop').loc[lop, 'TenKH']}"
+        tk = {"DiemGK": ("avg", "min", "max"), "DiemCK": ("avg", "min", "max"), "DiemTB": ("avg", "min", "max"), "ChuyenCan": ("avg",)}
+        tai(f"BangDiem_{lop}", bao_cao.pdf("Bảng điểm lớp", tham, df, cot, thong_ke=tk, to_mau=mau_diem),
+            bao_cao.excel({"BangDiem": (f"Bảng điểm lớp {lop}", df, {c[0]: c[1] for c in cot})}, tham_so=tham,
+                          thong_ke={"BangDiem": tk}, to_mau={"BangDiem": mau_diem}),
+            bao_cao.word("Bảng điểm lớp", tham, df, cot, to_mau=mau_diem))
 
 # ------------------------------------------------------------------ 4. Lịch sử học tập của một học viên
 elif ma == "lich_su":
@@ -128,8 +152,11 @@ elif ma == "lich_su":
                    ("DiemGK", "GK", 14, "num"), ("DiemCK", "CK", 14, "num"), ("DiemTB", "TB", 14, "num"), ("XepLoai", "Xếp loại", 24, None),
                    ("ChuyenCan", "Chuyên cần %", 24, "num"), ("KetQua", "Kết quả", 22, None), ("ThanhTien", "Học phí", 28, "money"),
                    ("TrangThaiHP", "Trạng thái HP", 28, None)]
-            tai(f"LichSu_{m}", bao_cao.pdf("Lịch sử học tập", f"Học viên {hv.set_index('MaHV').loc[m, 'HoTen']} ({m})", df, cot,
-                                           tong=["ThanhTien"]), None)
+            tham = f"Học viên {hv.set_index('MaHV').loc[m, 'HoTen']} ({m})"
+            tai(f"LichSu_{m}", bao_cao.pdf("Lịch sử học tập", tham, df, cot, tong=["ThanhTien"], to_mau=mau_diem),
+                bao_cao.excel({"LichSu": ("Lịch sử học tập", df, {c[0]: c[1] for c in cot})}, tong={"LichSu": ["ThanhTien"]},
+                              tham_so=tham, to_mau={"LichSu": mau_diem}),
+                bao_cao.word("Lịch sử học tập", tham, df, cot, tong=["ThanhTien"], to_mau=mau_diem))
 
 # ------------------------------------------------------------------ 5. Công nợ
 elif ma == "cong_no":
@@ -145,21 +172,24 @@ elif ma == "cong_no":
            "DaThu": "Đã thu", "ConNo": "Còn nợ", "QuaHanNgay": "Quá hạn (ngày)"}
     chi_tiet = db.query("""SELECT MaHV, HoTen, MaLop, TenKH, ThanhTien, DaThu, ConNo, HanDongHP, SoNgayQuaHan FROM vw_CongNoHocVien
                            WHERE ? IS NULL OR MaCN = ? ORDER BY MaHV""", [cn, cn])
-    tai("CongNo", bao_cao.pdf("Công nợ học viên", f"Nợ từ {ui.money(nguong)}", df,
-                              [(c, n, w, k) for (c, n), w, k in zip(cot.items(), [20, 50, 28, 18, 32, 32, 32, 24],
-                                                                    [None, None, None, None, "money", "money", "money", None])],
-                              tong=["ThanhTien", "DaThu", "ConNo"]),
+    cot_in = [(c, n, w, k) for (c, n), w, k in zip(cot.items(), [20, 50, 28, 18, 32, 32, 32, 24],
+                                                    [None, None, None, None, "money", "money", "money", "num"])]
+    st.caption("Dòng đỏ trong file xuất: học viên có khoản đã quá hạn đóng.")
+    tai("CongNo", bao_cao.pdf("Công nợ học viên", f"Nợ từ {ui.money(nguong)}", df, cot_in,
+                              tong=["ThanhTien", "DaThu", "ConNo"], to_mau=mau_no),
         bao_cao.excel({"TongHop": ("Công nợ theo học viên", df, cot),
                        "ChiTiet": ("Chi tiết từng đăng ký", chi_tiet, {"MaHV": "Mã HV", "HoTen": "Học viên", "MaLop": "Lớp", "TenKH": "Khoá học",
                                                                      "ThanhTien": "Phải đóng", "DaThu": "Đã thu", "ConNo": "Còn nợ",
                                                                      "HanDongHP": "Hạn đóng", "SoNgayQuaHan": "Quá hạn (ngày)"})},
-                      tong={"TongHop": ["ThanhTien", "DaThu", "ConNo"], "ChiTiet": ["ConNo"]}))
+                      tong={"TongHop": ["ThanhTien", "DaThu", "ConNo"], "ChiTiet": ["ConNo"]}, tham_so=f"Nợ từ {ui.money(nguong)}",
+                      to_mau={"TongHop": mau_no, "ChiTiet": mau_no}),
+        bao_cao.word("Công nợ học viên", f"Nợ từ {ui.money(nguong)}", df, cot_in, tong=["ThanhTien", "DaThu", "ConNo"], to_mau=mau_no))
 
 # ------------------------------------------------------------------ 6. Bảng lương giáo viên (gọi procedure dùng cursor)
 elif ma == "luong":
     c1, c2 = st.columns([1, 3])
     thang = c1.text_input("Tháng (yyyy-MM)", f"{date.today():%Y-%m}")
-    if c2.button("Tính lại bảng lương tháng này", help="Gọi sp_TinhLuongGiaoVien (cursor – T14)"):
+    if c2.button("Tính lại bảng lương tháng này", help="Tính lại từ số buổi đã dạy trong tháng × đơn giá buổi + lương cơ bản"):
         ui.run(lambda: db.call_proc("sp_TinhLuongGiaoVien", {"Thang": thang}, fetch=True), f"Đã tính lương tháng {thang}.", rerun=False)
     df = db.query("SELECT * FROM vw_BangLuong WHERE Thang = ? AND (? IS NULL OR MaCN = ?) ORDER BY TongLuong DESC", [thang, cn, cn])
     if df.empty:
@@ -168,23 +198,35 @@ elif ma == "luong":
         nhan = {"MaGV": "Mã GV", "HoTen": "Giáo viên", "LoaiGV": "Loại", "SoBuoiDay": "Số buổi", "DonGiaBuoi": "Đơn giá",
                 "LuongCoBan": "Lương cơ bản", "TongLuong": "Tổng lương"}
         ui.table(df, nhan, key="r6", select=False, money_cols=("DonGiaBuoi", "LuongCoBan", "TongLuong"))
-        tai(f"BangLuong_{thang}", None, bao_cao.excel({"BangLuong": (f"Bảng lương giáo viên tháng {thang}", df, nhan)},
-                                                    tong={"BangLuong": ["TongLuong"]}))
+        cot = [("MaGV", "Mã GV", 18, None), ("HoTen", "Giáo viên", 50, None), ("LoaiGV", "Loại", 25, None),
+               ("SoBuoiDay", "Số buổi", 18, "num"), ("DonGiaBuoi", "Đơn giá", 28, "money"), ("LuongCoBan", "Lương cơ bản", 30, "money"),
+               ("TongLuong", "Tổng lương", 32, "money")]
+        tham = f"Tháng {thang}"
+        tai(f"BangLuong_{thang}", bao_cao.pdf("Bảng lương giáo viên", tham, df, cot, tong=["TongLuong"],
+                                              thong_ke={"TongLuong": ("avg", "min", "max")}),
+            bao_cao.excel({"BangLuong": (f"Bảng lương giáo viên tháng {thang}", df, nhan)}, tong={"BangLuong": ["TongLuong"]},
+                          tham_so=tham),
+            bao_cao.word("Bảng lương giáo viên", tham, df, cot, tong=["TongLuong"]))
 
 # ------------------------------------------------------------------ 7. Tổng hợp theo chương trình
 elif ma == "tong_hop":
     nam = st.selectbox("Năm", [date.today().year, date.today().year - 1])
+    # mọi chỉ tiêu tính trên cùng tập lớp: khai giảng trong năm, thuộc chi nhánh trong phạm vi (JOIN theo mã, không theo tên)
     df = db.query("""SELECT ct.TenCT,
-                            (SELECT COUNT(*) FROM vw_SiSoLop l WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ?) AS SoLop,
-                            (SELECT COUNT(DISTINCT d.MaHV) FROM vw_DangKyChiTiet d JOIN vw_DM_KhoaHoc k ON k.MaKH = d.MaKH
-                              WHERE k.MaCT = ct.MaCT AND YEAR(d.NgayDK) = ?) AS SoHocVien,
-                            (SELECT AVG(l.TyLeLapDay) FROM vw_SiSoLop l WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ?) AS LapDay,
-                            (SELECT AVG(b.ChuyenCan) FROM vw_BangDiem b JOIN vw_DM_KhoaHoc k ON k.TenKH = b.TenKH
-                              WHERE k.MaCT = ct.MaCT) AS ChuyenCan,
+                            (SELECT COUNT(*) FROM vw_SiSoLop l WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ?
+                               AND (? IS NULL OR l.MaCN = ?)) AS SoLop,
+                            (SELECT COUNT(DISTINCT d.MaHV) FROM vw_DangKyChiTiet d JOIN vw_SiSoLop l ON l.MaLop = d.MaLop
+                              WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ? AND (? IS NULL OR l.MaCN = ?)) AS SoHocVien,
+                            (SELECT AVG(l.TyLeLapDay) FROM vw_SiSoLop l WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ?
+                               AND (? IS NULL OR l.MaCN = ?)) AS LapDay,
+                            (SELECT AVG(b.ChuyenCan) FROM vw_BangDiem b JOIN vw_SiSoLop l ON l.MaLop = b.MaLop
+                              WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ? AND (? IS NULL OR l.MaCN = ?)) AS ChuyenCan,
                             (SELECT 100.0 * SUM(CASE WHEN b.KetQua = N'Đạt' THEN 1 ELSE 0 END) / NULLIF(COUNT(b.KetQua), 0)
-                               FROM vw_BangDiem b JOIN vw_DM_KhoaHoc k ON k.TenKH = b.TenKH WHERE k.MaCT = ct.MaCT) AS TyLeDat,
-                            (SELECT ISNULL(SUM(SoTien), 0) FROM vw_BaoCaoDoanhThu r WHERE r.MaCT = ct.MaCT AND r.Nam = ?) AS DoanhThu
-                     FROM vw_DM_ChuongTrinh ct ORDER BY DoanhThu DESC""", [nam] * 4)
+                               FROM vw_BangDiem b JOIN vw_SiSoLop l ON l.MaLop = b.MaLop
+                              WHERE l.MaCT = ct.MaCT AND YEAR(l.NgayKhaiGiang) = ? AND (? IS NULL OR l.MaCN = ?)) AS TyLeDat,
+                            (SELECT ISNULL(SUM(SoTien), 0) FROM vw_BaoCaoDoanhThu r WHERE r.MaCT = ct.MaCT AND r.Nam = ?
+                               AND (? IS NULL OR r.MaCN = ?)) AS DoanhThu
+                     FROM vw_DM_ChuongTrinh ct ORDER BY DoanhThu DESC""", [nam, cn, cn] * 6)
     for c in ("LapDay", "ChuyenCan", "TyLeDat"):
         df[c] = pd.to_numeric(df[c]).round(1)
     nhan = {"TenCT": "Chương trình", "SoLop": "Số lớp", "SoHocVien": "Học viên", "LapDay": "Lấp đầy %", "ChuyenCan": "Chuyên cần %",
@@ -193,5 +235,8 @@ elif ma == "tong_hop":
     cot = [("TenCT", "Chương trình", 55, None), ("SoLop", "Số lớp", 18, None), ("SoHocVien", "Học viên", 20, None),
            ("LapDay", "Lấp đầy %", 22, "num"), ("ChuyenCan", "Chuyên cần %", 25, "num"), ("TyLeDat", "Tỷ lệ đạt %", 24, "num"),
            ("DoanhThu", "Doanh thu", 35, "money")]
-    tai(f"TongHop_{nam}", bao_cao.pdf("Báo cáo tổng hợp theo chương trình", f"Năm {nam}", df, cot, tong=["DoanhThu"]),
-        bao_cao.excel({"TongHop": (f"Tổng hợp theo chương trình năm {nam}", df, nhan)}, tong={"TongHop": ["DoanhThu"]}))
+    tham = f"Năm {nam}" + (f" · chi nhánh {cn}" if cn else " · toàn trung tâm")
+    tai(f"TongHop_{nam}", bao_cao.pdf("Báo cáo tổng hợp theo chương trình", tham, df, cot, tong=["DoanhThu"],
+                                      thong_ke={"LapDay": ("avg",), "ChuyenCan": ("avg",), "TyLeDat": ("avg",)}),
+        bao_cao.excel({"TongHop": (f"Tổng hợp theo chương trình năm {nam}", df, nhan)}, tong={"TongHop": ["DoanhThu"]}, tham_so=tham),
+        bao_cao.word("Báo cáo tổng hợp theo chương trình", tham, df, cot, tong=["DoanhThu"]))

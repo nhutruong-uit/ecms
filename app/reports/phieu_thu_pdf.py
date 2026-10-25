@@ -1,5 +1,6 @@
 """In phiếu thu học phí ra PDF (T23) – reportlab, font tiếng Việt."""
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 import pandas as pd
 from reportlab.lib import colors
@@ -13,19 +14,22 @@ from reports.pdf_common import FONT, FONT_BOLD, money, so_thanh_chu, styles
 def phieu_thu_pdf(pt: dict, ct: pd.DataFrame) -> bytes:
     """pt: một dòng vw_PhieuThu; ct: các dòng vw_CTPhieuThu của phiếu."""
     st = styles()
+    # Paragraph của reportlab hiểu markup (<b>, <br/>…): giá trị người dùng nhập phải escape, nếu không ghi chú
+    # kiểu "<KM10>" hay "A & B" làm hỏng việc dựng PDF hoặc chèn được định dạng lạ vào phiếu
+    e = {k: escape(str(v)) if v is not None else "" for k, v in pt.items()}
     buf = BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A5), leftMargin=12 * mm, rightMargin=12 * mm,
                             topMargin=10 * mm, bottomMargin=10 * mm, title=f"Phiếu thu {pt['SoPhieu']}", author="ECMS")
     ngay = pd.to_datetime(pt["NgayThu"])
     el = [
-        Table([[Paragraph(f"<b>TRUNG TÂM TIẾNG ANH ECMS</b><br/>{pt['TenCN']}<br/>{pt['DiaChiCN']} · ĐT {pt['DienThoaiCN']}", st["n"]),
-                Paragraph(f"Số: <b>{pt['SoPhieu']}</b><br/>Ngày {ngay:%d/%m/%Y %H:%M}", st["right"])]],
+        Table([[Paragraph(f"<b>TRUNG TÂM TIẾNG ANH ECMS</b><br/>{e['TenCN']}<br/>{e['DiaChiCN']} · ĐT {e['DienThoaiCN']}", st["n"]),
+                Paragraph(f"Số: <b>{e['SoPhieu']}</b><br/>Ngày {ngay:%d/%m/%Y %H:%M}", st["right"])]],
               colWidths=[120 * mm, 66 * mm], style=[("VALIGN", (0, 0), (-1, -1), "TOP")]),
         Spacer(0, 3 * mm),
         Paragraph("PHIẾU THU HỌC PHÍ", st["title"]),
-        Paragraph(f"Họ tên học viên: <b>{pt['HoTenHV']}</b> ({pt['MaHV']}) · Điện thoại: {pt['SoDienThoai']}", st["n"]),
-        Paragraph(f"Địa chỉ: {pt['DiaChiHV'] or '—'}", st["n"]),
-        Paragraph(f"Hình thức thanh toán: {pt['HinhThuc']}" + (f" · Ghi chú: {pt['GhiChu']}" if pt.get("GhiChu") else ""), st["n"]),
+        Paragraph(f"Họ tên học viên: <b>{e['HoTenHV']}</b> ({e['MaHV']}) · Điện thoại: {e['SoDienThoai']}", st["n"]),
+        Paragraph(f"Địa chỉ: {e['DiaChiHV'] or '—'}", st["n"]),
+        Paragraph(f"Hình thức thanh toán: {e['HinhThuc']}" + (f" · Ghi chú: {e['GhiChu']}" if pt.get("GhiChu") else ""), st["n"]),
         Spacer(0, 3 * mm),
     ]
     rows = [["STT", "Lớp", "Khoá học", "Học phí", "Giảm", "Phải đóng", "Thu lần này", "Còn nợ"]]
@@ -42,7 +46,7 @@ def phieu_thu_pdf(pt: dict, ct: pd.DataFrame) -> bytes:
     ]))
     el += [t, Spacer(0, 2 * mm), Paragraph(f"Số tiền bằng chữ: <b>{so_thanh_chu(pt['TongTien'])}</b>", st["n"]), Spacer(0, 5 * mm),
            Table([[Paragraph("<b>Người nộp tiền</b><br/>(ký, ghi rõ họ tên)", st["center"]),
-                   Paragraph(f"<b>Người lập phiếu</b><br/>(ký, ghi rõ họ tên)<br/><br/><br/>{pt['NguoiLap']}", st["center"])]],
+                   Paragraph(f"<b>Người lập phiếu</b><br/>(ký, ghi rõ họ tên)<br/><br/><br/>{e['NguoiLap']}", st["center"])]],
                  colWidths=[93 * mm, 93 * mm], style=[("VALIGN", (0, 0), (-1, -1), "TOP")]),
            Spacer(0, 3 * mm), Paragraph("Học phí đã đóng không hoàn lại sau buổi học thứ 3. Phiếu được in từ hệ thống ECMS.", st["small"])]
     doc.build(el)

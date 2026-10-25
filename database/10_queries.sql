@@ -66,11 +66,22 @@ FROM LICHHOC lh
 RIGHT JOIN PHONGHOC p ON p.MaCN = lh.MaCN AND p.MaPhong = lh.MaPhong
 WHERE lh.MaLop IS NULL;
 
--- Q09. Đối chiếu khoá học và lớp: khoá chưa mở lớp hoặc lớp không khớp khoá.    [FULL OUTER JOIN]
-SELECT k.MaKH, k.TenKH, l.MaLop, l.TrangThai
-FROM KHOAHOC k
-FULL OUTER JOIN (SELECT * FROM LOPHOC WHERE TrangThai <> N'Huỷ') l ON l.MaKH = k.MaKH
-ORDER BY k.MaKH, l.MaLop;
+-- Q09. Cung – cầu theo khoá học: "cầu" = khách tiềm năng (được kiểm tra đầu vào đề xuất khoá nhưng chưa ghi danh
+--      khoá đó), "cung" = số chỗ trống của các lớp còn nhận ghi danh. Hai tập độc lập nên CẢ HAI phía đều có thể
+--      không khớp: có khách mà không còn lớp nhận (cần mở lớp) và còn chỗ mà chưa có khách (cần tư vấn).  [FULL OUTER JOIN]
+SELECT COALESCE(cau.MaKH, cung.MaKH) AS MaKH, ISNULL(cau.SoTiemNang, 0) AS KhachTiemNang, ISNULL(cung.SoChoTrong, 0) AS ChoTrong,
+       CASE WHEN cung.MaKH IS NULL THEN N'Có khách, không còn lớp nhận'
+            WHEN cau.MaKH IS NULL THEN N'Còn chỗ, chưa có khách' ELSE N'Khớp' END AS NhanXet
+FROM (SELECT t.MaKHDeXuat AS MaKH, COUNT(DISTINCT t.MaHV) AS SoTiemNang
+      FROM KIEMTRA_DAUVAO t
+      WHERE t.MaKHDeXuat IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM DANGKY d JOIN LOPHOC l ON l.MaLop = d.MaLop WHERE d.MaHV = t.MaHV AND l.MaKH = t.MaKHDeXuat)
+      GROUP BY t.MaKHDeXuat) cau
+FULL OUTER JOIN
+     (SELECT MaKH, SUM(SiSoToiDa - SiSoHienTai) AS SoChoTrong
+      FROM LOPHOC WHERE TrangThai IN (N'Sắp mở', N'Đang học') AND SiSoHienTai < SiSoToiDa GROUP BY MaKH) cung
+  ON cung.MaKH = cau.MaKH
+ORDER BY NhanXet, MaKH;
 
 -- Q10. Nhân viên và người quản lý trực tiếp.                                     [SELF JOIN]
 SELECT nv.MaNV, nv.HoTen, nv.ChucVu, nv.MaCN, ql.HoTen AS NguoiQuanLy, ql.ChucVu AS ChucVuQL
@@ -147,8 +158,10 @@ WHERE YEAR(l.NgayKhaiGiang) = 2026
 -- Q20. Học viên còn nợ: số nợ tính bằng truy vấn con trong SELECT, lọc bằng truy vấn con trong FROM.
 SELECT * FROM (
     SELECT h.MaHV, h.HoTen, h.SoDienThoai,
-           (SELECT SUM(d.ThanhTien) FROM DANGKY d WHERE d.MaHV = h.MaHV AND d.TrangThai <> N'Huỷ')
-         - (SELECT ISNULL(SUM(c.SoTien), 0) FROM CT_PHIEUTHU c JOIN DANGKY d ON d.MaDK = c.MaDK WHERE d.MaHV = h.MaHV) AS ConNo
+           -- loại cả đăng ký "Đã chuyển lớp": khoản đã đóng đã đi theo đăng ký mới (giống dbo.fn_SoTienConNo)
+           (SELECT SUM(d.ThanhTien) FROM DANGKY d WHERE d.MaHV = h.MaHV AND d.TrangThai NOT IN (N'Huỷ', N'Đã chuyển lớp'))
+         - (SELECT ISNULL(SUM(c.SoTien), 0) FROM CT_PHIEUTHU c JOIN DANGKY d ON d.MaDK = c.MaDK
+            WHERE d.MaHV = h.MaHV AND d.TrangThai NOT IN (N'Huỷ', N'Đã chuyển lớp')) AS ConNo
     FROM HOCVIEN h
 ) x
 WHERE x.ConNo > 0

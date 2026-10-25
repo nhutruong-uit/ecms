@@ -99,11 +99,17 @@ DECLARE @DataName SYSNAME = (SELECT name FROM ECMS.sys.database_files WHERE type
 DECLARE @LogName  SYSNAME = (SELECT name FROM ECMS.sys.database_files WHERE type = 1);
 DECLARE @Move NVARCHAR(MAX) = N'MOVE @dn TO @dd, MOVE @ln TO @ld';
 DECLARE @dd NVARCHAR(400) = @DataDir + 'ECMS_KhoiPhuc.mdf', @ld NVARCHAR(400) = @LogDir + 'ECMS_KhoiPhuc_log.ldf';
+DECLARE @BatDauKhoiPhuc DATETIME2(3) = SYSDATETIME();              -- đo RTO: thời gian từ lúc bắt đầu phục hồi tới khi dùng được
 SET @sql = N'RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = @f WITH ' + @Move + N', NORECOVERY, REPLACE;';
 EXEC sp_executesql @sql, N'@f NVARCHAR(400), @dn SYSNAME, @dd NVARCHAR(400), @ln SYSNAME, @ld NVARCHAR(400)',
      @f = @FFull, @dn = @DataName, @dd = @dd, @ln = @LogName, @ld = @ld;
 RESTORE DATABASE ECMS_KhoiPhuc FROM DISK = @FDiff WITH NORECOVERY;
 RESTORE LOG ECMS_KhoiPhuc FROM DISK = @FLog WITH STOPAT = @T0, RECOVERY;
+DECLARE @RTO INT = DATEDIFF(MILLISECOND, @BatDauKhoiPhuc, SYSDATETIME());
+-- Bản phục hồi phải toàn vẹn về vật lý và logic trước khi lấy dữ liệu ra dùng: DBCC CHECKDB
+DBCC CHECKDB (ECMS_KhoiPhuc) WITH NO_INFOMSGS, ALL_ERRORMSGS;
+SELECT N'RTO đo được (Full + Diff + Log STOPAT)' AS ChiSo, @RTO AS Mili_giay,
+       N'DBCC CHECKDB không báo lỗi' AS KiemTraToanVen;
 
 -- 2.8 Đối chiếu: CSDL phục hồi có đủ điểm danh và có cả 2 phiếu thu tạo sau full backup
 SET @sql = N'SELECT @n1 = (SELECT COUNT(*) FROM ECMS_KhoiPhuc.dbo.DIEMDANH WHERE MaLop = @l),
@@ -146,33 +152,83 @@ WHERE bs.database_name = 'ECMS' ORDER BY bs.backup_finish_date DESC;
 GO
 
 /* ---------------------------------------------------------------------
-   4. Lịch sao lưu tự động đề xuất (SQL Server Agent – bản Developer/Standard; Docker cần MSSQL_AGENT_ENABLED=true)
-      Full: Chủ nhật 01:00 · Diff: hằng ngày 01:00 (trừ CN) · Log: mỗi 15 phút
-      Bản Express không có Agent: dùng Task Scheduler / cron gọi scripts/backup.sh hoặc sqlcmd -Q "EXEC sp_SaoLuuECMS 'LOG'"
+   4. Lịch sao lưu tự động bằng SQL Server Agent (bản Developer/Standard; Docker: MSSQL_AGENT_ENABLED=true)
+      Full: Chủ nhật 01:00 · Diff: 01:00 thứ Hai – thứ Bảy · Log: mỗi 15 phút.
+      Job được tạo ở trạng thái TẮT (@enabled = 0) để máy demo không sinh file sao lưu liên tục; chạy thử job Log
+      MỘT lần bằng sp_start_job rồi xem kết quả trong lịch sử job. Bật lịch thật: sp_update_job @enabled = 1.
+      Bản Express không có Agent: dùng Task Scheduler / cron gọi scripts/backup.sh.
    --------------------------------------------------------------------- */
-/*
-USE msdb;
-EXEC sp_add_job @job_name = N'ECMS – Log backup 15 phút';
-EXEC sp_add_jobstep @job_name = N'ECMS – Log backup 15 phút', @step_name = N'Log', @subsystem = N'TSQL',
-     @database_name = N'master', @command = N'EXEC dbo.sp_SaoLuuECMS ''LOG'';';
-EXEC sp_add_schedule @schedule_name = N'Mỗi 15 phút', @freq_type = 4, @freq_interval = 1,
-     @freq_subday_type = 4, @freq_subday_interval = 15;
-EXEC sp_attach_schedule @job_name = N'ECMS – Log backup 15 phút', @schedule_name = N'Mỗi 15 phút';
-EXEC sp_add_jobserver @job_name = N'ECMS – Log backup 15 phút';
--- tương tự cho FULL (@freq_type = 8 hằng tuần, @freq_interval = 1 Chủ nhật) và DIFF (@freq_type = 8, @freq_interval = 126 T2–T7)
-*/
+-- 'Agent XPs' = 1 chỉ nói Agent đã từng được bật; bản Developer cài Agent ở chế độ khởi động Manual nên sau khi
+-- khởi động lại máy dịch vụ thường đang dừng (sp_start_job báo "SQLServerAgent is not currently running") →
+-- kiểm tra thêm phiên làm việc của Agent (program_name 'SQLAgent - …', có trên cả Windows lẫn Linux)
+IF (SELECT CAST(value_in_use AS INT) FROM sys.configurations WHERE name = N'Agent XPs') = 1
+   AND EXISTS (SELECT 1 FROM sys.dm_exec_sessions WHERE program_name LIKE N'SQLAgent%')
+BEGIN
+    -- BatDau (HHMMSS): giờ chạy của Full / Diff; với Log là đầu khung giờ lặp 15 phút – phải từ 00:00:00, nếu đặt
+    -- 01:00 như hai job kia thì 00:00 – 01:00 mỗi ngày không có bản sao lưu log nào (RPO thành 75 phút)
+    DECLARE @Jobs TABLE (Ten SYSNAME, Loai VARCHAR(4), FreqType INT, FreqInterval INT, SubdayType INT, SubdayInterval INT, BatDau INT);
+    INSERT @Jobs VALUES (N'ECMS – Full hằng tuần', 'FULL', 8, 1, 1, 0, 10000),     -- hằng tuần, Chủ nhật, 01:00
+                        (N'ECMS – Diff hằng ngày', 'DIFF', 8, 126, 1, 0, 10000),   -- 126 = T2 … T7 (2+4+8+16+32+64), 01:00
+                        (N'ECMS – Log 15 phút',    'LOG',  4, 1, 4, 15, 0);        -- hằng ngày, mỗi 15 phút, cả ngày
+    DECLARE @Ten SYSNAME, @L VARCHAR(4), @ft INT, @fi INT, @st INT, @si INT, @bd INT, @cmd NVARCHAR(200);
+    DECLARE cj CURSOR LOCAL FAST_FORWARD FOR SELECT * FROM @Jobs;
+    OPEN cj; FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si, @bd;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @Ten) EXEC msdb.dbo.sp_delete_job @job_name = @Ten;
+        SET @cmd = CONCAT(N'EXEC master.dbo.sp_SaoLuuECMS ''', @L, N''';');
+        EXEC msdb.dbo.sp_add_job @job_name = @Ten, @enabled = 0, @description = N'ECMS – lịch sao lưu (T17)';
+        EXEC msdb.dbo.sp_add_jobstep @job_name = @Ten, @step_name = @L, @subsystem = N'TSQL', @database_name = N'master', @command = @cmd;
+        EXEC msdb.dbo.sp_add_jobschedule @job_name = @Ten, @name = @Ten, @freq_type = @ft, @freq_interval = @fi,
+             @freq_recurrence_factor = 1, @freq_subday_type = @st, @freq_subday_interval = @si, @active_start_time = @bd;
+        EXEC msdb.dbo.sp_add_jobserver @job_name = @Ten;
+        FETCH NEXT FROM cj INTO @Ten, @L, @ft, @fi, @st, @si, @bd;
+    END
+    CLOSE cj; DEALLOCATE cj;
+
+    EXEC msdb.dbo.sp_start_job @job_name = N'ECMS – Log 15 phút';               -- chạy thử 1 lần
+    DECLARE @cho INT = 0;
+    WHILE @cho < 30 AND NOT EXISTS (SELECT 1 FROM msdb.dbo.sysjobhistory h JOIN msdb.dbo.sysjobs j ON j.job_id = h.job_id
+                                    WHERE j.name = N'ECMS – Log 15 phút' AND h.step_id = 0)
+    BEGIN WAITFOR DELAY '00:00:01'; SET @cho += 1; END
+    SELECT j.name AS Job, j.enabled AS DangBat, s.name AS Lich,
+           (SELECT TOP 1 CASE h.run_status WHEN 1 THEN N'Thành công' WHEN 0 THEN N'Thất bại' ELSE N'Khác' END
+            FROM msdb.dbo.sysjobhistory h WHERE h.job_id = j.job_id AND h.step_id = 0 ORDER BY h.instance_id DESC) AS LanChayThu
+    FROM msdb.dbo.sysjobs j JOIN msdb.dbo.sysjobschedules js ON js.job_id = j.job_id JOIN msdb.dbo.sysschedules s ON s.schedule_id = js.schedule_id
+    WHERE j.name LIKE N'ECMS – %' ORDER BY j.name;
+END
+ELSE
+    PRINT N'SQL Server Agent không chạy (bản Express, Docker thiếu MSSQL_AGENT_ENABLED, hoặc dịch vụ SQL Server Agent '
+        + N'đang dừng – bật trong SQL Server Configuration Manager) – bỏ qua phần lập lịch.';
+GO
 
 /* ---------------------------------------------------------------------
-   5. (Tuỳ chọn) Sao lưu có mã hoá – cần master key + certificate trong master, PHẢI sao lưu certificate
-      ra file riêng, mất certificate = không phục hồi được bản sao lưu.
+   5. Sao lưu có mã hoá (AES-256): bản .bak bị lấy cắp cũng không phục hồi được nếu không có certificate.
+      Master key + certificate nằm trong master; PHẢI sao lưu certificate kèm khoá riêng ra file riêng –
+      mất certificate = không phục hồi được bản sao lưu. Mật khẩu dưới đây chỉ dùng cho môi trường demo.
    --------------------------------------------------------------------- */
-/*
-CREATE MASTER KEY ENCRYPTION BY PASSWORD = '<mật khẩu mạnh>';
-CREATE CERTIFICATE ECMS_BackupCert WITH SUBJECT = 'ECMS backup encryption';
-BACKUP CERTIFICATE ECMS_BackupCert TO FILE = '/var/opt/mssql/backup/ECMS_BackupCert.cer'
-    WITH PRIVATE KEY (FILE = '/var/opt/mssql/backup/ECMS_BackupCert.pvk', ENCRYPTION BY PASSWORD = '<mật khẩu>');
-BACKUP DATABASE ECMS TO DISK = '/var/opt/mssql/backup/ECMS_encrypted.bak'
-    WITH COMPRESSION, ENCRYPTION (ALGORITHM = AES_256, SERVER CERTIFICATE = ECMS_BackupCert), INIT;
-*/
-PRINT N'✓ 11_backup_restore.sql: đã demo Full → Diff → Log, phục hồi point-in-time ra ECMS_KhoiPhuc.';
+IF NOT EXISTS (SELECT 1 FROM master.sys.symmetric_keys WHERE name = N'##MS_DatabaseMasterKey##')
+    CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Ecms@MasterKey2026';
+IF NOT EXISTS (SELECT 1 FROM master.sys.certificates WHERE name = N'ECMS_BackupCert')
+    CREATE CERTIFICATE ECMS_BackupCert WITH SUBJECT = 'ECMS backup encryption', EXPIRY_DATE = '2036-12-31';
+GO
+DECLARE @Dir NVARCHAR(260) = CAST(SERVERPROPERTY('InstanceDefaultBackupPath') AS NVARCHAR(260));
+IF RIGHT(@Dir, 1) NOT IN ('/', '\') SET @Dir += IIF(@Dir LIKE '%/%', '/', '\');
+DECLARE @Hau NVARCHAR(20) = FORMAT(SYSDATETIME(), 'yyyyMMdd_HHmmss');   -- BACKUP CERTIFICATE không ghi đè file có sẵn
+DECLARE @cer NVARCHAR(400) = @Dir + 'ECMS_BackupCert_' + @Hau + '.cer', @pvk NVARCHAR(400) = @Dir + 'ECMS_BackupCert_' + @Hau + '.pvk';
+DECLARE @bak NVARCHAR(400) = @Dir + 'ECMS_encrypted.bak', @sql NVARCHAR(MAX);
+SET @sql = N'BACKUP CERTIFICATE ECMS_BackupCert TO FILE = {CER} WITH PRIVATE KEY (FILE = {PVK}, ENCRYPTION BY PASSWORD = ''Ecms@CertKey2026'');';
+SET @sql = REPLACE(REPLACE(@sql, N'{CER}', QUOTENAME(@cer, '''')), N'{PVK}', QUOTENAME(@pvk, ''''));   -- tên file phải là hằng
+EXEC (@sql);
+BACKUP DATABASE ECMS TO DISK = @bak
+    WITH COMPRESSION, ENCRYPTION (ALGORITHM = AES_256, SERVER CERTIFICATE = ECMS_BackupCert), INIT, FORMAT, CHECKSUM,
+         NAME = N'ECMS FULL – mã hoá AES_256';
+RESTORE VERIFYONLY FROM DISK = @bak WITH CHECKSUM;
+SELECT TOP 1 bs.name, bs.key_algorithm AS ThuatToan, bs.encryptor_type AS LoaiKhoa,
+       CONVERT(VARCHAR(20), bs.encryptor_thumbprint, 1) AS VanTayCertificate,
+       CAST(bs.compressed_backup_size / 1048576.0 AS DECIMAL(10,2)) AS KichThuocMB
+FROM msdb.dbo.backupset bs WHERE bs.database_name = 'ECMS' ORDER BY bs.backup_finish_date DESC;
+GO
+
+PRINT N'✓ 11_backup_restore.sql: Full → Diff → Log, phục hồi point-in-time + DBCC CHECKDB, lịch Agent, sao lưu mã hoá.';
 GO

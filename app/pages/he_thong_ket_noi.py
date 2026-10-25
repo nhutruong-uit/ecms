@@ -6,7 +6,7 @@ from core.config import DB
 
 auth.require_role("QuanLy")
 st.title("🔌 Kiểm tra kết nối")
-st.caption(f"Máy chủ `{DB.server},{DB.port}` · CSDL `{DB.database}` · Driver `{DB.driver}`")
+st.caption(f"Máy chủ `{DB.server}{',' + DB.port if DB.port.strip() else ''}` · CSDL `{DB.database}` · Driver `{DB.driver}`")
 
 try:
     info = db.server_info()

@@ -8,10 +8,14 @@ const ketQua = (ten, c) => { print(`\n=== ${ten}`); c.forEach(d => printjson(d))
 ketQua("1. Hồ sơ học viên HV0019", db.hoc_vien.find({ _id: "HV0019" },
   { ho_ten: 1, sdt: 1, "dang_ky.lop": 1, "dang_ky.diem.tb": 1, "dang_ky.ket_qua": 1, "dang_ky.hoc_phi.trang_thai": 1 }));
 
-// 2. SQL: SELECT n.MaCN, MONTH(NgayThu), SUM(TongTien) FROM PHIEUTHU p JOIN NHANVIEN n … GROUP BY …
-ketQua("2. Doanh thu chi nhánh × tháng 2026", db.phieu_thu.aggregate([
+// 2. SQL: SELECT l.MaCN, MONTH(p.NgayThu), SUM(c.SoTien) FROM CT_PHIEUTHU c JOIN PHIEUTHU p … JOIN DANGKY d … JOIN LOPHOC l …
+//    Doanh thu tính theo chi nhánh CỦA LỚP (như vw_DoanhThuThang), không theo chi nhánh người lập phiếu
+ketQua("2. Doanh thu chi nhánh lớp × tháng 2026", db.phieu_thu.aggregate([
   { $match: { ngay_thu: { $gte: ISODate("2026-01-01"), $lt: ISODate("2027-01-01") } } },
-  { $group: { _id: { cn: "$chi_nhanh", thang: { $month: "$ngay_thu" } }, tong: { $sum: "$tong_tien" }, so_phieu: { $sum: 1 } } },
+  { $unwind: "$chi_tiet" },
+  { $group: { _id: { cn: "$chi_tiet.chi_nhanh", thang: { $month: "$ngay_thu" } }, tong: { $sum: "$chi_tiet.so_tien" },
+              so_phieu: { $addToSet: "$_id" } } },
+  { $project: { tong: 1, so_phieu: { $size: "$so_phieu" } } },
   { $sort: { "_id.cn": 1, "_id.thang": 1 } }, { $limit: 6 }]));
 
 // 3. SQL: … WHERE KetQuaChiTiet.exist('/KetQua/KyNang[@Ten="Speaking" and @Diem < 3]') = 1   (XQuery trên cột XML)
@@ -41,7 +45,10 @@ ketQua("6. Lớp đang mở còn chỗ", db.lop_hoc.aggregate([
   { $lookup: { from: "khoa_hoc", localField: "khoa_hoc", foreignField: "_id", as: "kh" } }, { $unwind: "$kh" },
   { $project: { khoa: "$kh.ten", con_cho: { $subtract: ["$si_so.toi_da", "$si_so.hien_tai"] }, lich: 1 } }]));
 
-// 7. Cập nhật điểm danh một buổi – mảng lồng 2 cấp dùng arrayFilters (SQL: UPDATE DIEMDANH … WHERE MaDK = … AND STT = …)
-db.hoc_vien.updateOne({ _id: "HV0019" }, { $set: { "dang_ky.$[d].diem_danh.$[b].trang_thai": "Có phép" } },
-  { arrayFilters: [{ "d.ma_dk": { $exists: true } }, { "b.buoi": 1 }] });
-print("\n=== 7. Đã cập nhật điểm danh buổi 1 (minh hoạ arrayFilters)");
+// 7. Cập nhật điểm danh một buổi – mảng lồng 2 cấp dùng arrayFilters
+//    SQL: UPDATE DIEMDANH SET TrangThai = N'Có phép' WHERE MaDK = @dk AND STT = 1   (đúng MỘT đăng ký, MỘT buổi)
+//    arrayFilters phải lọc đúng mã đăng ký ("d.ma_dk": dk) – lọc { $exists: true } sẽ sửa buổi 1 của MỌI đăng ký
+const dk = db.hoc_vien.findOne({ _id: "HV0019" }).dang_ky.find(d => d.diem_danh.length > 0).ma_dk;
+const r7 = db.hoc_vien.updateOne({ _id: "HV0019" }, { $set: { "dang_ky.$[d].diem_danh.$[b].trang_thai": "Có phép" } },
+  { arrayFilters: [{ "d.ma_dk": dk }, { "b.buoi": 1 }] });
+print(`\n=== 7. Đã cập nhật điểm danh buổi 1 của đăng ký ${dk} (${r7.modifiedCount} document)`);

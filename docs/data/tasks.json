@@ -883,6 +883,38 @@
         "Nộp đúng hạn"
       ],
       "depends": ["T02", "T06", "T09", "T15", "T24", "T25", "T26", "T27", "T28"]
+    },
+    {
+      "id": "T30",
+      "issue": 66,
+      "title": "Khắc phục sau rà soát: bảo mật, giao dịch, nội dung đề cương còn thiếu, báo cáo & hướng dẫn",
+      "owner": "nhu",
+      "sprint": "S4",
+      "due": "2026-11-04",
+      "chapter": "pm",
+      "types": ["database", "web", "docs"],
+      "syllabus": "Rubric A4: nội dung đầy đủ, chính xác, có so sánh đối chiếu, số liệu rõ ràng; trình bày rõ ràng, minh hoạ trực quan. Bổ sung mục đề cương còn thiếu: mã hoá (TLS/TDE), kiểm toán, mô hình có cấu trúc, tri thức hiện/ẩn, 2PC, nửa kết, chiến lược ánh xạ kế thừa",
+      "summary": "Sửa các lỗi phát hiện khi rà soát toàn bộ đồ án (CSDL, ứng dụng, báo cáo, hướng dẫn sử dụng), bổ sung nội dung đề cương còn thiếu và đo lại số liệu trên CSDL dựng mới.",
+      "steps": [
+        "CI: healthcheck chờ đổi collation xong (CI main 20/10 đỏ do Msg 3434), múi giờ container, run_all chờ máy chủ sẵn sàng",
+        "Bảo mật: SESSION_CONTEXT read-only + kết nối riêng mỗi phiên, kiểm tra quyền fail-closed, chống dò tài khoản, tạm khoá 15 phút, băm lặp mật khẩu, kiểm tra lại phiên",
+        "Giao dịch & toàn vẹn: XACT_ABORT, khoá chống tranh chấp, chống lập phiếu trùng, mã lớp ≤ 10 ký tự, bảng lương không xoá dây chuyền, lương theo giáo viên dạy buổi",
+        "Demo bổ sung: chỉ mục XML, job Agent + sao lưu mã hoá + DBCC CHECKDB, TDE / mã hoá cột / masking / SQL Server Audit / ledger, 2PC, nửa kết, sự cố trạm",
+        "Ứng dụng: xác nhận khi xoá, phạm vi chi nhánh, xuất Word, thống kê và tô màu có điều kiện trong báo cáo, bỏ chú thích kỹ thuật trên giao diện",
+        "Chương 5: OID thật, đối tượng bền, 3 chiến lược ánh xạ kế thừa; MongoDB Decimal128, $jsonSchema, đo thao tác ghi",
+        "Báo cáo và hướng dẫn sử dụng: sửa số liệu, bổ sung nội dung đề cương, đánh số bảng; script chụp ảnh tự động"
+      ],
+      "deliverables": [
+        "database/*.sql, database/tests/*.sql",
+        "app/, tests/",
+        "report/*.md, docs/user-guide/huong-dan-su-dung.md, scripts/chup_anh.py"
+      ],
+      "acceptance": [
+        "run_all + test_seed / test_procedures / test_triggers / test_security + 10_queries chạy sạch trên CSDL trống",
+        "pytest tests: 0 lỗi",
+        "Báo cáo và hướng dẫn khớp mã nguồn và số liệu đo lại"
+      ],
+      "depends": ["T29"]
     }
   ],
   "coverage": [

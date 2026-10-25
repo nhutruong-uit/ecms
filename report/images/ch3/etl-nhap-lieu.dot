@@ -1,0 +1,20 @@
+// Quy trình ETL nhập 1.200 đăng ký trực tuyến (Chương 3, mục 3.2.5) – database/12_import_export.sql
+// Nguồn sinh etl-nhap-lieu.png:  dot -Tpng -Gdpi=200 etl-nhap-lieu.dot -o etl-nhap-lieu.png
+digraph ETL {
+  rankdir=TB; nodesep=0.4; ranksep=0.3; fontname="Arial"; bgcolor="white";
+  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
+        fontcolor="#0f172a", margin="0.12,0.07"];
+  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+
+  csv [label="hocvien_online.csv\n1.200 dòng, UTF-8, xuống dòng CRLF", shape=note, style="filled", fillcolor="#e2e8f0"];
+  e   [label="TRÍCH XUẤT – BULK INSERT (13 ms)\nbảng trung gian STG_HOCVIEN_ONLINE\nmọi cột kiểu chuỗi UTF-8: nhận cả dữ liệu sai", fillcolor="#dbeafe"];
+  t1  [label="BIẾN ĐỔI – chuẩn hoá\ncắt khoảng trắng · bỏ . - trong số điện thoại\nbỏ ký tự CR cuối dòng · TRY_CONVERT ngày dd/MM/yyyy", fillcolor="#ede9fe"];
+  t2  [label="BIẾN ĐỔI – 12 quy tắc chất lượng\nhọ tên (thiếu, quá dài) · ngày sinh (định dạng, hợp lý)\nngày đăng ký · giới tính · số điện thoại · email\nchi nhánh, khoá học tồn tại · trùng SĐT trong CSDL, trong tệp", fillcolor="#ede9fe"];
+  ok  [label="NẠP – 1.160 dòng hợp lệ\nINSERT HOCVIEN trong một giao dịch\n(mặc định chạy thử: ROLLBACK)", fillcolor="#dcfce7"];
+  bad [label="40 dòng lỗi kèm lý do\nSTG_HOCVIEN_LOI, tệp CSV lỗi\ngửi trả bộ phận tuyển sinh", fillcolor="#fee2e2"];
+
+  csv -> e -> t1 -> t2;
+  t2 -> ok [label=" Loi IS NULL"];
+  t2 -> bad [label=" có lỗi"];
+  {rank=same; ok; bad}
+}

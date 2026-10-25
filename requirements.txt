@@ -5,6 +5,7 @@ python-dotenv>=1.0
 plotly>=5.24
 reportlab>=4.2
 openpyxl>=3.1
+python-docx>=1.1          # xuất báo cáo Word (reports/bao_cao.py)
 
 # Công cụ sinh dữ liệu mẫu (scripts/gen_seed.py)
 faker>=30

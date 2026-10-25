@@ -1,0 +1,33 @@
+// Luồng giao dịch của sp_ThuHocPhi (Chương 3, mục 3.3.1) – database/05_procedures.sql
+// Nguồn sinh giao-dich-thu-hoc-phi.png:  dot -Tpng -Gdpi=200 giao-dich-thu-hoc-phi.dot -o giao-dich-thu-hoc-phi.png
+digraph ThuHocPhi {
+  rankdir=TB; nodesep=0.35; ranksep=0.26; fontname="Arial"; bgcolor="white"; compound=true; newrank=true;
+  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
+        fontcolor="#0f172a", margin="0.12,0.06"];
+  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+
+  tc   [label="@@TRANCOUNT = 0 ?", shape=diamond, style="filled", fillcolor="#fef3c7", margin="0.04,0.02"];
+  mo   [label="SET XACT_ABORT ON\nBEGIN TRANSACTION", fillcolor="#dbeafe"];
+  sv   [label="SAVE TRANSACTION\n(người gọi đã có giao dịch)", fillcolor="#dbeafe"];
+  subgraph cluster_try {
+    label="BEGIN TRY … END TRY"; labeljust=l; labelloc=b; fontsize=12; fontcolor="#1f3864"; style="rounded"; color="#cbd5e1";
+    yc   [label="Đã có phiếu với @MaYeuCau?\n(UPDLOCK, HOLDLOCK)", fillcolor="#fef3c7"];
+    kt   [label="JSON hợp lệ · người lập là kế toán / quản lý\nvà là người đang đăng nhập (50015)", fillcolor="#ede9fe"];
+    khoa [label="Khoá DANGKY được thu (UPDLOCK, HOLDLOCK)\nđúng học viên (50012) · số tiền > 0 (50013)\nkhông vượt số còn nợ (50014)", fillcolor="#ede9fe"];
+    ghi  [label="INSERT PHIEUTHU, CT_PHIEUTHU\ntrigger: tổng tiền, trạng thái học phí, NHATKY", fillcolor="#e0f2fe"];
+    ct   [label="COMMIT (nếu tự mở giao dịch)", fillcolor="#dcfce7"];
+  }
+  cu   [label="Trả lại phiếu đã lập (RETURN 1)\nbấm hai lần, gửi lại form\nkhông sinh phiếu trùng", fillcolor="#dcfce7"];
+  loi  [label="BEGIN CATCH\nXACT_STATE() = -1 hoặc tự mở\n→ ROLLBACK toàn bộ\nngược lại → ROLLBACK\nvề điểm lưu\nTHROW lỗi gốc", fillcolor="#fee2e2"];
+
+  tc -> mo [label=" có"];
+  tc -> sv [label=" không"];
+  mo -> yc; sv -> yc;
+  yc -> cu [label=" có"];
+  yc -> kt [label=" chưa"];
+  kt -> khoa -> ghi -> ct;
+  kt -> loi [ltail=cluster_try, style=dashed, color="#dc2626", fontcolor="#dc2626", label=" lỗi ở\n bất kỳ bước nào"];
+  {rank=same; mo; sv}
+  {rank=same; yc; cu}
+  {rank=same; kt; loi}
+}
