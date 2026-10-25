@@ -425,18 +425,9 @@ ALTER DATABASE ECMS_CN03 SET ONLINE;
 GO
 
 /* ---------------------------------------------------------------------
-   11. Các trạm là máy chủ khác nhau: linked server + giao tác phân tán qua MSDTC (chạy trên Windows có
-       2 instance SQL Server, dịch vụ Distributed Transaction Coordinator bật "Network DTC Access").
+   11. Các trạm là máy chủ khác nhau: linked server + BEGIN DISTRIBUTED TRANSACTION, MSDTC của hai máy điều phối 2PC
+       qua mạng → database/13b_2pc_msdtc.sql (trạm CN02 là SQL Server trên máy thứ hai, cấu hình ở database/tram_cn02/).
+       Đã chạy giữa Windows 11 (trạm CN01) và Docker trên macOS (trạm CN02) cùng mạng Wi-Fi.
    --------------------------------------------------------------------- */
-/*
-EXEC sp_addlinkedserver @server = N'TRAM_CN02', @srvproduct = N'', @provider = N'MSOLEDBSQL', @datasrc = N'MAY2\SQL2022';
-EXEC sp_addlinkedsrvlogin @rmtsrvname = N'TRAM_CN02', @useself = N'TRUE';
-EXEC sp_serveroption N'TRAM_CN02', N'remote proc transaction promotion', N'true';
-SELECT COUNT(*) FROM TRAM_CN02.ECMS_CN02.dbo.HOCVIEN;
-BEGIN DISTRIBUTED TRANSACTION;                                    -- MSDTC điều phối 2PC giữa hai máy
-    UPDATE TRAM_CN02.ECMS_CN02.dbo.DANGKY SET TrangThai = N'Đã chuyển lớp' WHERE MaDK = 100 AND MaCN = 'CN02';
-    INSERT ECMS_CN01.dbo.DANGKY (...) VALUES (...);
-COMMIT TRANSACTION;
-*/
 PRINT N'✓ 13_distributed.sql: 3 trạm chi nhánh + lược đồ toàn cục ECMS_TOANCUC; nhân bản, semi-join, 2PC, sự cố trạm.';
 GO

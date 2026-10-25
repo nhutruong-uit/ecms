@@ -16,12 +16,13 @@ ipconfig getifaddr en0          # IP của máy này – dùng ở bước 2 (IP
 ```
 
 `WIN_HOST`, `WIN_IP` là tên và IP máy Windows (`$env:COMPUTERNAME`, `ipconfig`). macOS có thể hỏi cho phép Docker nhận kết
-nối đến – chọn cho phép.
+nối đến – chọn cho phép. Cảnh báo `could not create log file for mssql-conf` khi chạy `mssql-conf` là vô hại; thiết lập có
+hiệu lực sau `docker restart`.
 
 ## 2. Máy Windows (PowerShell chạy bằng quyền Administrator)
 
 ```powershell
-$IP_MAC = "192.168.1.20"        # IP máy thứ hai
+$IP_MAC = "192.168.1.168"       # ĐỔI thành IP máy thứ hai lấy ở bước 1 – -RemoteAddress chỉ nhận IP thật
 # MSDTC nhận / gửi giao tác qua mạng; hai máy không chung domain nên không xác thực lẫn nhau
 Set-DtcNetworkSetting -DtcName Local -AuthenticationLevel NoAuth -InboundTransactionsEnabled $true `
   -OutboundTransactionsEnabled $true -RemoteClientAccessEnabled $true -RemoteAdministrationAccessEnabled $false `
@@ -39,10 +40,15 @@ Add-Content "$env:SystemRoot\System32\drivers\etc\hosts" "`r`n$IP_MAC ecms-tram-
 ## 3. Chạy demo (máy Windows, sau khi đã chạy `13_distributed.sql`)
 
 ```powershell
-sqlcmd -S localhost\MSSQLSERVER01 -E -C -b -I -f 65001 -v TRAM_CN02="$IP_MAC,14335" TRAM_CN02_MK="Ecms@12345" `
-  -i database\13b_2pc_msdtc.sql
+# sqlcmd đọc biến script từ biến môi trường ("-v" không nhận giá trị có dấu phẩy như "IP,cổng")
+$env:TRAM_CN02 = "$IP_MAC,14335"; $env:TRAM_CN02_MK = "Ecms@12345"
+sqlcmd -S localhost\MSSQLSERVER01 -E -C -b -I -f 65001 -i database\13b_2pc_msdtc.sql
 Get-DtcTransactionsStatistics      # số giao tác MSDTC đã cam kết / huỷ tăng thêm
 ```
+
+Kết quả đo ngày 25/10/2026 (Windows 11 + SQL Server 2025 Developer ↔ macOS + SQL Server 2025 trong Docker, cùng Wi-Fi):
+chuyển lớp cam kết ở cả hai máy với cùng một mã giao tác MSDTC (UOW) ở hai phía; lỗi CHECK ở trạm CN01 làm MSDTC huỷ
+cả cập nhật đã làm ở trạm CN02; `Get-DtcTransactionsStatistics` tăng 2 giao tác cam kết, 1 giao tác huỷ.
 
 ## 4. Dọn sau khi demo
 
