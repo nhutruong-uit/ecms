@@ -43,7 +43,7 @@ cd app && pytest ../tests -q
 
 ## Commit đúng tên thành viên
 
-Nhóm uỷ quyền cho Như thực hiện phần code. Để lịch sử git thể hiện đúng phân công, mọi commit của một task được ghi tên người phụ trách task đó:
+Mỗi thành viên phụ trách trọn các task của mình (phân tích, thiết kế, viết mã, báo cáo); Như (nhóm trưởng) review, tích hợp mã vào repo và chạy kiểm thử chung. Để lịch sử git thể hiện đúng phân công, mọi commit của một task được ghi tên người phụ trách task đó:
 
 ```bash
 scripts/commit-as.sh --list                                    # xem id thành viên
