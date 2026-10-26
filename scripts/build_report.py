@@ -68,12 +68,13 @@ DOCS = {
                    "Chương 4: Trình bày thông tin – ứng dụng web, báo cáo",
                    "Chương 5: Mô hình CSDL tiên tiến – hướng đối tượng, phân tán, NoSQL",
                    "Kiểm thử tích hợp, CI và tài liệu hướng dẫn sử dụng"],
-        nhan_xet=True),
+        nhan_xet=True, ma_consolas=True),
     "hdsd": dict(
         src=[ROOT / "docs" / "user-guide" / "huong-dan-su-dung.md"],
         out=REPORT / "HuongDanSuDung_ECMS.docx",
-        loai="HƯỚNG DẪN SỬ DỤNG", tieu_de=TEN_HT, header=f"HƯỚNG DẪN SỬ DỤNG - {TEN_HT}",
-        checklist=None, nhan_xet=False),
+        loai="HƯỚNG DẪN SỬ DỤNG", tieu_de=TEN_HT, header=TEN_HT.removesuffix(" (ECMS)"),
+        checklist=None, nhan_xet=False,
+        ma_consolas=False),     # `mã` trong đoạn văn: cùng font Times New Roman, chỉ khối mã dùng Consolas
 }
 
 NAVY, BLUE, GREY = "1f3864", "2e75b6", "555555"
@@ -362,8 +363,8 @@ def spacer(doc):
 
 # ============================================================================= Markdown → docx
 class DocxWriter:
-    def __init__(self, doc, src: Path):
-        self.doc, self.src = doc, src
+    def __init__(self, doc, src: Path, ma_consolas=True):
+        self.doc, self.src, self.ma_consolas = doc, src, ma_consolas
         self.num_id = 100
 
     # ----- inline
@@ -393,12 +394,13 @@ class DocxWriter:
                     p.add_run().add_break()
             elif t.type in ("text", "code_inline"):
                 code = t.type == "code_inline"
-                csize = (size or 13) - 1 if code else size
+                mono = code and self.ma_consolas
+                csize = (size or 13) - 1 if mono else size
                 text = t.content.replace("_", "_" + ZWSP) if ngat else t.content
                 if href and not href.startswith("#"):
-                    hyperlink(p, href, text, bold, italic, code, csize)
+                    hyperlink(p, href, text, bold, italic, mono, csize)
                 else:
-                    r = run_fmt(p.add_run(text), "Consolas" if code else "Times New Roman", csize, bold, italic,
+                    r = run_fmt(p.add_run(text), "Consolas" if mono else "Times New Roman", csize, bold, italic,
                                 color or (NAVY if code else None))
                     if vt:
                         r.font.subscript, r.font.superscript = vt == "sub", vt == "sup"
@@ -419,7 +421,7 @@ class DocxWriter:
     def paragraph(self, children, raw):
         p = self.doc.add_paragraph()
         dan = raw.rstrip().endswith(":")                  # câu dẫn của bảng / danh sách / khối mã: đi cùng phần sau
-        p_fmt(p, first=None if dan else 284, keep_next=dan)
+        p_fmt(p, first=284, keep_next=dan)                 # mọi đoạn thân bài thụt 0,5 cm, kể cả câu dẫn
         self.inline(p, children)
 
     def image(self, src):
@@ -688,6 +690,19 @@ def build_docx(cfg) -> Path:
     trong = [e for e in list(body)[:body.index(paras["«NGAY»"])] if e.tag == qn("w:p") and not "".join(e.itertext()).strip()]
     for e in trong[-3:]:
         body.remove(e)
+    doc.styles["FigureCaption"].font.size = Pt(13)          # mẫu để 11 pt; chú thích hình / bảng cùng cỡ thân bài
+    # Ký hiệu "•" của danh sách không khai báo font → Word lấy Arial; mục lục Word sinh ra gắn font theme (Calibri)
+    # vào dấu chấm dẫn → đặt rõ Times New Roman cho cả hai
+    for lvl in doc.part.numbering_part.element.iter(qn("w:lvl")):
+        rpr = lvl.find(qn("w:rPr"))
+        if rpr is None:
+            rpr = el("w:rPr")
+            lvl.append(rpr)
+        for cu in rpr.findall(qn("w:rFonts")):
+            rpr.remove(cu)
+        rpr.insert(0, el("w:rFonts", w_ascii="Times New Roman", w_hAnsi="Times New Roman", w_cs="Times New Roman"))
+    theme = next(r.target_part for r in doc.part.rels.values() if r.reltype.endswith("/theme"))
+    theme._blob = re.sub(rb'(<a:(?:major|minor)Font><a:latin typeface=")[^"]*', rb"\1Times New Roman", theme.blob)
     if "TableCaption" not in [s.name for s in doc.styles]:
         tc = doc.styles.add_style("TableCaption", WD_STYLE_TYPE.PARAGRAPH)
         tc.base_style = doc.styles["FigureCaption"]
@@ -736,11 +751,11 @@ def build_docx(cfg) -> Path:
             field(tmp, 'TOC \\h \\z \\t "TableCaption,1"', goi_y)
         else:
             body.remove(tmp._p)
-            w = DocxWriter(doc, cfg["src"][0])
+            w = DocxWriter(doc, cfg["src"][0], cfg["ma_consolas"])
             w.bat_buoc_chu_thich = False
             w.write(viet_tat_md(noi_dung))
     for src in cfg["src"]:
-        DocxWriter(doc, src).write(src.read_text(encoding="utf-8"))
+        DocxWriter(doc, src, cfg["ma_consolas"]).write(src.read_text(encoding="utf-8"))
     tach_phan_dau(doc)
     settings = doc.settings.element
     if settings.find(qn("w:updateFields")) is None:
@@ -767,7 +782,7 @@ body { font: 13pt/1.15 'Times New Roman', serif; color: #000; margin: 0; }
 h1 { font-size: 13pt; color: #1f3864; break-before: page; margin: 12pt 0 8pt; }
 h2 { font-size: 13pt; color: #2e75b6; margin: 10pt 0 6pt; } h3, h4 { font-size: 13pt; margin: 8pt 0 5pt; }
 h1, h2, h3, h4 { break-after: avoid; }
-p { text-align: justify; margin: 0 0 6pt; text-indent: 0.5cm; } p.lead { text-indent: 0; break-after: avoid; }
+p { text-align: justify; margin: 0 0 6pt; text-indent: 0.5cm; } p.lead { break-after: avoid; }
 li { text-align: justify; margin-bottom: 4pt; } li p { text-indent: 0; margin: 0; }
 a { color: #2e75b6; text-decoration: none; }
 code { font: 12pt Consolas, Menlo, monospace; color: #1f3864; }
@@ -898,7 +913,8 @@ def build_pdf(cfg):
     db = "".join(f'<li><a href="#{a}">{html.escape(tx)}</a></li>' for a, tx in bang)
     vt = md.render(viet_tat_md("\n".join(src.read_text(encoding="utf-8") for src in cfg["src"]))).replace("<table>", "<table class='vt'>", 1)
     page = (f"<!doctype html><html lang='vi'><head><meta charset='utf-8'><title>{html.escape(cfg['tieu_de'])}</title>"
-            f"<style>{CSS.replace('%HEADER%', cfg['header'])}</style></head><body>{bia}{extra}"
+            f"<style>{CSS.replace('%HEADER%', cfg['header'])}{'' if cfg['ma_consolas'] else 'code { font: inherit; }'}</style>"
+            f"</head><body>{bia}{extra}"
             f"<section class='pb toc front'><p class='title'>MỤC LỤC</p><ul>{ml}</ul></section>"
             f"<section class='pb toc front'><p class='title'>DANH MỤC HÌNH ẢNH</p><ul>{dh}</ul></section>"
             f"<section class='pb toc front'><p class='title'>DANH MỤC BẢNG</p><ul>{db}</ul></section>"

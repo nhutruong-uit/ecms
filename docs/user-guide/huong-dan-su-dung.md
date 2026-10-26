@@ -40,39 +40,40 @@ Hệ thống có năm vai trò. Mỗi vai trò chỉ nhìn thấy các chức n�
 | Giáo viên | Điểm danh, nhập điểm, xử lý cảnh báo chuyên cần, báo cáo các lớp mình dạy | Các lớp mình phụ trách |
 | Học viên | Xem lịch học tuần, bảng điểm, học phí còn nợ | Dữ liệu của chính mình |
 
-Vai trò của tài khoản nhân viên luôn đi theo **chức vụ** của nhân viên đó: Quản lý không chọn vai trò khi tạo tài khoản, và muốn đổi vai trò thì đổi chức vụ ở trang Nhân viên. Bảng 1.3 cho biết mỗi vai trò thấy những mục menu nào (dấu ✓ là có quyền):
+Vai trò của tài khoản nhân viên luôn đi theo **chức vụ** của nhân viên đó: Quản lý không chọn vai trò khi tạo tài khoản, và muốn đổi vai trò thì đổi chức vụ ở trang Nhân viên. Bảng 1.3 cho biết mỗi vai trò thấy những mục menu nào (dấu x là có quyền):
 
 *Bảng 1.3 – Mục menu theo vai trò*
 
 | Nhóm menu | Mục | Quản lý | Giáo vụ | Kế toán | Giáo viên | Học viên |
 |---|---|:-:|:-:|:-:|:-:|:-:|
-| – | Trang chủ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Danh mục | Chi nhánh, phòng, ca học | ✓ | | | | |
-| | Nhân viên & giáo viên | ✓ | | ✓ | | |
-| Đào tạo | Chương trình & khoá học | ✓ | ✓ | | | |
-| | Lớp học | ✓ | ✓ | | | |
-| | Xếp lịch & buổi học | ✓ | ✓ | | | |
-| Học viên | Hồ sơ học viên | ✓ | ✓ | | | |
-| | Kiểm tra đầu vào | ✓ | ✓ | | | |
-| | Ghi danh | ✓ | ✓ | | | |
-| | Lịch học & kết quả của tôi | | | | | ✓ |
-| Học tập | Điểm danh | ✓ | | | ✓ | |
-| | Nhập điểm | ✓ | | | ✓ | |
-| | Cảnh báo chuyên cần | ✓ | ✓ | | ✓ | |
-| Tài chính | Lập phiếu thu | ✓ | | ✓ | | |
-| | Công nợ | ✓ | ✓ | ✓ | | |
-| Báo cáo | Dashboard | ✓ | | ✓ | | |
-| | Báo cáo & xuất file | ✓ | ✓ | ✓ | ✓ | |
-| Hệ thống | Tài khoản | ✓ | | | | |
-| | Nhật ký hệ thống | ✓ | | | | |
-| | Đổi mật khẩu | ✓ | ✓ | ✓ | ✓ | ✓ |
-| | Kiểm tra kết nối | ✓ | | | | |
+| – | Trang chủ | x | x | x | x | x |
+| Danh mục | Chi nhánh, phòng, ca học | x | | | | |
+| | Nhân viên & giáo viên | x | | x | | |
+| Đào tạo | Chương trình & khoá học | x | x | | | |
+| | Lớp học | x | x | | | |
+| | Xếp lịch & buổi học | x | x | | | |
+| Học viên | Hồ sơ học viên | x | x | | | |
+| | Kiểm tra đầu vào | x | x | | | |
+| | Ghi danh | x | x | | | |
+| | Lịch học & kết quả của tôi | | | | | x |
+| Học tập | Điểm danh | x | | | x | |
+| | Nhập điểm | x | | | x | |
+| | Cảnh báo chuyên cần | x | x | | x | |
+| Tài chính | Lập phiếu thu | x | | x | | |
+| | Công nợ | x | x | x | | |
+| Báo cáo | Dashboard | x | | x | | |
+| | Báo cáo & xuất file | x | x | x | x | |
+| Hệ thống | Tài khoản | x | | | | |
+| | Nhật ký hệ thống | x | | | | |
+| | Đổi mật khẩu | x | x | x | x | x |
+| | Kiểm tra kết nối | x | | | | |
 
 ## 1.4 Quy ước trình bày
 
 - Tên nút, ô nhập, thẻ trên giao diện được in **đậm**, ví dụ nút **Lưu**.
 - Đường dẫn menu được viết theo dạng **Nhóm → Mục**, ví dụ **Học viên → Ghi danh**.
 - Thông báo của hệ thống được đặt trong ngoặc kép, ví dụ "Lớp đã đủ sĩ số."
+- Giá trị cần nhập, lệnh và tên tệp được in màu xanh đậm, ví dụ mật khẩu `Ecms@2026`.
 - Đoạn bắt đầu bằng **Lưu ý** là thông tin cần đọc kỹ để tránh thao tác sai.
 
 ## 1.5 Thuật ngữ
@@ -243,7 +244,7 @@ Rê chuột lên biểu đồ để xem số liệu chi tiết của từng đi�
 
 ### 4.1.4 Tài khoản người dùng
 
-Vào **Hệ thống → Tài khoản**. Bảng liệt kê các tài khoản với vai trò, chi nhánh, trạng thái (Hoạt động, ⏳ Tạm khoá, 🔒 Bị khoá), thời điểm hết tạm khoá, số lần đăng nhập sai và lần đăng nhập cuối.
+Vào **Hệ thống → Tài khoản**. Bảng liệt kê các tài khoản với vai trò, chi nhánh, trạng thái (Hoạt động, Tạm khoá, Bị khoá), thời điểm hết tạm khoá, số lần đăng nhập sai và lần đăng nhập cuối.
 
 **Tạo tài khoản mới:**
 
@@ -338,7 +339,7 @@ Hệ thống từ chối thêm lịch nếu phòng hoặc giáo viên đã bận
 
 Vào **Học viên → Hồ sơ học viên**.
 
-1. Nhập tên, mã, số điện thoại hoặc email vào ô tìm kiếm, chọn thêm bộ lọc khoá học, tình trạng học phí nếu cần, nhấn **Tìm**. Kết quả được phân trang 15 dòng; dùng nút **◀ Trang trước** và **Trang sau ▶** để chuyển trang.
+1. Nhập tên, mã, số điện thoại hoặc email vào ô tìm kiếm, chọn thêm bộ lọc khoá học, tình trạng học phí nếu cần, nhấn **Tìm**. Kết quả được phân trang 15 dòng; dùng nút **Trang trước** và **Trang sau** để chuyển trang.
 2. Chọn một học viên để xem các thẻ **Lớp đã học & điểm**, **Kiểm tra đầu vào**, **Học phí** và **Sửa hồ sơ**.
 3. Để thêm học viên mới, bỏ chọn mọi dòng, điền form **Thêm học viên mới** ở cuối trang rồi nhấn **Lưu hồ sơ**. Học viên phải từ 4 tuổi; với học viên dưới 16 tuổi, phải nhập họ tên phụ huynh.
 
@@ -399,7 +400,7 @@ Giáo vụ dùng được hai trang theo dõi:
 Vào **Tài chính → Lập phiếu thu**, thẻ **Lập phiếu thu**:
 
 1. **Thông tin phiếu**: tìm và chọn học viên; mỗi học viên được hiển thị kèm tổng số tiền còn nợ.
-2. **Chi tiết**: bảng liệt kê các đăng ký còn nợ của học viên; khoản quá hạn có dấu **⚠ Quá hạn**. **Mọi khoản đã được tích sẵn** ở cột **Thu**, với cột **Thu lần này (đ)** bằng số còn nợ. Bỏ tích các khoản học viên chưa đóng lần này; sửa số ở cột **Thu lần này (đ)** nếu học viên chỉ đóng một phần.
+2. **Chi tiết**: bảng liệt kê các đăng ký còn nợ của học viên; khoản quá hạn có nhãn **Quá hạn**. **Mọi khoản đã được tích sẵn** ở cột **Thu**, với cột **Thu lần này (đ)** bằng số còn nợ. Bỏ tích các khoản học viên chưa đóng lần này; sửa số ở cột **Thu lần này (đ)** nếu học viên chỉ đóng một phần.
 3. Chọn **Hình thức** (Tiền mặt, Chuyển khoản hoặc Thẻ), nhập **Ghi chú** nếu cần, kiểm tra **Tổng phiếu** và số dòng.
 4. Nhấn **Lập phiếu thu**. Hệ thống báo "Đã lập phiếu thu PTxxxxxx. Tổng … đ." với số phiếu vừa tạo.
 5. Nhấn **In phiếu PTxxxxxx (PDF)** ngay dưới thông báo để tải phiếu thu khổ A5 có số tiền bằng chữ và chỗ ký.
@@ -452,7 +453,7 @@ Kế toán chi nhánh chỉ thấy lương giáo viên của chi nhánh mình.
 
 Vào **Học tập → Điểm danh**:
 
-1. Chọn **Lớp**, rồi chọn **Buổi học**. Danh sách lớp chỉ gồm các lớp **Đang học** mà mình phụ trách. Buổi đã điểm danh có dấu ✔, buổi chưa điểm danh ghi "(chưa điểm danh)"; chỉ điểm danh được các buổi từ hôm nay trở về trước.
+1. Chọn **Lớp**, rồi chọn **Buổi học**. Danh sách lớp chỉ gồm các lớp **Đang học** mà mình phụ trách. Buổi đã điểm danh có dấu tích ở cuối tên buổi, buổi chưa điểm danh ghi "(chưa điểm danh)"; chỉ điểm danh được các buổi từ hôm nay trở về trước.
 2. Cả lớp mặc định ở trạng thái *Có mặt*. Sửa cột **Trạng thái** cho học viên *Vắng*, *Muộn* hoặc *Có phép*; ghi chú nếu cần. Bốn ô đếm dưới bảng cho biết số học viên ở mỗi trạng thái.
 3. Nhấn **Lưu điểm danh** – cả lớp được lưu trong một lần. Buổi đã điểm danh vẫn sửa lại được.
 
@@ -671,7 +672,7 @@ Trang Điểm danh chỉ liệt kê lớp **Đang học** do giáo viên đó ph
 Lớp đã điểm danh ít nhất một buổi, nên lịch và các buổi đã sinh được giữ nguyên (mục 4.2.3).
 
 **Vì sao một số ô hoặc nút bị mờ, không bấm được?**
-Hệ thống khoá các điều khiển không được dùng trong tình huống hiện tại. Ví dụ: ô mã không sửa được khi đang sửa bản ghi có sẵn; nút **Lưu điểm** chỉ bật khi đã sửa ít nhất một điểm; nút **Lập phiếu thu** chỉ bật khi đã chọn ít nhất một khoản và không có dòng nào nhập sai; nút **◀ Trang trước** mờ ở trang đầu tiên.
+Hệ thống khoá các điều khiển không được dùng trong tình huống hiện tại. Ví dụ: ô mã không sửa được khi đang sửa bản ghi có sẵn; nút **Lưu điểm** chỉ bật khi đã sửa ít nhất một điểm; nút **Lập phiếu thu** chỉ bật khi đã chọn ít nhất một khoản và không có dòng nào nhập sai; nút **Trang trước** mờ ở trang đầu tiên.
 
 **Có xoá được một phiếu thu đã lập không?**
 Không. Phiếu thu là chứng từ tài chính nên không được sửa hay xoá; mọi thao tác trên phiếu thu đều được ghi vào nhật ký.
