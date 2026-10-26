@@ -2,8 +2,9 @@
 //   dot -Tpng -Gdpi=200 lop-bao-ve.dot -o lop-bao-ve.png
 // Đi từ ngoài vào trong: mỗi lớp chặn một nhóm mối đe doạ; lớp trong vẫn có tác dụng khi lớp ngoài bị vượt qua.
 digraph LopBaoVe {
-  rankdir=TB; nodesep=0.15; ranksep=0.08; fontname="Arial"; bgcolor="white";
-  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fontcolor="#0f172a",
+  splines=polyline;
+  rankdir=TB; nodesep=0.15; ranksep=0.08; fontname="Times New Roman,"; bgcolor="white";
+  node [fontname="Times New Roman,", fontsize=13, shape=box, style="filled,rounded", color="#94a3b8", fontcolor="#0f172a",
         width=7.0, height=0.62, fixedsize=true];
   edge [style=invis];
 

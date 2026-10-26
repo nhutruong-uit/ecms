@@ -1,29 +1,59 @@
-// Nửa kết (semi-join) tại trạm CN01 so với chuyển nguyên mảnh (T30) – database/13_distributed.sql mục 8
-//   dot -Tpng -Gdpi=200 nua-ket.dot -o nua-ket.png
+// Nửa kết (semi-join) tại trạm CN01 so với chuyển nguyên mảnh (Hình 5.3) – database/13_distributed.sql mục 8
+//   neato -n -Tpng -Gdpi=200 report/images/ch5/nua-ket.dot -o report/images/ch5/nua-ket.png
+// Toạ độ cố định (pos, đơn vị point): hai khung cùng mép dưới; hàng CN02/CN03 và hàng CN01 nhận kết quả của hai cách
+// nằm cùng độ cao để so sánh (Cách 1 không có bước gửi khoá nên khung thấp hơn). Mũi tên là đoạn thẳng nối các điểm neo ẩn trên mép ô; nét đậm là dữ liệu dòng, nét mảnh
+// là danh sách khoá. Nhãn đặt ngoài đường, không đè lên nét. Ảnh rộng ~ 19,5 cm → in 15 cm, chữ 14 pt in ~ 10,8 pt.
+// Phông Times New Roman như thân báo cáo (dấu phẩy cuối tên phông bắt buộc với Pango).
 digraph NuaKet {
-  rankdir=TB; nodesep=0.25; ranksep=0.5; fontname="Arial"; bgcolor="white"; newrank=true;
-  node [fontname="Arial", fontsize=13, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc"];
-  edge [fontname="Arial", fontsize=12, arrowsize=0.8];
+  graph [splines=line, pad=0.06, bgcolor="white"];
+  node  [fontname="Times New Roman,", fontsize=14, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc",
+         fixedsize=true, height=0.9167, margin=0, penwidth=1.2];
+  edge  [arrowsize=0.8];
 
-  subgraph cluster_a {
-    label=<<B>Cách 1 – chuyển nguyên mảnh</B><BR/>216 dòng · 15.186 byte>; fontsize=13; style="rounded"; color="#dc2626";
-    A2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB></TD></TR><TR><TD CELLPADDING="1">119 dòng</TD></TR></TABLE>>];
-    A3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB></TD></TR><TR><TD CELLPADDING="1">97 dòng</TD></TR></TABLE>>];
-    A1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">DANGKY<SUB>1</SUB> ⋈ HOCVIEN<SUB>2,3</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
-    A2 -> A1 [label="119 dòng", color="#dc2626", penwidth=2.5];
-    A3 -> A1 [label=" 97 dòng", color="#dc2626", penwidth=2.5];
-  }
+  // ---- hai khung (vẽ trước, không tô nền)
+  k1 [pos="126,119.5!", width=3.5000, height=3.3194, label="", style="rounded", color="#dc2626", penwidth=1.3];
+  k2 [pos="404,174.5!", width=3.9444, height=4.8472, label="", style="rounded", color="#16a34a", penwidth=1.3];
+  node [shape=plain, style="", fixedsize=false, width=0, height=0];
+  t1 [pos="126,214.5!", label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Cách 1 – chuyển nguyên mảnh</B></TD></TR><TR><TD CELLPADDING="1">216 dòng · 15.186 byte</TD></TR></TABLE>>];
+  t2 [pos="404,324.5!", label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Cách 2 – nửa kết</B></TD></TR><TR><TD CELLPADDING="1">406 dòng · 4.104 byte (−73%)</TD></TR></TABLE>>];
 
-  subgraph cluster_b {
-    label=<<B>Cách 2 – nửa kết</B><BR/>406 dòng · 4.104 byte (−73%)>; fontsize=13; style="rounded"; color="#16a34a";
-    B1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">π<SUB>MaHV</SUB>(DANGKY<SUB>1</SUB>)</TD></TR><TR><TD CELLPADDING="1">175 mã học viên</TD></TR></TABLE>>];
-    B2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">27 dòng khớp</TD></TR></TABLE>>];
-    B3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">29 dòng khớp</TD></TR></TABLE>>];
-    B4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">kết với DANGKY<SUB>1</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
-    B1 -> B2 [label="175 khoá", color="#2563eb"];
-    B1 -> B3 [label=" 175 khoá", color="#2563eb"];
-    B2 -> B4 [label="27 dòng", color="#16a34a", penwidth=2.5];
-    B3 -> B4 [label=" 29 dòng", color="#16a34a", penwidth=2.5];
-  }
-  { rank=same; A2; A3; B1; }
+  // ---- Cách 1: hai trạm gửi nguyên mảnh về CN01
+  node [shape=box, style="rounded,filled", fixedsize=true, height=0.9167];
+  A2 [pos="58,153!", width=1.3333, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB></TD></TR><TR><TD CELLPADDING="1">119 dòng</TD></TR></TABLE>>];
+  A3 [pos="194,153!", width=1.3333, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB></TD></TR><TR><TD CELLPADDING="1">97 dòng</TD></TR></TABLE>>];
+  A1 [pos="126,43!", width=2.3889, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">DANGKY<SUB>1</SUB> ⋈ HOCVIEN<SUB>2,3</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+
+  // ---- Cách 2: gửi khoá đi, nhận về dòng khớp
+  B1 [pos="404,263!", width=1.7222, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">π<SUB>MaHV</SUB>(DANGKY<SUB>1</SUB>)</TD></TR><TR><TD CELLPADDING="1">175 mã học viên</TD></TR></TABLE>>];
+  B2 [pos="334,153!", width=1.7222, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN02</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>2</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">27 dòng khớp</TD></TR></TABLE>>];
+  B3 [pos="474,153!", width=1.7222, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN03</B></TD></TR><TR><TD CELLPADDING="1">HOCVIEN<SUB>3</SUB> ⋉ khoá</TD></TR><TR><TD CELLPADDING="1">29 dòng khớp</TD></TR></TABLE>>];
+  B4 [pos="404,43!", width=1.7222, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>CN01</B></TD></TR><TR><TD CELLPADDING="1">kết với DANGKY<SUB>1</SUB></TD></TR><TR><TD CELLPADDING="1">→ 56 học viên</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
+
+  // ---- điểm neo ẩn trên mép ô
+  node [shape=point, width=0.01, height=0.01, style=invis, label=""];
+  p1 [pos="58,120!"];
+  q1 [pos="58,76!"];
+  p2 [pos="194,120!"];
+  q2 [pos="194,76!"];
+  p3 [pos="382,230!"];
+  q3 [pos="334,186!"];
+  p4 [pos="426,230!"];
+  q4 [pos="474,186!"];
+  p5 [pos="334,120!"];
+  q5 [pos="382,76!"];
+  p6 [pos="474,120!"];
+  q6 [pos="426,76!"];
+
+  // ---- nhãn lượng dữ liệu, đặt ngoài nét
+  node [shape=plain, style="", fixedsize=false, width=0, height=0];
+  n1 [pos="89.5,98!", label="119 dòng", fontcolor="#b91c1c"];
+  n2 [pos="164.5,98!", label="97 dòng", fontcolor="#b91c1c"];
+  n3 [pos="315,208!", label="175 khoá", fontcolor="#1d4ed8"];
+  n4 [pos="493,208!", label="175 khoá", fontcolor="#1d4ed8"];
+  n5 [pos="317,98!", label="27 dòng", fontcolor="#15803d"];
+  n6 [pos="491,98!", label="29 dòng", fontcolor="#15803d"];
+
+  p1 -> q1 [color="#dc2626", penwidth=2.6]; p2 -> q2 [color="#dc2626", penwidth=2.6];
+  p3 -> q3 [color="#2563eb", penwidth=1.3]; p4 -> q4 [color="#2563eb", penwidth=1.3];
+  p5 -> q5 [color="#16a34a", penwidth=2.6]; p6 -> q6 [color="#16a34a", penwidth=2.6];
 }

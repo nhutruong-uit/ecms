@@ -1,14 +1,15 @@
 // Luồng xác thực và ngữ cảnh phiên của ECMS (Chương 3, mục 3.2.1) – nguồn sinh xac-thuc-phien.png:
 //   dot -Tpng -Gdpi=200 xac-thuc-phien.dot -o xac-thuc-phien.png
 digraph XacThucPhien {
-  rankdir=TB; nodesep=0.35; ranksep=0.3; fontname="Arial"; bgcolor="white";
-  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
+  splines=polyline;
+  rankdir=TB; nodesep=0.35; ranksep=0.3; fontname="Times New Roman,"; bgcolor="white";
+  node [fontname="Times New Roman,", fontsize=13, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
         fontcolor="#0f172a", margin="0.12,0.07"];
-  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+  edge [fontname="Times New Roman,", fontsize=12, color="#475569", arrowsize=0.7];
 
   dn   [label="Người dùng nhập tên đăng nhập, mật khẩu", fillcolor="#e2e8f0"];
   sp   [label="sp_DangNhap\nbăm lặp 10.000 vòng SHA2_256 + salt\nsai 5 lần → tạm khoá 15 phút", fillcolor="#dbeafe"];
-  sai  [label="Thông báo chung\n“Sai tên đăng nhập\nhoặc mật khẩu.”", fillcolor="#fee2e2"];
+  sai  [label="Thông báo chung\n“Sai tên đăng nhập hoặc\nmật khẩu, hoặc tài khoản\nđang bị khoá.”", fillcolor="#fee2e2"];
   ctx  [label="Kết nối riêng của phiên (không pooling)\nsp_set_session_context @read_only = 1\napp_user, vai_tro, ma_nv, ma_hv, ma_cn", fillcolor="#ede9fe"];
   req  [label="Mỗi thao tác: require_role()\n30 phút không thao tác → hết phiên\n60 giây đọc lại trạng thái, vai trò tài khoản", fillcolor="#e0e7ff"];
   obj  [label="Gọi view / procedure\n(r_App bị DENY trên mọi bảng)", fillcolor="#e0f2fe"];

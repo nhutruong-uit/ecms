@@ -1,10 +1,11 @@
 // Quy trình ETL nhập 1.200 đăng ký trực tuyến (Chương 3, mục 3.2.5) – database/12_import_export.sql
 // Nguồn sinh etl-nhap-lieu.png:  dot -Tpng -Gdpi=200 etl-nhap-lieu.dot -o etl-nhap-lieu.png
 digraph ETL {
-  rankdir=TB; nodesep=0.4; ranksep=0.3; fontname="Arial"; bgcolor="white";
-  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
+  splines=polyline;
+  rankdir=TB; nodesep=0.4; ranksep=0.3; fontname="Times New Roman,"; bgcolor="white";
+  node [fontname="Times New Roman,", fontsize=13, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
         fontcolor="#0f172a", margin="0.12,0.07"];
-  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+  edge [fontname="Times New Roman,", fontsize=12, color="#475569", arrowsize=0.7];
 
   csv [label="hocvien_online.csv\n1.200 dòng, UTF-8, xuống dòng CRLF", shape=note, style="filled", fillcolor="#e2e8f0"];
   e   [label="TRÍCH XUẤT – BULK INSERT (13 ms)\nbảng trung gian STG_HOCVIEN_ONLINE\nmọi cột kiểu chuỗi UTF-8: nhận cả dữ liệu sai", fillcolor="#dbeafe"];

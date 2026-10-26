@@ -489,7 +489,7 @@ Tắt **Chỉ hiện cảnh báo chưa xử lý** để xem lại cả các cả
 
 ![Cảnh báo chuyên cần](../../report/images/ch4/13_canh_bao.jpg)
 
-*Hình 4.16 – Cảnh báo học viên vắng nhiều (tài khoản Giáo vụ, phạm vi chi nhánh)*
+*Hình 4.16 – Cảnh báo học viên vắng nhiều (tài khoản Giáo vụ)*
 
 ## 4.5 Học viên
 

@@ -1,18 +1,69 @@
-// Kiến trúc ba lược đồ của CSDL phân tán ECMS và cấp phát mảnh cho bốn trạm (T30) – database/13_distributed.sql
-//   dot -Tpng -Gdpi=200 phan-manh.dot -o phan-manh.png
-// Bố cục cố định bằng một nhãn HTML (mỗi dòng một ô để chỉ số dưới không đè dòng kế tiếp) cho vừa khổ A4.
+// Kiến trúc lược đồ của CSDL phân tán ECMS và cấp phát mảnh cho bốn trạm (Hình 5.2) – database/13_distributed.sql
+//   dot -Tpng -Gdpi=200 report/images/ch5/phan-manh.dot -o report/images/ch5/phan-manh.png
+// Bốn tầng lược đồ xếp dọc, cùng bề rộng, nối bằng mũi tên thẳng: toàn cục → phân mảnh → cấp phát → cục bộ.
+// Mỗi tầng là một bảng HTML: lề trong đều, công thức phân mảnh canh theo cột (kiểu | mảnh | = | định nghĩa),
+// bốn trạm là bốn ô cùng kích thước. Phông Times New Roman như thân báo cáo (dấu phẩy cuối tên phông bắt buộc với Pango).
 digraph PhanManh {
-  bgcolor="white"; pad=0.1;
-  node [shape=plain, fontname="Arial", fontsize=13];
-  H [label=<
-<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="6" CELLPADDING="0">
-<TR><TD COLSPAN="2"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#dbeafe" STYLE="rounded" CELLPADDING="6"><TR><TD ALIGN="CENTER" CELLPADDING="2"><B>LƯỢC ĐỒ TOÀN CỤC</B> – CSDL ECMS_TOANCUC</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">view trùng tên bảng gốc: HOCVIEN, LOPHOC,</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">DANGKY, DIEMDANH, NHANVIEN</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2"><I>người dùng truy vấn như trên CSDL tập trung</I></TD></TR></TABLE></TD></TR>
-<TR><TD COLSPAN="2"><FONT COLOR="#475569">▼  ánh xạ phân mảnh</FONT></TD></TR>
-<TR><TD COLSPAN="2"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" BGCOLOR="#ede9fe" STYLE="rounded"><TR><TD COLSPAN="2" CELLPADDING="5"><B>LƯỢC ĐỒ PHÂN MẢNH</B></TD></TR><TR><TD ALIGN="RIGHT"><I>ngang chính</I></TD><TD ALIGN="LEFT">HOCVIEN<SUB>i</SUB> = σ<SUB>MaCN='CN0i'</SUB>(HOCVIEN)</TD></TR><TR><TD> </TD><TD ALIGN="LEFT">LOPHOC<SUB>i</SUB> = σ<SUB>MaCN='CN0i'</SUB>(LOPHOC)</TD></TR><TR><TD ALIGN="RIGHT"><I>ngang dẫn xuất</I></TD><TD ALIGN="LEFT">DANGKY<SUB>i</SUB> = DANGKY ⋉ LOPHOC<SUB>i</SUB></TD></TR><TR><TD> </TD><TD ALIGN="LEFT">DIEMDANH<SUB>i</SUB> = DIEMDANH ⋉ DANGKY<SUB>i</SUB></TD></TR><TR><TD ALIGN="RIGHT"><I>dọc</I></TD><TD ALIGN="LEFT">NV_CHUNG = π<SUB>MaNV, HoTen, …, MaCN</SUB>(NHANVIEN)</TD></TR><TR><TD> </TD><TD ALIGN="LEFT">NV_LUONG = π<SUB>MaNV, LuongCoBan</SUB>(NHANVIEN)</TD></TR><TR><TD ALIGN="RIGHT"><I>hỗn hợp</I></TD><TD ALIGN="LEFT">NV_CHUNG<SUB>i</SUB> = σ<SUB>MaCN='CN0i'</SUB>(NV_CHUNG)</TD></TR><TR><TD ALIGN="RIGHT"><I>nhân bản</I></TD><TD ALIGN="LEFT">CHUONGTRINH, KHOAHOC, CAHOC ở mọi trạm</TD></TR><TR><TD COLSPAN="2"> </TD></TR></TABLE></TD></TR>
-<TR><TD COLSPAN="2"><FONT COLOR="#475569">▼  ánh xạ cấp phát – mảnh nào đặt ở trạm nào</FONT></TD></TR>
-<TR><TD><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#dcfce7" STYLE="rounded" CELLPADDING="6"><TR><TD ALIGN="CENTER" CELLPADDING="2"><B>Trạm CN01 – Thủ Đức</B></TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">(ECMS_CN01)</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">HOCVIEN<SUB>1</SUB> 133 · LOPHOC<SUB>1</SUB> 9</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">DANGKY<SUB>1</SUB> 195 · DIEMDANH<SUB>1</SUB> 3.280</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">NV_CHUNG<SUB>1</SUB> · bản sao danh mục</TD></TR></TABLE></TD><TD><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#dcfce7" STYLE="rounded" CELLPADDING="6"><TR><TD ALIGN="CENTER" CELLPADDING="2"><B>Trạm CN02 – Quận 1</B></TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">(ECMS_CN02)</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">HOCVIEN<SUB>2</SUB> 119 · LOPHOC<SUB>2</SUB> 8</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">DANGKY<SUB>2</SUB> 181 · DIEMDANH<SUB>2</SUB> 3.597</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">NV_CHUNG<SUB>2</SUB> · bản sao danh mục</TD></TR></TABLE></TD></TR>
-<TR><TD><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#dcfce7" STYLE="rounded" CELLPADDING="6"><TR><TD ALIGN="CENTER" CELLPADDING="2"><B>Trạm CN03 – Bình Thạnh</B></TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">(ECMS_CN03)</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">HOCVIEN<SUB>3</SUB> 97 · LOPHOC<SUB>3</SUB> 8</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">DANGKY<SUB>3</SUB> 163 · DIEMDANH<SUB>3</SUB> 3.186</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">NV_CHUNG<SUB>3</SUB> · bản sao danh mục</TD></TR></TABLE></TD><TD><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#fee2e2" STYLE="rounded" CELLPADDING="6"><TR><TD ALIGN="CENTER" CELLPADDING="2"><B>Trạm trung tâm</B></TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">(ECMS_TOANCUC)</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">NV_LUONG – lương chỉ lưu ở đây</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">view toàn cục</TD></TR><TR><TD ALIGN="CENTER" CELLPADDING="2">sp_DongBoDanhMuc</TD></TR></TABLE></TD></TR>
-<TR><TD COLSPAN="2"><FONT POINT-SIZE="12" COLOR="#475569"><B>LƯỢC ĐỒ CỤC BỘ</B>: mỗi trạm là một CSDL SQL Server;</FONT></TD></TR>
-<TR><TD COLSPAN="2"><FONT POINT-SIZE="12" COLOR="#475569">mảnh có CHECK (MaCN = 'CN0i') và khoá chính chứa MaCN</FONT></TD></TR>
+  graph [rankdir=TB, splines=line, nodesep=0.2, ranksep=0.34, pad=0.12, bgcolor="white"];
+  node  [shape=plain, fontname="Times New Roman,", fontsize=15];
+  edge  [fontname="Times New Roman,", fontsize=14, fontcolor="#334155", color="#475569", penwidth=1.6, arrowsize=0.9];
+
+  toancuc [label=<
+<TABLE BORDER="1" COLOR="#3b82f6" STYLE="rounded" BGCOLOR="#dbeafe" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" WIDTH="552">
+  <TR><TD ALIGN="CENTER"><B>1. LƯỢC ĐỒ TOÀN CỤC</B> – CSDL ECMS_TOANCUC</TD></TR>
+  <TR><TD ALIGN="CENTER" WIDTH="540">view trùng tên bảng gốc: HOCVIEN, LOPHOC, DANGKY, DIEMDANH, NHANVIEN</TD></TR>
+  <TR><TD ALIGN="CENTER"><I>người dùng truy vấn như trên một CSDL tập trung</I></TD></TR>
 </TABLE>>];
+
+  phanmanh [label=<
+<TABLE BORDER="1" COLOR="#8b5cf6" STYLE="rounded" BGCOLOR="#ede9fe" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" WIDTH="552">
+  <TR><TD COLSPAN="4" ALIGN="CENTER"><B>2. LƯỢC ĐỒ PHÂN MẢNH</B></TD></TR>
+  <TR><TD ALIGN="RIGHT"><I>ngang chính</I></TD><TD ALIGN="RIGHT">HOCVIEN<SUB>i</SUB></TD><TD>=</TD><TD ALIGN="LEFT" WIDTH="300">σ<SUB>MaCN = 'CN0i'</SUB>(HOCVIEN)</TD></TR>
+  <TR><TD></TD><TD ALIGN="RIGHT">LOPHOC<SUB>i</SUB></TD><TD>=</TD><TD ALIGN="LEFT">σ<SUB>MaCN = 'CN0i'</SUB>(LOPHOC)</TD></TR>
+  <TR><TD ALIGN="RIGHT"><I>ngang dẫn xuất</I></TD><TD ALIGN="RIGHT">DANGKY<SUB>i</SUB></TD><TD>=</TD><TD ALIGN="LEFT">DANGKY ⋉ LOPHOC<SUB>i</SUB></TD></TR>
+  <TR><TD></TD><TD ALIGN="RIGHT">DIEMDANH<SUB>i</SUB></TD><TD>=</TD><TD ALIGN="LEFT">DIEMDANH ⋉ DANGKY<SUB>i</SUB></TD></TR>
+  <TR><TD ALIGN="RIGHT"><I>dọc</I></TD><TD ALIGN="RIGHT">NV_CHUNG</TD><TD>=</TD><TD ALIGN="LEFT">π<SUB>MaNV, HoTen, …, MaCN</SUB>(NHANVIEN)</TD></TR>
+  <TR><TD></TD><TD ALIGN="RIGHT">NV_LUONG</TD><TD>=</TD><TD ALIGN="LEFT">π<SUB>MaNV, LuongCoBan</SUB>(NHANVIEN)</TD></TR>
+  <TR><TD ALIGN="RIGHT"><I>hỗn hợp</I></TD><TD ALIGN="RIGHT">NV_CHUNG<SUB>i</SUB></TD><TD>=</TD><TD ALIGN="LEFT">σ<SUB>MaCN = 'CN0i'</SUB>(NV_CHUNG)</TD></TR>
+  <TR><TD ALIGN="RIGHT"><I>nhân bản</I></TD><TD COLSPAN="3" ALIGN="LEFT">CHUONGTRINH, KHOAHOC, CAHOC có bản sao ở mọi trạm</TD></TR>
+</TABLE>>];
+
+  capphat [label=<
+<TABLE BORDER="1" COLOR="#16a34a" STYLE="rounded" BGCOLOR="#f0fdf4" CELLBORDER="0" CELLSPACING="8" CELLPADDING="0" WIDTH="552">
+  <TR><TD COLSPAN="2" ALIGN="CENTER" WIDTH="520"><B>3. LƯỢC ĐỒ CẤP PHÁT</B> – mảnh nào đặt ở trạm nào</TD></TR>
+  <TR>
+    <TD><TABLE BORDER="1" COLOR="#16a34a" STYLE="rounded" BGCOLOR="#dcfce7" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2" WIDTH="262">
+      <TR><TD WIDTH="254"><B>Trạm CN01 – Thủ Đức</B></TD></TR><TR><TD WIDTH="254">CSDL ECMS_CN01</TD></TR>
+      <TR><TD WIDTH="254">HOCVIEN<SUB>1</SUB> 133 · LOPHOC<SUB>1</SUB> 9</TD></TR>
+      <TR><TD WIDTH="254">DANGKY<SUB>1</SUB> 195 · DIEMDANH<SUB>1</SUB> 3.280</TD></TR>
+      <TR><TD WIDTH="254">NV_CHUNG<SUB>1</SUB> · bản sao danh mục</TD></TR></TABLE></TD>
+    <TD><TABLE BORDER="1" COLOR="#16a34a" STYLE="rounded" BGCOLOR="#dcfce7" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2" WIDTH="262">
+      <TR><TD WIDTH="254"><B>Trạm CN02 – Quận 1</B></TD></TR><TR><TD WIDTH="254">CSDL ECMS_CN02</TD></TR>
+      <TR><TD WIDTH="254">HOCVIEN<SUB>2</SUB> 119 · LOPHOC<SUB>2</SUB> 8</TD></TR>
+      <TR><TD WIDTH="254">DANGKY<SUB>2</SUB> 181 · DIEMDANH<SUB>2</SUB> 3.597</TD></TR>
+      <TR><TD WIDTH="254">NV_CHUNG<SUB>2</SUB> · bản sao danh mục</TD></TR></TABLE></TD>
+  </TR>
+  <TR>
+    <TD><TABLE BORDER="1" COLOR="#16a34a" STYLE="rounded" BGCOLOR="#dcfce7" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2" WIDTH="262">
+      <TR><TD WIDTH="254"><B>Trạm CN03 – Bình Thạnh</B></TD></TR><TR><TD WIDTH="254">CSDL ECMS_CN03</TD></TR>
+      <TR><TD WIDTH="254">HOCVIEN<SUB>3</SUB> 97 · LOPHOC<SUB>3</SUB> 8</TD></TR>
+      <TR><TD WIDTH="254">DANGKY<SUB>3</SUB> 163 · DIEMDANH<SUB>3</SUB> 3.186</TD></TR>
+      <TR><TD WIDTH="254">NV_CHUNG<SUB>3</SUB> · bản sao danh mục</TD></TR></TABLE></TD>
+    <TD><TABLE BORDER="1" COLOR="#dc2626" STYLE="rounded" BGCOLOR="#fee2e2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2" WIDTH="262">
+      <TR><TD WIDTH="254"><B>Trạm trung tâm</B></TD></TR><TR><TD WIDTH="254">CSDL ECMS_TOANCUC</TD></TR>
+      <TR><TD WIDTH="254">NV_LUONG – lương chỉ lưu ở đây</TD></TR>
+      <TR><TD WIDTH="254">view toàn cục</TD></TR>
+      <TR><TD WIDTH="254">sp_DongBoDanhMuc</TD></TR></TABLE></TD>
+  </TR>
+</TABLE>>];
+
+  cucbo [label=<
+<TABLE BORDER="1" COLOR="#64748b" STYLE="rounded" BGCOLOR="#f1f5f9" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" WIDTH="552">
+  <TR><TD ALIGN="CENTER" WIDTH="540"><B>4. LƯỢC ĐỒ CỤC BỘ</B> – mỗi trạm là một CSDL SQL Server</TD></TR>
+  <TR><TD ALIGN="CENTER" WIDTH="540">mảnh có CHECK (MaCN = 'CN0i') và khoá chính chứa MaCN</TD></TR>
+</TABLE>>];
+
+  toancuc  -> phanmanh [label="  ánh xạ phân mảnh"];
+  phanmanh -> capphat  [label="  ánh xạ cấp phát"];
+  capphat  -> cucbo    [label="  cài đặt tại từng trạm"];
 }

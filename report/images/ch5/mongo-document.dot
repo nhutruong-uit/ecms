@@ -1,47 +1,70 @@
-// Thiết kế document MongoDB của ECMS: nhúng và tham chiếu (T30) – nosql/migrate.py
-//   dot -Tpng -Gdpi=200 mongo-document.dot -o mongo-document.png
+// Thiết kế document MongoDB của ECMS: nhúng và tham chiếu (Hình 5.5) – nosql/migrate.py
+//   neato -n -Tpng -Gdpi=200 report/images/ch5/mongo-document.dot -o report/images/ch5/mongo-document.png
+// Toạ độ cố định (pos, đơn vị point), ba hàng cùng mép trái / phải: phieu_thu + chú giải | hoc_vien | lop_hoc + khoa_hoc.
+// Mỗi dòng của bảng có chiều cao cố định (HEIGHT) nên biết trước toạ độ từng trường; mũi tên tham chiếu là đoạn thẳng
+// đứng / ngang nối các điểm neo ẩn đặt đúng mép bảng, vòng tiên quyết của khoa_hoc là đường gấp khúc vuông góc.
+// Ảnh rộng ~ 18 cm → in 15 cm, chữ 14 pt in ~ 11,8 pt. Phông Times New Roman như thân báo cáo.
 digraph Mongo {
-  rankdir=TB; nodesep=0.5; ranksep=0.5; fontname="Arial"; bgcolor="white"; newrank=true;
-  node [shape=plain, fontname="Arial", fontsize=13]; edge [fontname="Arial", fontsize=12, arrowsize=0.8];
+  graph [splines=line, pad=0.06, bgcolor="white"];
+  node  [shape=plain, fontname="Times New Roman,", fontsize=14];
+  edge  [color="#2563eb", style=dashed, penwidth=1.4, arrowsize=0.85, fontname="Times New Roman,", fontsize=14];
 
-  pt [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc">
-    <TR><TD BGCOLOR="#16a34a"><FONT COLOR="white"><B>phieu_thu</B> (501)</FONT></TD></TR>
-    <TR><TD ALIGN="LEFT" PORT="hv">_id: SoPhieu · hoc_vien<BR ALIGN="LEFT"/>ngay_thu · tong_tien<BR ALIGN="LEFT"/></TD></TR>
-    <TR><TD ALIGN="LEFT" BGCOLOR="#dcfce7" PORT="ct">chi_tiet[ ] (508)<BR ALIGN="LEFT"/>{ma_dk, lop, chi_nhanh, so_tien}<BR ALIGN="LEFT"/></TD></TR>
-  </TABLE>>];
+  // ---- khung chú giải (x 306..507, y 0..118,5)
+  lg [pos="406.5,457.25!", shape=box, style="rounded", color="#94a3b8", fixedsize=true, width=2.7917, height=1.6458, label=""];
+  node [shape=box, style="filled", fixedsize=true, width=0.3333, height=0.2083, label="", penwidth=0.8, color="#64748b"];
+  s1 [pos="330,499.25!", fillcolor="#dcfce7"];
+  s2 [pos="330,465.5!", fillcolor="#fde68a"];
+  node [shape=plain, style="", fixedsize=false, width=0, height=0];
+  c1 [pos="425,499.25!", label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD WIDTH="146" ALIGN="LEFT">nhúng (embedded)</TD></TR></TABLE>>];
+  c2 [pos="425,465.5!", label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD WIDTH="146" ALIGN="LEFT" BALIGN="LEFT">nhúng bản sao – đổi phải<BR/>sửa nhiều document</TD></TR></TABLE>>];
+  c3 [pos="425,423.5!", label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD WIDTH="146" ALIGN="LEFT" BALIGN="LEFT">tham chiếu theo _id<BR/>(không có khoá ngoại)</TD></TR></TABLE>>];
 
-  lg [shape=box, style="rounded", color="#94a3b8", fontsize=12, label=<<TABLE BORDER="0" CELLSPACING="3">
-    <TR><TD BGCOLOR="#dcfce7" WIDTH="18"> </TD><TD ALIGN="LEFT">nhúng (embedded)</TD></TR>
-    <TR><TD BGCOLOR="#fde68a" WIDTH="18"> </TD><TD ALIGN="LEFT">nhúng bản sao – đổi phải sửa nhiều document</TD></TR>
-    <TR><TD><FONT COLOR="#2563eb">- - ▶</FONT></TD><TD ALIGN="LEFT">tham chiếu theo _id (không có khoá ngoại)</TD></TR></TABLE>>];
+  // ---- bốn collection
+  pt [pos="98,457.25!", label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#64748b">
+      <TR><TD HEIGHT="28" WIDTH="198" BGCOLOR="#16a34a"><FONT COLOR="white"><B>phieu_thu</B> (501)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="42" BGCOLOR="#f8fafc">_id: SoPhieu · hoc_vien<BR/>ngay_thu · tong_tien</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="42" BGCOLOR="#dcfce7">chi_tiet[ ] (508)<BR/>{ma_dk, lop, chi_nhanh, so_tien}</TD></TR>
+    </TABLE>>];
+  hv [pos="253,264.25!", label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#64748b">
+      <TR><TD HEIGHT="28" WIDTH="508" BGCOLOR="#16a34a" COLSPAN="2"><FONT COLOR="white"><B>hoc_vien</B> (349)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#f8fafc" COLSPAN="2">_id: "HV0019" · ho_ten {ho, ten} · sdt · chi_nhanh</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#dcfce7" COLSPAN="2">dia_chi {so_nha, phuong, quan, tinh}</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#dcfce7" COLSPAN="2">kiem_tra[ ] (357) {ngay, diem_tong, ky_nang {listening, …}}</TD></TR>
+      <TR><TD ROWSPAN="2" WIDTH="90" HEIGHT="68" BGCOLOR="#dcfce7">dang_ky[ ]<BR/>(539)</TD><TD ALIGN="LEFT" BALIGN="LEFT" WIDTH="418" HEIGHT="42" BGCOLOR="#dcfce7">ma_dk, lop, khoa_hoc, chi_nhanh,<BR/>hoc_phi {thanh_tien, da_thu: Decimal128}, diem</TD></TR>
+      <TR><TD ALIGN="LEFT" HEIGHT="26" BGCOLOR="#bbf7d0">diem_danh[ ] (10.063) {buoi, ngay, trang_thai}</TD></TR>
+    </TABLE>>];
+  lop [pos="98,65.25!", label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#64748b">
+      <TR><TD HEIGHT="28" WIDTH="198" BGCOLOR="#16a34a"><FONT COLOR="white"><B>lop_hoc</B> (25)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="42" BGCOLOR="#f8fafc">_id: MaLop · khoa_hoc<BR/>chi_nhanh · si_so</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#dcfce7">lich[ ] {thu, ca, gio, phong}</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#fde68a">giao_vien {ma, ho_ten, loai}</TD></TR>
+    </TABLE>>];
+  kh [pos="365,79.5!", label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#64748b">
+      <TR><TD HEIGHT="28" WIDTH="130" BGCOLOR="#16a34a"><FONT COLOR="white"><B>khoa_hoc</B> (12)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="42" BGCOLOR="#f8fafc">_id: MaKH · ten<BR/>hoc_phi</TD></TR>
+      <TR><TD ALIGN="LEFT" BALIGN="LEFT" HEIGHT="26" BGCOLOR="#f8fafc">tien_quyet</TD></TR>
+    </TABLE>>];
 
-  hv [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc">
-    <TR><TD BGCOLOR="#16a34a" COLSPAN="2"><FONT COLOR="white"><B>hoc_vien</B> (349)</FONT></TD></TR>
-    <TR><TD ALIGN="LEFT" COLSPAN="2" PORT="top">_id: "HV0019" · ho_ten {ho, ten} · sdt · chi_nhanh</TD></TR>
-    <TR><TD ALIGN="LEFT" COLSPAN="2" BGCOLOR="#dcfce7">dia_chi {so_nha, phuong, quan, tinh}</TD></TR>
-    <TR><TD ALIGN="LEFT" COLSPAN="2" BGCOLOR="#dcfce7">kiem_tra[ ] (357) {ngay, diem_tong, ky_nang {listening, …}}</TD></TR>
-    <TR><TD ALIGN="LEFT" BGCOLOR="#dcfce7" ROWSPAN="2" PORT="dk">dang_ky[ ]<BR ALIGN="LEFT"/>(539)</TD><TD ALIGN="LEFT" BGCOLOR="#dcfce7">ma_dk, lop, khoa_hoc, chi_nhanh,<BR ALIGN="LEFT"/>hoc_phi {thanh_tien, da_thu: Decimal128}, diem<BR ALIGN="LEFT"/></TD></TR>
-    <TR><TD ALIGN="LEFT" BGCOLOR="#bbf7d0">diem_danh[ ] (10.063) {buoi, ngay, trang_thai}</TD></TR>
-  </TABLE>>];
+  // ---- điểm neo ẩn trên mép bảng
+  node [shape=point, width=0.01, height=0.01, style=invis, label=""];
+  a1 [pos="98,398!"];  b1 [pos="98,358!"];       // phieu_thu (đáy) → hoc_vien (đỉnh)
+  a2 [pos="45,170.5!"];  b2 [pos="45,130.5!"];       // hoc_vien.dang_ky (đáy) → lop_hoc (đỉnh)
+  a3 [pos="197,79.5!"]; b3 [pos="300,79.5!"];      // lop_hoc._id ở mép phải → khoa_hoc._id ở mép trái
+  a4 [pos="430,42.75!"]; q4 [pos="450,42.75!"]; r4 [pos="450,79.5!"]; b4 [pos="430,79.5!"];   // tien_quyet → khoa_hoc._id
+  e1 [pos="318,423.5!"]; f1 [pos="342,423.5!"];   // mẫu mũi tên trong chú giải
 
-  lop [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc">
-    <TR><TD BGCOLOR="#16a34a"><FONT COLOR="white"><B>lop_hoc</B> (25)</FONT></TD></TR>
-    <TR><TD ALIGN="LEFT" PORT="kh">_id: MaLop · khoa_hoc · chi_nhanh · si_so</TD></TR>
-    <TR><TD ALIGN="LEFT" BGCOLOR="#dcfce7">lich[ ] {thu, ca, gio, phong}</TD></TR>
-    <TR><TD ALIGN="LEFT" BGCOLOR="#fde68a">giao_vien {ma, ho_ten, loai}</TD></TR>
-  </TABLE>>];
+  // ---- nhãn mũi tên
+  node [shape=plain, style="", width=0, height=0, fontcolor="#1d4ed8"];
+  n1 [pos="133,378!", label="hoc_vien"];
+  n2 [pos="86,150.5!",  label="dang_ky.lop"];
+  n3 [pos="248,90.5!", label="khoa_hoc"];
+  n4 [pos="484,61.1!", label="tiên quyết"];
 
-  kh [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f8fafc">
-    <TR><TD BGCOLOR="#16a34a"><FONT COLOR="white"><B>khoa_hoc</B> (12)</FONT></TD></TR>
-    <TR><TD ALIGN="LEFT" PORT="id">_id: MaKH · ten · hoc_phi</TD></TR>
-    <TR><TD ALIGN="LEFT" PORT="tq">tien_quyet</TD></TR>
-  </TABLE>>];
-
-  { rank=same; pt; lg; }
-  { rank=same; lop; kh; }
-  pt:hv -> hv:top [color="#2563eb", style=dashed, label=" hoc_vien "];
-  hv:dk -> lop:kh [color="#2563eb", style=dashed, label=" dang_ky.lop "];
-  lop:kh -> kh:id [color="#2563eb", style=dashed, label=" khoa_hoc "];
-  kh:tq:e -> kh:id:e [color="#2563eb", style=dashed, label=" tiên quyết "];
-  lg -> hv [style=invis];
+  a1 -> b1; a2 -> b2; a3 -> b3;
+  a4 -> q4 [arrowhead=none]; q4 -> r4 [arrowhead=none]; r4 -> b4;
+  e1 -> f1;
 }

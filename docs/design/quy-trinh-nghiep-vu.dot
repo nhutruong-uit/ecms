@@ -1,40 +1,71 @@
-// Quy trình nghiệp vụ trung tâm tiếng Anh ECMS (T02) – nguồn sinh quy-trinh-nghiep-vu.png / .drawio
+// Quy trình nghiệp vụ trung tâm tiếng Anh ECMS (T02) – nguồn sinh quy-trinh-nghiep-vu.png (Hình 1.1)
+//   neato -n -Tpng -Gdpi=200 docs/design/quy-trinh-nghiep-vu.dot -o docs/design/quy-trinh-nghiep-vu.png
+// Bố cục chữ chi ba hàng với toạ độ cố định (pos, đơn vị point): hàng 1 trái → phải, hàng 2 phải → trái, hàng 3 trái →
+// phải; nhánh phụ đặt trong dải giữa các hàng, sát bước sinh ra nó. Hai nút cạnh nhau cách ≥ 35 pt để mũi tên luôn
+// thấy rõ; nhãn nhánh (Có, Không, còn nợ) là nút chữ đặt cạnh mũi tên, không đè lên đầu mũi tên. Ảnh rộng ~ 21 cm nên
+// khi chèn vào báo cáo (15 cm) chữ in còn ~ 10,5 pt. Tác nhân phân biệt bằng màu (chú giải ở hàng cuối).
 digraph G {
-  rankdir=LR; nodesep=0.35; ranksep=0.45; fontname="Arial"; fontsize=12;
-  node [fontname="Arial", fontsize=11, shape=box, style="rounded,filled", fillcolor="#eef2ff", color="#4f46e5", width=1.6];
-  edge [fontname="Arial", fontsize=9, color="#475569"];
+  graph [splines=line, outputorder=edgesfirst, pad=0.12, bgcolor="white"];
+  node  [fontname="Times New Roman,", fontsize=15, shape=box, style="rounded,filled", penwidth=1.4,
+         width=1.3, height=0.66, fixedsize=false, margin="0.10,0.06"];
+  edge  [fontname="Times New Roman,", fontsize=14, color="#475569", penwidth=1.3, arrowsize=0.85];
 
-  start [label="Khách hàng\nliên hệ", shape=ellipse, fillcolor="#dcfce7", color="#16a34a"];
-  subgraph cluster_tv { label="Tư vấn – Giáo vụ"; style="rounded,dashed"; color="#94a3b8";
-    tuvan [label="1. Tư vấn\nchương trình"];
-    hoso  [label="Lập hồ sơ\nhọc viên"];
-    ktdv  [label="2. Kiểm tra đầu vào\n(4 kỹ năng → XML)"];
-    xeplop [label="3. Đề xuất khoá\n& xếp lớp"];
-    conCho [label="Lớp còn chỗ &\nđủ tiên quyết?", shape=diamond, fillcolor="#fef9c3", color="#ca8a04", width=1.9];
-    ghidanh [label="Ghi danh\n(DANGKY)"];
-    cho [label="Đưa vào danh sách\nchờ / lớp khác", fillcolor="#fee2e2", color="#dc2626"];
-  }
-  subgraph cluster_kt { label="Kế toán"; style="rounded,dashed"; color="#94a3b8";
-    thuphi [label="4. Thu học phí\n(phiếu thu master–detail)"];
-    congno [label="Theo dõi\ncông nợ"];
-  }
-  subgraph cluster_gv { label="Giáo viên"; style="rounded,dashed"; color="#94a3b8";
-    hoc [label="5. Học & điểm danh\ntừng buổi"];
-    canhbao [label="Cảnh báo\nvắng > 20%", fillcolor="#fee2e2", color="#dc2626"];
-    thi [label="6. Thi giữa kỳ /\ncuối kỳ, nhập điểm"];
-  }
-  subgraph cluster_ql { label="Quản lý"; style="rounded,dashed"; color="#94a3b8";
-    capcn [label="7. Cấp chứng nhận\nhoàn thành"];
-    baocao [label="Báo cáo doanh thu,\nsĩ số, chuyên cần"];
-  }
-  end [label="Học viên học tiếp\nkhoá kế tiếp", shape=ellipse, fillcolor="#dcfce7", color="#16a34a"];
+  // ---- hàng 1 (y = 445): trái → phải
+  start  [pos="66,445!",  label="Khách hàng\nliên hệ", shape=ellipse, fillcolor="#dcfce7", color="#16a34a", width=1.6];
+  tuvan  [pos="205,445!", label="1. Tư vấn\nchương trình", fillcolor="#eef2ff", color="#4f46e5"];
+  hoso   [pos="362,445!", label="Lập hồ sơ\nhọc viên", fillcolor="#eef2ff", color="#4f46e5"];
+  ktdv   [pos="528,445!", label="2. Kiểm tra đầu vào\n(4 kỹ năng → XML)", fillcolor="#eef2ff", color="#4f46e5"];
 
-  start -> tuvan -> hoso -> ktdv -> xeplop -> conCho;
-  conCho -> ghidanh [label="Có"];
-  conCho -> cho [label="Không"];
-  ghidanh -> thuphi -> hoc -> thi -> capcn -> end;
-  thuphi -> congno [style=dashed, label="còn nợ"];
+  // ---- dải giữa hàng 1 và 2 (y = 360): nhánh phụ của hàng 2
+  congno [pos="66,360!",  label="Theo dõi\ncông nợ", fillcolor="#fef3c7", color="#d97706"];
+  cho    [pos="362,360!", label="Danh sách chờ /\nlớp khác", fillcolor="#fee2e2", color="#dc2626"];
+
+  // ---- hàng 2 (y = 265): phải → trái
+  xeplop [pos="528,265!", label="3. Đề xuất khoá\n& xếp lớp", fillcolor="#eef2ff", color="#4f46e5"];
+  conCho [pos="362,265!", label="Lớp còn chỗ &\nđủ tiên quyết?", shape=diamond, style=filled, fillcolor="#fef9c3", color="#ca8a04",
+          fixedsize=true, width=2.15, height=1.1, fontsize=14];
+  ghidanh [pos="205,265!", label="Ghi danh\n(DANGKY)", fillcolor="#eef2ff", color="#4f46e5"];
+  thuphi [pos="66,265!",  label="4. Thu học phí\n(master–detail)", fillcolor="#fef3c7", color="#d97706"];
+
+  // ---- hàng 3 (y = 160): trái → phải
+  hoc    [pos="66,160!",  label="5. Học &\nđiểm danh", fillcolor="#f3e8ff", color="#9333ea"];
+  thi    [pos="210,160!", label="6. Thi giữa kỳ,\ncuối kỳ, nhập điểm", fillcolor="#f3e8ff", color="#9333ea"];
+  capcn  [pos="368,160!", label="7. Cấp chứng\nnhận hoàn thành", fillcolor="#ccfbf1", color="#0f766e"];
+  end    [pos="528,160!", label="Học tiếp\nkhoá kế tiếp", shape=ellipse, fillcolor="#dcfce7", color="#16a34a", width=1.6];
+
+  // ---- dải dưới hàng 3 (y = 72): nhánh phụ của hàng 3
+  canhbao [pos="66,72!",  label="Cảnh báo\nvắng > 20%", fillcolor="#fee2e2", color="#dc2626"];
+  baocao  [pos="289,72!", label="Báo cáo doanh thu,\nsĩ số, chuyên cần", fillcolor="#ccfbf1", color="#0f766e"];
+
+  // ---- nhãn nhánh: nút chữ đặt cạnh mũi tên
+  node [shape=plaintext, style="", width=0, height=0, margin=0, fontsize=14, fontcolor="#334155"];
+  lCo    [pos="270,279!", label="Có"];
+  lKhong [pos="391,320!", label="Không"];
+  lNo    [pos="96,313!",  label="còn nợ"];
+
+  // ---- chú giải tác nhân
+  legend [pos="297,8!", shape=plain, label=<
+    <TABLE BORDER="0" CELLSPACING="8" CELLPADDING="5"><TR>
+      <TD STYLE="rounded" BGCOLOR="#eef2ff" COLOR="#4f46e5" BORDER="1">  Giáo vụ (tư vấn)  </TD>
+      <TD STYLE="rounded" BGCOLOR="#fef3c7" COLOR="#d97706" BORDER="1">  Kế toán  </TD>
+      <TD STYLE="rounded" BGCOLOR="#f3e8ff" COLOR="#9333ea" BORDER="1">  Giáo viên  </TD>
+      <TD STYLE="rounded" BGCOLOR="#ccfbf1" COLOR="#0f766e" BORDER="1">  Quản lý  </TD>
+      <TD STYLE="rounded" BGCOLOR="#fee2e2" COLOR="#dc2626" BORDER="1">  Ngoại lệ, cảnh báo  </TD>
+    </TR></TABLE>>, fontsize=15, fontcolor="black"];
+
+  // ---- luồng chính
+  start -> tuvan -> hoso -> ktdv;
+  ktdv -> xeplop;
+  xeplop -> conCho;
+  conCho -> ghidanh;
+  ghidanh -> thuphi;
+  thuphi -> hoc;
+  hoc -> thi -> capcn -> end;
+
+  // ---- nhánh phụ
+  conCho -> cho [style=dashed];
+  thuphi -> congno [style=dashed];
   hoc -> canhbao [style=dashed];
   thi -> baocao [style=dashed];
-  thuphi -> baocao [style=dashed];
+  capcn -> baocao [style=dashed];
 }

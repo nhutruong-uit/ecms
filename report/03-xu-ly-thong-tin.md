@@ -236,7 +236,7 @@ Truy vấn X04 cho một kết quả có giá trị quản lý: học viên thi 
 
 ![Số trang đọc của X18](images/ch3/chi-muc-xml.png)
 
-*Hình 3.1 – Số trang đọc của truy vấn X18 khi có và không có chỉ mục XML ở hai quy mô dữ liệu*
+*Hình 3.1 – Số trang đọc của X18 khi có và không có chỉ mục XML*
 
 **Nhận xét.** Kết quả đo cho thấy chỉ mục XML không phải lúc nào cũng có lợi. Ở quy mô thật, chỉ mục giúp không phải phân tích lại XML (không còn lượt đọc LOB) nên tổng số trang giảm từ 1.969 xuống 707. Nhưng ở quy mô gấp 30 lần, bộ tối ưu chọn kế hoạch tra chỉ mục cho *từng* tài liệu (10.712 lượt tra), nên số trang đọc tăng gấp khoảng 20 lần, từ 1.956 lên 40.490. Nguyên nhân là điều kiện chỉ loại được khoảng 85% số bài – độ chọn lọc thấp, giống trường hợp P2 ở mục 3.1.2. Chỉ mục còn chiếm dung lượng gấp 3,3 lần dữ liệu XML và phải cập nhật mỗi khi ghi. Vì vậy ECMS không tạo chỉ mục XML cố định; nhu cầu lọc phổ biến nhất (theo điểm tổng) đã được phục vụ bằng cột `DiemTong` với chỉ mục B-tree thông thường. Chỉ mục XML chỉ nên dùng khi tài liệu lớn, số lượng nhiều và điều kiện lọc rất chọn lọc.
 
@@ -244,7 +244,7 @@ Truy vấn X04 cho một kết quả có giá trị quản lý: học viên thi 
 
 **So sánh lưu XML với tách thành bảng quan hệ.** Một phương án khác là tách kết quả kiểm tra thành bảng KETQUA_KYNANG (MaKT, KyNang, Diem, NhanXet). Hai phương án được so sánh như sau:
 
-*Bảng 3.11 – So sánh lưu kết quả kiểm tra bằng cột XML và bằng bảng quan hệ*
+*Bảng 3.11 – Lưu kết quả kiểm tra bằng cột XML và bằng bảng quan hệ*
 
 | Tiêu chí | Cột XML (phương án ECMS dùng) | Bảng quan hệ KETQUA_KYNANG |
 |---|---|---|
@@ -264,7 +264,7 @@ Hệ thống bảo vệ dữ liệu theo nhiều lớp, đi từ ngoài vào tro
 
 ![Các lớp bảo vệ dữ liệu của ECMS](images/ch3/lop-bao-ve.png)
 
-*Hình 3.2 – Bảy lớp bảo vệ dữ liệu của ECMS và mối đe doạ mỗi lớp ngăn chặn*
+*Hình 3.2 – Bảy lớp bảo vệ dữ liệu và mối đe doạ mỗi lớp ngăn chặn*
 
 ### 3.2.1 Xác thực
 
@@ -334,7 +334,7 @@ Các procedure quản lý tài khoản được thiết kế như sau:
 
 ![Luồng xác thực và ngữ cảnh phiên](images/ch3/xac-thuc-phien.png)
 
-*Hình 3.3 – Luồng xác thực và ngữ cảnh phiên: từ đăng nhập tới kiểm tra quyền trên từng dòng*
+*Hình 3.3 – Luồng xác thực, ngữ cảnh phiên và kiểm tra quyền*
 
 - **Đặt ngữ cảnh ở chế độ chỉ đọc.** Sau khi đăng nhập thành công, ứng dụng mở một kết nối vật lý riêng cho phiên làm việc và gọi `sp_set_session_context` với `@read_only = 1` cho năm khoá: `app_user`, `vai_tro`, `ma_nv`, `ma_hv`, `ma_cn`. Từ đó đến khi đóng kết nối, không câu lệnh nào – kể cả câu lệnh bị chèn mã – sửa được các giá trị này; thử ghi đè `ma_cn` nhận lỗi 15664.
 - **Không dùng connection pool.** Nhóm đã thử nghiệm và thấy kết nối lấy lại từ pool của ODBC Driver 18 *giữ nguyên* SESSION_CONTEXT của người dùng trước (cùng SPID, khoá chỉ đọc vẫn còn), nên người sau có thể "thừa hưởng" phạm vi chi nhánh của người trước. Vì vậy pooling bị tắt và mỗi phiên giữ một kết nối riêng; chi phí mở kết nối mới (khoảng 135 ms) chỉ phát sinh một lần khi đăng nhập.
@@ -538,7 +538,7 @@ Script `11_backup_restore.sql` tạo procedure dùng chung `sp_SaoLuuECMS` nhậ
 
 ![Chuỗi sao lưu và phục hồi](images/ch3/sao-luu-phuc-hoi.png)
 
-*Hình 3.4 – Chuỗi sao lưu Full → vi sai → nhật ký và phục hồi song song về thời điểm T0*
+*Hình 3.4 – Chuỗi sao lưu Full → vi sai → nhật ký và phục hồi về T0*
 
 ```sql title="Mã lệnh – Phục hồi về thời điểm T0 ra một CSDL mới và đo RTO"
 DECLARE @BatDau DATETIME2(3) = SYSDATETIME();
@@ -605,7 +605,7 @@ Khung giờ lặp của job nhật ký phải bắt đầu từ 00:00: nếu đ�
 
 ![Quy trình ETL nhập đăng ký trực tuyến](images/ch3/etl-nhap-lieu.png)
 
-*Hình 3.5 – Quy trình ETL nhập 1.200 đăng ký trực tuyến vào bảng HOCVIEN*
+*Hình 3.5 – Quy trình ETL nhập 1.200 đăng ký trực tuyến vào HOCVIEN*
 
 Mười hai quy tắc gồm: thiếu họ tên; họ tên dài hơn cột đích (báo lỗi thay vì lặng lẽ cắt chuỗi); ngày đăng ký sai định dạng; ngày sinh sai định dạng; ngày sinh không hợp lý (chưa đủ 4 tuổi hoặc ở tương lai); giới tính ngoài Nam, Nữ; số điện thoại không phải 9 – 11 chữ số; email sai dạng; chi nhánh không tồn tại; khoá học quan tâm không tồn tại; trùng số điện thoại với học viên đã có; trùng số điện thoại trong chính tệp (giữ dòng đầu tiên).
 
@@ -675,7 +675,7 @@ Các cơ chế này bổ sung chứ không thay thế nhau. TDE không bảo v�
 
 **Kiểm toán.** ECMS có ba cách ghi lại "ai đã làm gì", với điểm mạnh khác nhau. Nhật ký bằng trigger (mục 3.3.3) ghi giá trị cũ, mới và tên tài khoản ứng dụng nhưng không thấy thao tác *đọc*. SQL Server Audit do máy chủ ghi ra tệp bên ngoài CSDL, ghi được cả SELECT: đặc tả `ECMS_AuditDuLieuNhayCam` theo dõi mọi lần đọc bảng NHANVIEN, TAIKHOAN và mọi lần gọi `sp_CapNhatTaiKhoan`. Khi chạy thử, tệp audit ghi đúng ba sự kiện đọc (`SL`): quản lý (`ecms_quanly`) đọc bảng lương NHANVIEN, và ứng dụng (`ecms_app`) đọc NHANVIEN, TAIKHOAN qua `vw_TaiKhoan` – audit ghi cả bảng gốc bên dưới view. Bảng ledger chỉ-ghi-thêm (SQL Server 2022 trở lên) chặn sửa, xoá ngay ở tầng máy chủ: lệnh UPDATE bị từ chối với lỗi 37359, TRUNCATE với lỗi 13545, kể cả khi chạy bằng `sa`; mỗi giao dịch được băm nối chuỗi để kiểm chứng bằng `sys.sp_verify_database_ledger`.
 
-*Bảng 3.32 – So sánh ba cách kiểm toán: trigger, SQL Server Audit và bảng ledger*
+*Bảng 3.32 – So sánh kiểm toán bằng trigger, SQL Server Audit và ledger*
 
 | Tiêu chí | Trigger ghi bảng NHATKY | SQL Server Audit | Bảng ledger chỉ-ghi-thêm |
 |---|---|---|---|
@@ -807,7 +807,7 @@ Procedure này thể hiện các quyết định thiết kế mà nhóm áp dụ
 
 ![Luồng giao dịch của sp_ThuHocPhi](images/ch3/giao-dich-thu-hoc-phi.png)
 
-*Hình 3.6 – Luồng giao dịch của sp_ThuHocPhi: giao dịch lồng được, khoá chống tranh chấp và mã yêu cầu chống lập phiếu trùng*
+*Hình 3.6 – Luồng giao dịch lập phiếu thu trong sp_ThuHocPhi*
 
 - **Giao dịch lồng được.** Procedure tự mở giao dịch khi được gọi độc lập; nếu người gọi đã có giao dịch thì chỉ đặt điểm lưu (`SAVE TRANSACTION`). Khi có lỗi, khối CATCH dựa vào `XACT_STATE()` để quyết định huỷ toàn bộ (giao dịch hỏng hoặc do chính procedure mở) hay chỉ quay về điểm lưu, rồi ném lại lỗi gốc cho ứng dụng.
 - **XACT_ABORT chỉ khi procedure sở hữu giao dịch.** Với `SET XACT_ABORT ON`, khi máy khách huỷ lệnh giữa chừng (hết thời gian chờ, mất kết nối), SQL Server huỷ toàn bộ giao dịch thay vì để lại một giao dịch mở cùng các khoá treo trên máy chủ. Tuy nhiên, nếu bật khi đang chạy trong giao dịch của người gọi, mọi lỗi sẽ làm giao dịch ngoài hỏng hẳn (`XACT_STATE() = -1`) và không quay về điểm lưu được nữa. Vì vậy procedure chỉ bật tuỳ chọn này khi `@@TRANCOUNT = 0`. Ca kiểm thử 35 xác nhận: lỗi trong `sp_SinhBuoiHoc` được gọi bên trong một giao dịch khác vẫn giữ nguyên giao dịch ngoài (`@@TRANCOUNT = 1`).
@@ -1162,9 +1162,9 @@ DEALLOCATE cur_Lich;   -- 5. DEALLOCATE: huỷ định nghĩa cursor
 
 Từ khoá `LOCAL` giới hạn cursor trong phạm vi procedure để không trùng tên với phiên khác; khối CATCH kiểm tra `CURSOR_STATUS` để giải phóng cursor khi lỗi xảy ra giữa chừng. Thiếu lệnh FETCH ở cuối thân vòng lặp sẽ tạo vòng lặp vô hạn – lỗi phổ biến nhất khi viết cursor. Nếu lịch cố định không đủ để sinh hết số buổi trước ngày giới hạn, procedure báo lỗi 50085 thay vì tạo một lớp thiếu buổi.
 
-**Kết quả chạy.** `sp_SinhBuoiHoc 'IE65-2601', 1` sinh **30 buổi học** với ngày kết thúc 07/02/2027, trùng khớp hoàn toàn với lịch trong dữ liệu mẫu. Gọi procedure cho lớp IE55-2602 đã điểm danh thì bị từ chối với lỗi 50083 "Lớp đã điểm danh, không thể sinh lại buổi học". Kết quả tính lương tháng 9/2026 (trích):
+**Kết quả chạy.** `sp_SinhBuoiHoc 'IE65-2601', 1` sinh **30 buổi học** với ngày kết thúc 07/02/2027, trùng khớp hoàn toàn với lịch trong dữ liệu mẫu. Gọi procedure cho lớp IE55-2602 đã điểm danh thì bị từ chối với lỗi 50083 "Lớp đã điểm danh, không thể sinh lại buổi học". Kết quả tính lương tháng 9/2026 bằng `sp_TinhLuongGiaoVien` (trích):
 
-*Bảng 3.49 – Trích bảng lương giáo viên tháng 9/2026 (sp_TinhLuongGiaoVien)*
+*Bảng 3.49 – Trích bảng lương giáo viên tháng 9/2026*
 
 | Giáo viên | Số buổi dạy | Đơn giá (đồng) | Lương cơ bản (đồng) | Tổng lương (đồng) |
 |---|:-:|--:|--:|--:|
@@ -1185,7 +1185,7 @@ Chạy cảnh báo chuyên cần với ngưỡng mặc định 20% sinh ra 2 c�
 
 **Các loại cursor.** Để thấy rõ khác biệt giữa các loại cursor, nhóm mở cursor trên một bảng ba dòng, đọc dòng thứ nhất, rồi trong khi cursor đang mở thì **sửa dòng 2** và **thêm dòng 4**:
 
-*Bảng 3.51 – Hành vi của bốn loại cursor khi dữ liệu thay đổi trong lúc đang duyệt*
+*Bảng 3.51 – Bốn loại cursor khi dữ liệu thay đổi trong lúc duyệt*
 
 | Loại | Thấy dòng bị sửa | Thấy dòng mới | Các giá trị đọc được | Đặc điểm |
 |---|:-:|:-:|---|---|
@@ -1206,7 +1206,7 @@ Chạy cảnh báo chuyên cần với ngưỡng mặc định 20% sinh ra 2 c�
 
 ![So sánh cursor và xử lý theo tập hợp](images/ch3/cursor-set-based.png)
 
-*Hình 3.7 – Thời gian trung bình của cursor và xử lý theo tập hợp trên ba bài toán*
+*Hình 3.7 – Thời gian chạy của cursor và xử lý theo tập hợp trên ba bài toán*
 
 **Nhận xét.** Khoảng cách phụ thuộc vào việc cursor phải làm bao nhiêu truy vấn con cho mỗi dòng. Bảng lương chênh lệch lớn nhất (6,9 lần) vì cursor đếm số buổi dạy rồi ghi bảng lương riêng cho *từng* giáo viên của *từng* tháng – 10 giáo viên × 12 tháng là 120 lần đếm và 120 lệnh ghi – còn bản tập hợp gộp tất cả vào một câu `MERGE` mỗi tháng và để bộ tối ưu chọn một kế hoạch thực thi duy nhất. Cảnh báo chuyên cần chênh 2,8 lần vì cursor đếm điểm danh cho từng đăng ký. Ngược lại, khi sinh buổi học hai cách gần như ngang nhau (1,1 lần): phần lớn thời gian của cả hai nằm ở việc ghi 30 buổi học, trong khi bản tập hợp phải tự dựng lịch ngày bằng bảng số và `ROW_NUMBER` – phức tạp và khó đọc hơn hẳn bản cursor. Từ đó, nguyên tắc nhóm áp dụng là: **mặc định xử lý theo tập hợp; chỉ dùng cursor `LOCAL FAST_FORWARD` khi bài toán thực sự tuần tự** – bước sau phụ thuộc kết quả bước trước như sinh buổi học, cần gọi procedure cho từng dòng, hoặc cần xử lý theo lô nhỏ để tránh giữ khoá lâu – vì khi đó cursor không chậm hơn đáng kể mà dễ viết, dễ kiểm tra hơn.
 
