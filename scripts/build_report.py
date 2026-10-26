@@ -73,13 +73,13 @@ DOCS = {
                    "Chương 4: Trình bày thông tin – ứng dụng web, báo cáo",
                    "Chương 5: Mô hình CSDL tiên tiến – hướng đối tượng, phân tán, NoSQL",
                    "Kiểm thử tích hợp, CI và tài liệu hướng dẫn sử dụng"],
-        nhan_xet=True, ma_consolas=False),  # tên mã trong câu cùng phông Times New Roman, cỡ, màu với chữ xung quanh
+        nhan_xet=True, ma_consolas=False, ma_xanh=False),  # tên mã trong câu cùng phông, cỡ, màu với chữ xung quanh
     "hdsd": dict(
         src=[ROOT / "docs" / "user-guide" / "huong-dan-su-dung.md"],
         out=REPORT / "HuongDanSuDung_ECMS.docx",
         loai="HƯỚNG DẪN SỬ DỤNG", tieu_de=TEN_HT, header=TEN_HT.removesuffix(" (ECMS)"),
         checklist=None, nhan_xet=False,
-        ma_consolas=False),     # `mã` trong đoạn văn: cùng font Times New Roman, chỉ khối mã dùng Consolas
+        ma_consolas=False, ma_xanh=True),  # `giá trị`, lệnh, tên tệp: Times New Roman màu xanh đậm (quy ước ở mục 1.4)
 }
 
 NAVY, BLUE, GREY = "1f3864", "2e75b6", "555555"
@@ -479,8 +479,8 @@ def sect_pr(doc, ngang: bool):
 
 
 class DocxWriter:
-    def __init__(self, doc, src: Path, ma_consolas=True):
-        self.doc, self.src, self.ma_consolas = doc, src, ma_consolas
+    def __init__(self, doc, src: Path, ma_consolas=True, ma_xanh=True):
+        self.doc, self.src, self.ma_consolas, self.ma_xanh = doc, src, ma_consolas, ma_xanh
         self.num_id = 100
         self.ngang = False                # dòng <!-- trang-ngang --> trước hình: hình + chú thích sang trang ngang
 
@@ -520,7 +520,7 @@ class DocxWriter:
                     hyperlink(p, href, text, bold, italic, mono, csize)
                 else:
                     r = run_fmt(p.add_run(text), "Consolas" if mono else "Times New Roman", csize, bold, italic,
-                                color or (NAVY if mono else None))
+                                color or (NAVY if code and (mono or self.ma_xanh) else None))
                     if vt:
                         r.font.subscript, r.font.superscript = vt == "sub", vt == "sup"
             elif t.type == "softbreak":
@@ -920,11 +920,11 @@ def build_docx(cfg) -> Path:
             field(tmp, 'TOC \\h \\z \\t "TableCaption,1"', goi_y)
         else:
             body.remove(tmp._p)
-            w = DocxWriter(doc, cfg["src"][0], cfg["ma_consolas"])
+            w = DocxWriter(doc, cfg["src"][0], cfg["ma_consolas"], cfg["ma_xanh"])
             w.bat_buoc_chu_thich = False
             w.write(viet_tat_md(noi_dung))
     for src in cfg["src"]:
-        DocxWriter(doc, src, cfg["ma_consolas"]).write(src.read_text(encoding="utf-8"))
+        DocxWriter(doc, src, cfg["ma_consolas"], cfg["ma_xanh"]).write(src.read_text(encoding="utf-8"))
     tach_phan_dau(doc)
     settings = doc.settings.element
     if settings.find(qn("w:updateFields")) is None:
@@ -1092,7 +1092,7 @@ def build_pdf(cfg):
     db = "".join(f'<li><a href="#{a}">{html.escape(tx)}</a></li>' for a, tx in bang)
     vt = md.render(viet_tat_md("\n".join(src.read_text(encoding="utf-8") for src in cfg["src"]))).replace("<table>", "<table class='vt'>", 1)
     page = (f"<!doctype html><html lang='vi'><head><meta charset='utf-8'><title>{html.escape(cfg['tieu_de'])}</title>"
-            f"<style>{CSS.replace('%HEADER%', cfg['header'])}{'' if cfg['ma_consolas'] else 'code { font: inherit; }'}</style>"
+            f"<style>{CSS.replace('%HEADER%', cfg['header'])}{'code { font: 12pt Consolas, Menlo, monospace; }' if cfg['ma_consolas'] else ''}{'code { color: #1f3864; }' if cfg['ma_xanh'] else ''}</style>"
             f"</head><body>{bia}{extra}"
             f"<section class='pb toc front'><p class='title'>MỤC LỤC</p><ul>{ml}</ul></section>"
             f"<section class='pb toc front'><p class='title'>DANH MỤC HÌNH ẢNH</p><ul>{dh}</ul></section>"
