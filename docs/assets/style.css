@@ -152,6 +152,19 @@ section.block { padding: 40px 0 8px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
 .card.pad { padding: 18px 20px; }
 
+/* ---------- Tài liệu ---------- */
+.docs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.doc { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+.doc .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; }
+.doc .ico svg { width: 22px; height: 22px; }
+.doc h3 { margin: 4px 0 0; font-size: 17px; }
+.doc p { margin: 0; color: var(--muted); font-size: 13.5px; flex: 1; }
+.doc .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.doc .meta span { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.doc .meta span:first-child { background: var(--accent-soft); color: var(--accent); }
+.doc .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
 /* ---------- Members ---------- */
 .members { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .member { padding: 16px; cursor: pointer; transition: transform .15s ease, border-color .15s ease; text-align: left; font: inherit; color: inherit; }
@@ -300,7 +313,7 @@ footer { color: var(--muted); font-size: 13px; padding: 40px 0 48px; border-top:
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .members { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sprints, .grid-2, .tech { grid-template-columns: 1fr; }
+  .sprints, .grid-2, .tech, .docs { grid-template-columns: 1fr; }
   .tbody { grid-template-columns: 1fr; }
   details.task > summary { grid-template-columns: auto 1fr; }
   details.task > summary .badge { grid-column: 2; justify-self: start; }

@@ -17,6 +17,7 @@
       <a class="brand" href="#tong-quan"><span class="logo">EC</span><span class="txt">ECMS · IE103</span></a>
       <nav class="nav" aria-label="Mục lục">
         <a href="#tong-quan">Tổng quan</a>
+        <a href="#tai-lieu">Tài liệu</a>
         <a href="#thanh-vien">Thành viên</a>
         <a href="#lo-trinh">Lộ trình</a>
         <a href="#cong-viec">Công việc</a>
@@ -47,6 +48,7 @@
       </div>
       <div class="actions">
         <a class="btn primary" id="btnProject" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">▦ Bảng công việc (Project)</a>
+        <a class="btn" href="#tai-lieu">⇩ Tải báo cáo, slide (PDF)</a>
         <a class="btn" href="https://github.com/nhutruong-uit/ecms/issues" target="_blank" rel="noopener">◎ Issues</a>
         <a class="btn" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">⌥ Mã nguồn</a>
       </div>
@@ -74,6 +76,50 @@
         </div>
       </div>
       <div class="sync-note" id="syncNote">Đang đồng bộ trạng thái từ GitHub Issues…</div>
+    </section>
+
+    <!-- ================= Tài liệu ================= -->
+    <!-- Tệp lấy thẳng từ nhánh main (raw) nên luôn là bản mới nhất, không cần chép PDF vào docs/.
+         Dựng lại tài liệu thì sửa số trang, dung lượng bên dưới. -->
+    <section class="block" id="tai-lieu">
+      <div class="section-head">
+        <div>
+          <h2>Tài liệu nộp</h2>
+          <p>Bản PDF mới nhất của báo cáo, hướng dẫn sử dụng và slide thuyết trình, lấy trực tiếp từ nhánh <code>main</code>; bấm là tải về. Kèm bản Word, PowerPoint để chỉnh sửa.</p>
+        </div>
+      </div>
+      <div class="docs">
+        <article class="card doc">
+          <span class="ico" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>
+          <h3>Báo cáo đồ án</h3>
+          <p>Bảy chương theo mẫu Lab 04: tổng quan, tổ chức, xử lý, trình bày thông tin, CSDL tiên tiến, kết luận và phụ lục.</p>
+          <div class="meta"><span>PDF</span><span>217 trang</span><span>12,2 MB</span></div>
+          <div class="acts">
+            <a class="btn primary" href="https://github.com/nhutruong-uit/ecms/raw/main/report/BaoCao_IE103_Nhom1.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Tải PDF</a>
+            <a class="btn" href="https://github.com/nhutruong-uit/ecms/raw/main/report/BaoCao_IE103_Nhom1.docx">Bản Word</a>
+          </div>
+        </article>
+        <article class="card doc">
+          <span class="ico" style="background:linear-gradient(135deg,#059669,#10b981)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg></span>
+          <h3>Hướng dẫn sử dụng</h3>
+          <p>Cài đặt, đăng nhập, thao tác chung và hướng dẫn theo từng vai trò: quản lý, giáo vụ, kế toán, giáo viên, học viên, quản trị.</p>
+          <div class="meta"><span>PDF</span><span>54 trang</span><span>5,2 MB</span></div>
+          <div class="acts">
+            <a class="btn primary" href="https://github.com/nhutruong-uit/ecms/raw/main/report/HuongDanSuDung_ECMS.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Tải PDF</a>
+            <a class="btn" href="https://github.com/nhutruong-uit/ecms/raw/main/report/HuongDanSuDung_ECMS.docx">Bản Word</a>
+          </div>
+        </article>
+        <article class="card doc">
+          <span class="ico" style="background:linear-gradient(135deg,#ea580c,#ec4899)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/></svg></span>
+          <h3>Slide thuyết trình</h3>
+          <p>Bố cục sáu phần cho buổi trình bày 15 phút, có demo trực tiếp; bản PowerPoint kèm ghi chú người trình bày và mốc thời gian.</p>
+          <div class="meta"><span>PDF</span><span>17 slide</span><span>5,0 MB</span></div>
+          <div class="acts">
+            <a class="btn primary" href="https://github.com/nhutruong-uit/ecms/raw/main/slides/ECMS_Nhom1.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Tải PDF</a>
+            <a class="btn" href="https://github.com/nhutruong-uit/ecms/raw/main/slides/ECMS_Nhom1.pptx">Bản PowerPoint</a>
+          </div>
+        </article>
+      </div>
     </section>
 
     <!-- ================= Thành viên ================= -->
