@@ -24,4 +24,13 @@ with mid:
         st.error(msg, icon="⛔")
     if SHOW_DEMO_ACCOUNTS:          # chỉ môi trường phát triển (ECMS_SHOW_DEMO=yes trong .env) – tắt khi triển khai thật
         with st.expander("Tài khoản demo (môi trường phát triển)"):
-            st.markdown("`quanly`, `giaovu`, `ketoan`, `giaovien` – mật khẩu `Ecms@2026` · `hocvien` – mật khẩu `Hocvien@2026`")
+            st.dataframe(
+                [{"Tài khoản": tk, "Mật khẩu": mk, "Vai trò": vt} for tk, mk, vt in (
+                    ("quanly", "Ecms@2026", "Quản lý trung tâm"),
+                    ("giaovu", "Ecms@2026", "Giáo vụ CN01"),
+                    ("ketoan", "Ecms@2026", "Kế toán CN01"),
+                    ("giaovien", "Ecms@2026", "Giáo viên"),
+                    ("hocvien", "Hocvien@2026", "Học viên"),
+                )],
+                hide_index=True, width="stretch",
+            )

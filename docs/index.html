@@ -15,17 +15,31 @@
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="#tong-quan"><span class="logo">EC</span><span class="txt">ECMS · IE103</span></a>
-      <nav class="nav" aria-label="Mục lục">
+      <!-- Ba mục dùng nhiều để thẳng trên thanh, các mục còn lại gom vào hai dropdown để thanh không tràn ngang;
+           màn hình hẹp thì cả mục lục thu vào nút ☰ (app.js: initNav) -->
+      <nav class="nav" id="nav" aria-label="Mục lục">
         <a href="#tong-quan">Tổng quan</a>
         <a href="#tai-lieu">Tài liệu</a>
-        <a href="#thanh-vien">Thành viên</a>
-        <a href="#lo-trinh">Lộ trình</a>
-        <a href="#cong-viec">Công việc</a>
-        <a href="#de-cuong">Bám đề cương</a>
-        <a href="#thiet-ke">Thiết kế CSDL</a>
-        <a href="#cong-nghe">Công nghệ</a>
-        <a href="#quy-uoc">Quy ước</a>
+        <a href="#web-app">Xem web app</a>
+        <div class="nav-group">
+          <button class="nav-btn" type="button" aria-expanded="false" aria-controls="navKeHoach">Kế hoạch</button>
+          <div class="nav-menu" id="navKeHoach">
+            <a href="#thanh-vien">Thành viên</a>
+            <a href="#lo-trinh">Lộ trình</a>
+            <a href="#cong-viec">Công việc</a>
+            <a href="#de-cuong">Bám đề cương</a>
+          </div>
+        </div>
+        <div class="nav-group">
+          <button class="nav-btn" type="button" aria-expanded="false" aria-controls="navKyThuat">Kỹ thuật</button>
+          <div class="nav-menu" id="navKyThuat">
+            <a href="#thiet-ke">Thiết kế CSDL</a>
+            <a href="#cong-nghe">Công nghệ</a>
+            <a href="#quy-uoc">Quy ước</a>
+          </div>
+        </div>
       </nav>
+      <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Mở mục lục">☰</button>
       <button class="theme-btn" id="themeBtn" type="button" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">◐</button>
     </div>
   </header>
@@ -49,6 +63,7 @@
       <div class="actions">
         <a class="btn primary" id="btnProject" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">▦ Bảng công việc (Project)</a>
         <a class="btn" href="#tai-lieu">⇩ Tải báo cáo, slide (PDF)</a>
+        <a class="btn" href="#web-app">▶ Xem web app</a>
         <a class="btn" href="https://github.com/nhutruong-uit/ecms/issues" target="_blank" rel="noopener">◎ Issues</a>
         <a class="btn" href="https://github.com/nhutruong-uit/ecms" target="_blank" rel="noopener">⌥ Mã nguồn</a>
       </div>
@@ -119,6 +134,57 @@
             <a class="btn" href="https://github.com/nhutruong-uit/ecms/raw/main/slides/ECMS_Nhom1.pptx">Bản PowerPoint</a>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- ================= Xem web app ================= -->
+    <!-- Ứng dụng chạy trên laptop Windows của nhóm (SQL Server + Streamlit), người xem cùng mạng Wi-Fi mở bằng trình
+         duyệt qua IP của máy đó. IP đổi theo từng mạng nên không ghi cố định ở đây – nhóm gửi link mỗi buổi. -->
+    <section class="block" id="web-app">
+      <div class="section-head">
+        <div>
+          <h2>Xem web app</h2>
+          <p>Ứng dụng chạy trên laptop của nhóm. Thầy và các bạn chỉ cần kết nối <b>cùng mạng Wi-Fi</b> rồi mở link nhóm gửi bằng trình duyệt (Safari, Chrome, Edge – macOS, Windows hay điện thoại đều được), không cần clone repo hay cài SQL Server.</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card pad">
+          <h3 style="margin-top:0">Người xem</h3>
+          <ol class="steps-list">
+            <li><div>Kết nối cùng mạng Wi-Fi với máy đang chạy ứng dụng (hoặc cùng hotspot nhóm phát)</div></li>
+            <li><div>Mở link nhóm gửi, dạng <code>http://&lt;IP-máy-nhóm&gt;:8501</code>, ví dụ <code>http://192.168.1.25:8501</code></div></li>
+            <li><div>Đăng nhập bằng một tài khoản demo bên dưới; danh sách này cũng hiện ngay ở trang Đăng nhập</div></li>
+          </ol>
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead><tr><th>Tài khoản</th><th>Mật khẩu</th><th>Vai trò</th></tr></thead>
+              <tbody>
+                <tr><td><code>quanly</code></td><td><code>Ecms@2026</code></td><td>Quản lý trung tâm (mọi chi nhánh)</td></tr>
+                <tr><td><code>giaovu</code></td><td><code>Ecms@2026</code></td><td>Giáo vụ CN01</td></tr>
+                <tr><td><code>ketoan</code></td><td><code>Ecms@2026</code></td><td>Kế toán CN01</td></tr>
+                <tr><td><code>giaovien</code></td><td><code>Ecms@2026</code></td><td>Giáo viên</td></tr>
+                <tr><td><code>hocvien</code></td><td><code>Hocvien@2026</code></td><td>Học viên</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note" style="margin-bottom:0">Dữ liệu là dữ liệu mẫu, có thể thử thêm, sửa, xoá thoải mái: chạy lại <code>run_all.ps1</code> là về như ban đầu.</p>
+        </div>
+        <div class="card pad">
+          <h3 style="margin-top:0">Nhóm chạy máy chủ (Windows)</h3>
+          <ol class="steps-list">
+            <li><div>Lần đầu (hoặc muốn làm mới dữ liệu): dựng CSDL – <code>.\database\run_all.ps1 -Server "localhost\&lt;instance&gt;"</code>, khoảng 20 giây</div></li>
+            <li><div>Khởi động ứng dụng ở thư mục repo: <code>.\.venv\Scripts\python.exe -m streamlit run app/main.py</code></div></li>
+            <li><div>Lấy link ở dòng <code>Network URL</code> Streamlit in ra (hoặc <code>ipconfig | findstr IPv4</code>, chọn IP của Wi-Fi) rồi gửi vào nhóm chat</div></li>
+            <li><div>Windows hỏi có cho Python dùng mạng không thì chọn <b>Allow</b>; giữ máy bật, không cho ngủ trong lúc mọi người xem</div></li>
+          </ol>
+          <h3>Không vào được?</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>Đổi mạng là đổi IP: lấy lại link mới ở bước 3, link hôm trước không dùng lại được</li>
+            <li>Điện thoại cùng Wi-Fi cũng không mở được thì mạng đang chặn các máy kết nối với nhau (thường gặp ở Wi-Fi trường): phát hotspot từ điện thoại, cho cả hai máy vào hotspot đó</li>
+            <li>Kiểm tra trên chính máy chủ: <code>http://localhost:8501</code> mở được là ứng dụng đang chạy, lỗi nằm ở mạng</li>
+          </ul>
+          <p class="note" style="margin-bottom:0">Cài đặt đầy đủ (SQL Server, ODBC, <code>.env</code>): xem <a href="https://github.com/nhutruong-uit/ecms/blob/main/docs/SETUP.md" target="_blank" rel="noopener">docs/SETUP.md</a>.</p>
+        </div>
       </div>
     </section>
 
