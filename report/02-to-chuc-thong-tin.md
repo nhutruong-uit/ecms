@@ -33,6 +33,7 @@ Ngoài ra, bốn mối kết hợp có thuộc tính riêng sẽ được **th�
 
 Sơ đồ ERD được vẽ theo ký hiệu Chen: thực thể là hình chữ nhật, thực thể yếu có viền đôi, mối kết hợp là hình thoi (viền đôi nếu là mối kết hợp xác định của thực thể yếu), bản số ghi theo dạng (min, max) cạnh mỗi thực thể tham gia. Hình 2.1 là sơ đồ tổng quan, vẽ 13 tập thực thể: thực thể NHATKY không tham gia mối kết hợp nào – mỗi dòng nhật ký do trigger ghi và chỉ lưu khoá của dòng bị thay đổi dưới dạng văn bản – nên không đưa lên sơ đồ. Hình 2.2 minh hoạ chi tiết các loại thuộc tính trên một số thực thể tiêu biểu.
 
+<!-- trang-ngang -->
 ![ERD tổng quan](../docs/design/erd.png)
 
 *Hình 2.1 – Sơ đồ ERD tổng quan của ECMS*
@@ -110,6 +111,7 @@ Ba cột được bổ sung trong đợt rà soát cuối cùng đều xuất ph
 
 Song song với ERD, nhóm xây dựng sơ đồ lớp (Class Diagram) để nhìn bài toán theo góc độ hướng đối tượng: mỗi lớp gồm cả dữ liệu lẫn hành vi. Sơ đồ này là cơ sở cho lược đồ hướng đối tượng ở Chương 5. Ký hiệu phạm vi truy cập: `+` public, `-` private, `#` protected.
 
+<!-- trang-ngang -->
 ![Class Diagram](../docs/design/class-diagram.png)
 
 *Hình 2.3 – Sơ đồ lớp của ECMS*
@@ -346,7 +348,7 @@ Ràng buộc toàn vẹn (RBTV) là các quy tắc mà dữ liệu phải luôn 
 
 Bảng tầm ảnh hưởng xác định thao tác nào trên quan hệ nào có thể làm vi phạm ràng buộc, từ đó biết cần kiểm tra ở đâu. Ký hiệu: **+** là thao tác có thể vi phạm (phải kiểm tra), **–** là không vi phạm, **+(cột)** là chỉ vi phạm khi sửa cột đó. Các RBTV miền giá trị và liên thuộc tính trên một dòng đơn giản (RB01–RB04, RB07, RB18, RB19) được CHECK kiểm tra ở mọi thao tác thêm và sửa nên không đưa vào Bảng 2.15.
 
-*Bảng 2.15 – Bảng tầm ảnh hưởng của các ràng buộc liên dòng và liên quan hệ*
+*Bảng 2.15 – Tầm ảnh hưởng của ràng buộc liên dòng và liên quan hệ*
 
 | RBTV | Quan hệ | Thêm | Xoá | Sửa |
 |---|---|:-:|:-:|:-:|
@@ -484,7 +486,7 @@ XML là dữ liệu **bán cấu trúc** và **tự mô tả**: tên thẻ, tên
 
 Bản DTD mô tả được trình tự phần tử nhưng để lọt hai ràng buộc quan trọng mà XSD kiểm tra được: điểm `Diem` chỉ là chuỗi bất kỳ (DTD không có kiểu số), và hình thức `HinhThuc` không liệt kê được vì giá trị "Tại trung tâm" chứa khoảng trắng – danh sách liệt kê của DTD chỉ nhận các token liền. Bảng 2.19 tổng hợp khác biệt giữa hai ngôn ngữ.
 
-*Bảng 2.19 – So sánh DTD và XML Schema trên tài liệu kết quả kiểm tra đầu vào*
+*Bảng 2.19 – So sánh DTD và XML Schema trên kết quả kiểm tra đầu vào*
 
 | Tiêu chí | DTD | XML Schema (dùng trong ECMS) |
 |---|---|---|
@@ -682,15 +684,17 @@ Các ràng buộc phức tạp hơn (trigger, procedure) được kiểm thử t
 
 ### 2.7.5 Sơ đồ CSDL
 
-Để đối chiếu kết quả cài đặt với thiết kế, nhóm sinh sơ đồ CSDL trực tiếp từ siêu dữ liệu của SQL Server (các khung nhìn hệ thống `sys.tables`, `sys.columns`, `sys.foreign_keys`), tương đương chức năng Database Diagram của SSMS. Một sơ đồ đủ 22 bảng và toàn bộ cột sẽ không đọc được khi in trên khổ A4, nên sơ đồ được tách thành hai nhóm bảng và mỗi bảng chỉ liệt kê các cột khoá; danh sách cột đầy đủ ở Phụ lục C. Trong sơ đồ, **PK** là khoá chính, **FK** là khoá ngoại, dấu ✱ đánh dấu cột NOT NULL, ô xám là bảng thuộc nhóm còn lại.
+Để đối chiếu kết quả cài đặt với thiết kế, nhóm sinh sơ đồ CSDL trực tiếp từ siêu dữ liệu của SQL Server (các khung nhìn hệ thống `sys.tables`, `sys.columns`, `sys.foreign_keys`), tương đương chức năng Database Diagram của SSMS. Một sơ đồ đủ 22 bảng và toàn bộ cột sẽ không đọc được khi in trên khổ A4, nên sơ đồ được tách thành hai nhóm bảng – danh mục và đào tạo (13 bảng, 18 khoá ngoại; Hình 2.5), học viên, học tập, tài chính và hệ thống (9 bảng, 15 khoá ngoại; Hình 2.6) – và mỗi bảng chỉ liệt kê các cột khoá; danh sách cột đầy đủ ở Phụ lục C. Trong sơ đồ, **PK** là khoá chính, **FK** là khoá ngoại, dấu * đánh dấu cột NOT NULL, ô xám là bảng thuộc nhóm còn lại.
 
+<!-- trang-ngang -->
 ![Sơ đồ CSDL – danh mục và đào tạo](images/ch2/db-diagram-1.png)
 
-*Hình 2.5 – Sơ đồ CSDL sinh từ siêu dữ liệu: nhóm danh mục và đào tạo (13 bảng, 18 khoá ngoại)*
+*Hình 2.5 – Sơ đồ CSDL: nhóm danh mục và đào tạo*
 
+<!-- trang-ngang -->
 ![Sơ đồ CSDL – học viên, tài chính và hệ thống](images/ch2/db-diagram-2.png)
 
-*Hình 2.6 – Sơ đồ CSDL sinh từ siêu dữ liệu: nhóm học viên, học tập, tài chính và hệ thống (9 bảng, 15 khoá ngoại)*
+*Hình 2.6 – Sơ đồ CSDL: nhóm học viên, học tập, tài chính và hệ thống*
 
 Hai sơ đồ có đủ 22 bảng và 33 khoá ngoại, khớp với các mối kết hợp của ERD ở mục 2.1 và lược đồ quan hệ ở mục 2.4.
 

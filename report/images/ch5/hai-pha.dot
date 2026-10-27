@@ -1,41 +1,54 @@
-// Cam kết hai pha (2PC) khi chuyển lớp CN02 → CN01 (T30) – database/13_distributed.sql mục 9
-//   dot -Tpng -Gdpi=200 hai-pha.dot -o hai-pha.png
-// Cột giữa là bộ điều phối, hai bên là hai trạm tham gia; mỗi hàng là một bước, nét chấm là đường đời của từng bên.
+// Cam kết hai pha (2PC) khi chuyển lớp CN02 → CN01 (Hình 5.4) – database/13_distributed.sql mục 9
+//   neato -n -Tpng -Gdpi=200 report/images/ch5/hai-pha.dot -o report/images/ch5/hai-pha.png
+// Toạ độ cố định (pos, đơn vị point) để ba cột thẳng hàng: trạm CN02 | bộ điều phối | trạm CN01. Cột hai bên rộng
+// 147 pt, cột giữa 130 pt, khe 44 pt; mỗi khung nét đứt là một pha, mũi tên ngang thẳng là thông điệp – tên thông điệp
+// (PREPARE, COMMIT, ROLLBACK) đã ghi trong ô bộ điều phối nên mũi tên không cần nhãn, nhờ vậy hình hẹp lại:
+// ảnh rộng ~ 18,8 cm → in 15 cm, chữ 14 pt in ~ 11 pt.
+// Phông Times New Roman như thân báo cáo (dấu phẩy cuối tên phông bắt buộc với Pango).
 digraph HaiPha {
-  rankdir=TB; nodesep=0.25; ranksep=0.3; fontname="Arial"; bgcolor="white"; newrank=true;
-  node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc", width=1.8];
-  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.8];
+  graph [splines=line, pad=0.06, bgcolor="white"];
+  node  [fontname="Times New Roman,", fontsize=14, shape=box, style="rounded,filled", color="#64748b", fillcolor="#f8fafc",
+         fixedsize=true, width=2.0417, height=0.8333, penwidth=1.2];
+  edge  [color="#475569", arrowsize=0.8, penwidth=1.4];
 
-  H2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Trạm CN02</B></TD></TR><TR><TD CELLPADDING="1">UPDATE DANGKY</TD></TR><TR><TD CELLPADDING="1">→ 'Đã chuyển lớp'</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
-  H1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Bộ điều phối</B></TD></TR><TR><TD CELLPADDING="1">SQL Server (1 máy)</TD></TR><TR><TD CELLPADDING="1">MSDTC (nhiều máy)</TD></TR></TABLE>>, fillcolor="#dbeafe", color="#1d4ed8"];
-  H3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD CELLPADDING="1"><B>Trạm CN01</B></TD></TR><TR><TD CELLPADDING="1">INSERT DANGKY mới</TD></TR><TR><TD CELLPADDING="1">→ 'Đang học'</TD></TR></TABLE>>, fillcolor="#dcfce7", color="#16a34a"];
-  { rank=same; H2; H1; H3; }
+  // ---- khung ba pha (vẽ trước, không tô nền)
+  k1 [pos="264,245.5!", width=7.3333, height=1.3194, label="", style="rounded,dashed", color="#7c3aed", penwidth=1.3];
+  k2 [pos="264,146.5!", width=7.3333, height=1.0972, label="", style="rounded,dashed", color="#16a34a", penwidth=1.3];
+  k3 [pos="264,47.5!",  width=7.3333, height=1.3194, label="", style="rounded,dashed", color="#dc2626", penwidth=1.3];
+  node [shape=plaintext, style="", width=0.1, height=0.1, fixedsize=false, margin=0];
+  t1 [pos="264,279!", label=<<B>Pha 1 – chuẩn bị</B>>];
+  t2 [pos="264,172!", label=<<B>Pha 2 – cam kết (kịch bản a)</B>>];
+  t3 [pos="264,81!",  label=<<B>Kịch bản lỗi (b)</B>>];
 
-  subgraph cluster_p1 {
-    label=<<B>Pha 1 – chuẩn bị</B>>; fontsize=12; style="rounded,dashed"; color="#7c3aed";
-    P2 [label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
-    P1 [label="gửi PREPARE\ntới mọi trạm,\nchờ trả lời"];
-    P3 [label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
-    { rank=same; P2; P1; P3; }
-  }
-  subgraph cluster_p2 {
-    label=<<B>Pha 2 – cam kết (kịch bản a)</B>>; fontsize=12; style="rounded,dashed"; color="#16a34a";
-    C2 [label="LOP_COMMIT_XACT\nnhả khoá"];
-    C1 [label="mọi trạm sẵn sàng\n→ gửi COMMIT"];
-    C3 [label="LOP_COMMIT_XACT\nnhả khoá"];
-    { rank=same; C2; C1; C3; }
-  }
-  subgraph cluster_p3 {
-    label=<<B>Kịch bản lỗi (b)</B>>; fontsize=12; style="rounded,dashed"; color="#dc2626";
-    R2 [label="huỷ UPDATE 'Bảo lưu'\n→ vẫn là\n'Đã chuyển lớp'", fillcolor="#fee2e2", color="#dc2626"];
-    R1 [label="một trạm lỗi\n→ gửi ROLLBACK\ncho mọi trạm", fillcolor="#fee2e2", color="#dc2626"];
-    R3 [label="INSERT vi phạm\nCHECK MaCN\n→ lỗi 547, 0 dòng", fillcolor="#fee2e2", color="#dc2626"];
-    { rank=same; R2; R1; R3; }
-  }
-  H2 -> P2 -> C2 -> R2 [style=dotted, arrowhead=none];
-  H1 -> P1 -> C1 -> R1 [style=dotted, arrowhead=none];
-  H3 -> P3 -> C3 -> R3 [style=dotted, arrowhead=none];
-  P1 -> P2 [constraint=false, color="#7c3aed", label="PREPARE"]; P1 -> P3 [constraint=false, color="#7c3aed", label="PREPARE"];
-  C1 -> C2 [constraint=false, color="#16a34a", label="COMMIT"];   C1 -> C3 [constraint=false, color="#16a34a", label="COMMIT"];
-  R3 -> R1 [constraint=false, color="#dc2626", label="lỗi"];      R1 -> R2 [constraint=false, color="#dc2626", label="ROLLBACK"];
+  // ---- nhãn thông điệp lỗi, ngay trên mũi tên (các thông điệp khác đã ghi trong ô bộ điều phối)
+  m6 [pos="351,50!", label="lỗi", fontcolor="#b91c1c"];
+
+  node [shape=box, style="rounded,filled", fixedsize=true, width=2.0417, height=0.8333, margin=0];
+  // ---- hàng tiêu đề: ba bên tham gia
+  H2 [pos="81.5,337.5!", height=0.9028, fillcolor="#dcfce7", color="#16a34a", label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+    <TR><TD><B>Trạm CN02</B></TD></TR><TR><TD>UPDATE DANGKY</TD></TR><TR><TD>→ 'Đã chuyển lớp'</TD></TR></TABLE>>];
+  H1 [pos="264,337.5!", height=0.9028, width=1.8056, fillcolor="#dbeafe", color="#1d4ed8", label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+    <TR><TD><B>Bộ điều phối</B></TD></TR><TR><TD>SQL Server (1 máy)</TD></TR><TR><TD>MSDTC (nhiều máy)</TD></TR></TABLE>>];
+  H3 [pos="446.5,337.5!", height=0.9028, fillcolor="#dcfce7", color="#16a34a", label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">
+    <TR><TD><B>Trạm CN01</B></TD></TR><TR><TD>INSERT DANGKY</TD></TR><TR><TD>mới → 'Đang học'</TD></TR></TABLE>>];
+
+  // ---- pha 1
+  P2 [pos="81.5,236!",  label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
+  P1 [pos="264,236!", label="gửi PREPARE\ntới mọi trạm,\nchờ trả lời", width=1.8056];
+  P3 [pos="446.5,236!", label="ghi LOP_PREP_XACT\ngiữ khoá\n→ SẴN SÀNG"];
+
+  // ---- pha 2
+  C2 [pos="81.5,137!",  label="LOP_COMMIT_XACT\nnhả khoá", height=0.6111];
+  C1 [pos="264,137!", label="mọi trạm sẵn sàng\n→ gửi COMMIT", height=0.6111, width=1.8056];
+  C3 [pos="446.5,137!", label="LOP_COMMIT_XACT\nnhả khoá", height=0.6111];
+
+  // ---- kịch bản lỗi
+  node [fillcolor="#fee2e2", color="#dc2626"];
+  R2 [pos="81.5,38!",  label="huỷ UPDATE 'Bảo lưu'\n→ vẫn là\n'Đã chuyển lớp'"];
+  R1 [pos="264,38!", label="một trạm lỗi →\ngửi ROLLBACK\ncho mọi trạm", width=1.8056];
+  R3 [pos="446.5,38!", label="INSERT vi phạm\nCHECK MaCN\n→ lỗi 547, 0 dòng"];
+
+  P1 -> P2 [color="#7c3aed"]; P1 -> P3 [color="#7c3aed"];
+  C1 -> C2 [color="#16a34a"]; C1 -> C3 [color="#16a34a"];
+  R3 -> R1 [color="#dc2626"]; R1 -> R2 [color="#dc2626"];
 }

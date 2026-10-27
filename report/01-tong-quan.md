@@ -227,7 +227,7 @@ Mô hình DIKW (Data – Information – Knowledge – Wisdom) mô tả tiến t
 
 ![Tháp DIKW trên bài toán chuyên cần](../docs/design/dikw.png)
 
-*Hình 1.2 – Mô hình DIKW áp dụng cho bài toán chuyên cần, số liệu lấy từ CSDL mẫu*
+*Hình 1.2 – Tháp DIKW trên bài toán chuyên cần, số liệu từ CSDL mẫu*
 
 *Bảng 1.11 – Các tầng DIKW và đối tượng CSDL tương ứng*
 

@@ -14,8 +14,11 @@ xin quyền truy cập file: bấm **Select…** và chọn file trong `report/.
 Windows có Word: `.\scripts\export_pdf.ps1` (Word qua COM, không cần thao tác tay). Không có Word: `python scripts/build_report.py --pdf`
 in PDF bằng Chrome/Edge (mục lục không có số trang).
 
-Cỡ chữ theo mẫu Lab 04: thân bài 13 pt, bảng 10–12 pt tuỳ số cột, khối mã Consolas 10,5 pt (mỗi dòng mã ≤ 76 ký tự để
-không bị Word tự xuống dòng), chú thích hình 13 pt nghiêng.
+Cỡ chữ 13 pt cho thân bài, bảng và chú thích hình / bảng (chú thích in nghiêng); bảng nhiều chữ tự giảm 12 → 11 → 10,5 pt
+cho tới khi mỗi hàng trung bình không quá 2,2 / 2,8 dòng chữ (bảng thoáng giữ 13 pt khi không quá 1,8 dòng). Mọi đoạn văn thụt đầu dòng 0,5 cm; riêng khối mã dùng Consolas 10,5 pt
+(mỗi dòng mã ≤ 76 ký tự để không bị Word tự xuống dòng). Chú thích hình / bảng nên ngắn để Danh mục hình ảnh, Danh mục
+bảng không xuống dòng (khoảng 60 ký tự sau "Hình x.y."). Bảng thấp hơn nửa trang được giữ trọn một trang, bảng cao hơn
+được ngắt giữa hai dòng (lặp dòng tiêu đề); hình trên trang dọc cao tối đa 17,5 cm để không đẩy trang trống.
 Nguồn hướng dẫn sử dụng: [`docs/user-guide/huong-dan-su-dung.md`](../docs/user-guide/huong-dan-su-dung.md).
 
 | File | Nội dung | Người viết |

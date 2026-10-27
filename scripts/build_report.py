@@ -8,8 +8,10 @@
 Mẫu: report/template/mau-bao-cao-uit.docx (tách từ báo cáo Lab 04 – giữ nguyên bìa, checklist, trang nhận xét của giảng viên,
 style, header / footer "Trang X/Y"). Nội dung sinh theo đúng quy ước của mẫu:
   • Tiêu đề cấp 1 "CHƯƠNG n: …" / "PHẦN n: …" sang trang mới; cấp 2–3 đánh số "1.1." / "1.1.1.".
-  • Đoạn văn canh đều, thụt đầu dòng 0,5 cm, giãn dòng 1,15; gạch đầu dòng "•", danh sách số "1.".
-  • Bảng: hàng tiêu đề nền xanh đậm chữ trắng, viền xám; khối mã: hộp nền xám, Consolas 10,5, tô màu cú pháp kiểu SSMS.
+  • Đoạn văn canh đều, mọi đoạn (kể cả câu dẫn kết thúc bằng ":") thụt đầu dòng 0,5 cm, giãn dòng 1,15;
+    gạch đầu dòng "•", danh sách số "1.".
+  • Một phông Times New Roman 13 pt cho thân bài, bảng, chú thích và tên mã trong câu; riêng khối mã dùng Consolas 10,5.
+  • Bảng: hàng tiêu đề nền xanh đậm chữ trắng, viền xám; khối mã: hộp nền xám, tô màu cú pháp kiểu SSMS.
     Khối mã có dòng tiêu đề như mẫu ("Mã lệnh – …", "Kiểm thử – …") khi viết ```sql title="Mã lệnh – sp_DangKyHoc"```.
   • Hình: căn giữa, chú thích "Hình x.y. …" in nghiêng màu xám ngay dưới (lấy từ dòng "*Hình x.y – …*" trong Markdown).
   • Bảng: chú thích "Bảng x.y. …" ngay trên bảng (dòng "*Bảng x.y – …*" đứng trước bảng; phụ lục dùng "Bảng C.1").
@@ -17,9 +19,12 @@ style, header / footer "Trang X/Y"). Nội dung sinh theo đúng quy ước củ
   • Mục lục, Danh mục hình ảnh, Danh mục bảng là trường TOC – Word hỏi cập nhật khi mở file, chọn Yes (hoặc Ctrl+A rồi
     F9); Danh mục từ viết tắt sinh từ bảng VIET_TAT (chỉ giữ từ có xuất hiện trong tài liệu).
   • Phần đầu (bìa → danh mục) là một section riêng: bìa không có tiêu đề chạy và số trang, các trang sau đánh số
-    i, ii, iii…; thân bài đánh số lại từ 1, chân trang "Trang X/Y" với Y là số trang thân bài.
-  • Giữ tiêu đề, câu dẫn ("…:"), chú thích bảng đi cùng nội dung phía sau; bảng ngắn (≤ 12 dòng) và khối mã ngắn
-    (≤ 30 dòng) không bị cắt ngang trang; tên định danh trong bảng chỉ xuống dòng sau dấu "_".
+    i, ii, iii…; thân bài đánh số lại từ 1, chân trang "Trang X/Y" với Y là số trang thân bài (trang cuối).
+  • Dòng <!-- trang-ngang --> ngay trước một hình: hình và chú thích nằm trên trang A4 ngang riêng (hình rộng như ERD).
+  • Độ rộng cột đo bằng phông Times New Roman: tối thiểu đủ từ dài nhất, phần dư chia theo lượng chữ của cột.
+  • Giữ tiêu đề, câu dẫn ("…:"), chú thích bảng đi cùng nội dung phía sau; bảng thấp (ước lượng ≤ nửa trang) và khối
+    mã ngắn (≤ 30 dòng) không bị cắt ngang trang, bảng cao hơn được ngắt giữa hai dòng (lặp dòng tiêu đề) để không để
+    trống nửa trang; không dòng nào bị cắt đôi; tên định danh trong bảng chỉ xuống dòng sau dấu "_".
   • <sub>…</sub>, <sup>…</sup> trong Markdown thành chỉ số dưới / trên.
 Bản PDF dựng từ cùng nội dung qua HTML + CSS in ấn (mục lục là liên kết, không kèm số trang). Bản PDF nộp bài xuất bằng
 Word: scripts/export_pdf.sh (macOS) hoặc scripts/export_pdf.ps1 (Windows).
@@ -61,24 +66,28 @@ DOCS = {
                                   "04-trinh-bay-thong-tin.md", "05-csdl-tien-tien.md", "06-ket-luan.md",
                                   "07-phu-luc.md") if (REPORT / f).exists()],
         out=REPORT / "BaoCao_IE103_Nhom1.docx",
-        loai="BÁO CÁO ĐỒ ÁN", tieu_de=f"ĐỒ ÁN: {TEN_HT}", header=f"BÁO CÁO ĐỒ ÁN - {TEN_HT}",
+        loai="BÁO CÁO ĐỒ ÁN", tieu_de=f"ĐỒ ÁN: {TEN_HT}", header="HỆ THỐNG QUẢN LÝ TRUNG TÂM TIẾNG ANH",
         checklist=["Chương 1: Tổng quan – khảo sát nghiệp vụ, đặc tả yêu cầu",
                    "Chương 2: Tổ chức thông tin – ERD, lược đồ quan hệ, cài đặt CSDL",
                    "Chương 3: Xử lý thông tin – truy vấn, an ninh, lập trình CSDL",
                    "Chương 4: Trình bày thông tin – ứng dụng web, báo cáo",
                    "Chương 5: Mô hình CSDL tiên tiến – hướng đối tượng, phân tán, NoSQL",
                    "Kiểm thử tích hợp, CI và tài liệu hướng dẫn sử dụng"],
-        nhan_xet=True),
+        nhan_xet=True, ma_consolas=False, ma_xanh=False),  # tên mã trong câu cùng phông, cỡ, màu với chữ xung quanh
     "hdsd": dict(
         src=[ROOT / "docs" / "user-guide" / "huong-dan-su-dung.md"],
         out=REPORT / "HuongDanSuDung_ECMS.docx",
-        loai="HƯỚNG DẪN SỬ DỤNG", tieu_de=TEN_HT, header=f"HƯỚNG DẪN SỬ DỤNG - {TEN_HT}",
-        checklist=None, nhan_xet=False),
+        loai="HƯỚNG DẪN SỬ DỤNG", tieu_de=TEN_HT, header=TEN_HT.removesuffix(" (ECMS)"),
+        checklist=None, nhan_xet=False,
+        ma_consolas=False, ma_xanh=True),  # `giá trị`, lệnh, tên tệp: Times New Roman màu xanh đậm (quy ước ở mục 1.4)
 }
 
 NAVY, BLUE, GREY = "1f3864", "2e75b6", "555555"
 ZWSP = "\u200b"                     # chỗ được phép xuống dòng (vô hình) – chèn sau "_" của tên định danh trong bảng
-BANG_NGAN, MA_NGAN = 12, 30         # bảng ≤ 12 dòng, khối mã ≤ 30 dòng: không cắt ngang trang
+BANG_NGAN, MA_NGAN = 12, 30         # bản HTML: bảng ≤ 12 dòng; khối mã ≤ 30 dòng: không cắt ngang trang
+CO_BANG = ((13, 1.8), (12, 2.2), (11, 2.8), (10.5, None))   # (cỡ chữ, số dòng chữ trung bình tối đa mỗi hàng) – xem co_bang
+CAO_GIU = 330                        # pt – bảng Word ước lượng cao ≤ ~ nửa trang (thân trang ~ 680 pt) mới giữ trọn một trang
+CO_CHU = 13                         # cỡ chữ thân bài, bảng và chú thích (pt); khối mã Consolas 10,5 pt
 CHU_THICH_RE = re.compile(r"^\*(Hình|Bảng) ((?:\d+|[A-Z])\.\d+)")
 
 # Danh mục từ viết tắt – chỉ in những từ thực sự xuất hiện trong tài liệu
@@ -334,25 +343,114 @@ def table_fmt(tbl, widths):
         gc.set(qn("w:w"), str(w))
 
 
-def cot_rong(texts, weights, size) -> list[int]:
-    """Độ rộng cột (twips): mỗi cột đủ chỗ cho từ dài nhất của nó (không ngắt giữa từ như "5000 / 1"),
-    phần còn lại chia theo độ dài nội dung."""
-    def rong(w):                          # twips; Times New Roman: chữ hoa, số ≈ 0,72 em, chữ thường ≈ 0,5 em
-        return sum(0.72 if c.isupper() or c.isdigit() or c in "()_%" else 0.5 for c in w) * size * 20
-    # lề ô 2 × 100 twips + dư; hàng đầu (tiêu đề in đậm) rộng hơn khoảng 10%
-    toi_thieu = [int(min(max([rong(w) * (1.1 if k == 0 else 1) for k, t in enumerate(col) for w in t.split()]
-                             or [size * 10]) + 380, W_TRANG * 3 // 10))
-                 for col in texts]
-    if sum(toi_thieu) >= W_TRANG:         # quá nhiều cột: chia theo tỷ lệ độ rộng tối thiểu
-        return [int(W_TRANG * m / sum(toi_thieu)) for m in toi_thieu]
-    co_dinh: set[int] = set()             # cột bị giữ ở mức tối thiểu; phần còn lại chia theo tỷ lệ cho các cột khác
+_PHONG = {}
+
+
+def phong(bold: bool):
+    """Phông Times New Roman thật (macOS / Windows / Linux) để đo bề rộng chữ; None nếu không tìm thấy."""
+    if bold not in _PHONG:
+        from PIL import ImageFont
+        ten = ["Times New Roman Bold.ttf", "timesbd.ttf"] if bold else ["Times New Roman.ttf", "times.ttf"]
+        thu_muc = ["/System/Library/Fonts/Supplemental", "/Library/Fonts", r"C:\Windows\Fonts", "/usr/share/fonts/truetype/msttcorefonts"]
+        _PHONG[bold] = next((ImageFont.truetype(f"{d}/{t}", 200) for d in thu_muc for t in ten if Path(f"{d}/{t}").exists()), None)
+    return _PHONG[bold]
+
+
+def rong_chu(text: str, size: float, bold=False) -> float:
+    """Bề rộng (twips) của đoạn chữ ở cỡ size pt."""
+    f = phong(bold)
+    if f is None:                         # ước lượng: chữ hoa, số ≈ 0,72 em, chữ thường ≈ 0,5 em
+        return sum(0.72 if c.isupper() or c.isdigit() else 0.5 for c in text) * size * 20 * (1.08 if bold else 1)
+    return f.getlength(text) / 200 * size * 20
+
+
+def dong_bang(texts, widths, size) -> list[int]:
+    """Số dòng chữ của từng hàng trong bảng: ngắt từ theo bề rộng thật của cột (trừ lề ô)."""
+    out = []
+    for ri in range(len(texts[0])):
+        dong = 1
+        for ci, col in enumerate(texts):
+            rong = widths[ci] - 2 * 100 - 20
+            n, cur = 1, 0.0
+            for w in col[ri].replace(ZWSP, " ").split():
+                ww = rong_chu(w, size, ri == 0)
+                if cur and cur + rong_chu(" ", size) + ww > rong:
+                    n, cur = n + 1, ww
+                else:
+                    cur += (rong_chu(" ", size) if cur else 0) + ww
+            dong = max(dong, n)
+        out.append(dong)
+    return out
+
+
+def cao_bang(texts, widths, size) -> float:
+    """Chiều cao ước lượng (pt) của bảng, dòng chữ ~ 1,2 cỡ chữ cộng lề trên dưới của ô."""
+    return sum(n * size * 1.2 + 6 for n in dong_bang(texts, widths, size))
+
+
+def co_bang(texts):
+    """Cỡ chữ và độ rộng cột của bảng: cỡ thân bài (13 pt) khi mỗi hàng dữ liệu trung bình không quá 1,8 dòng chữ;
+    bảng nhiều chữ giảm dần 12 → 11 → 10,5 pt cho tới khi trung bình mỗi hàng không quá 2,2 / 2,8 dòng (CO_BANG) –
+    ô ít xuống dòng thì bảng thoáng, dễ đọc hơn giữ cỡ lớn mà mỗi ô dài năm, sáu dòng."""
+    for co, nguong in CO_BANG:
+        widths = cot_rong(texts, co)
+        dong = dong_bang(texts, widths, co)[1:] or [1]
+        if nguong is None or sum(dong) / len(dong) <= nguong:
+            return co, widths
+
+
+CAMEL = re.compile(r"(?<=[a-zà-ỹ0-9])(?=[A-Z])")    # chỗ đổi chữ hoa trong tên định danh: fn_Nguoi|Dung|HienTai
+
+
+def cot_rong(texts, size) -> list[int]:
+    """Độ rộng cột (twips) cân theo lượng chữ: mỗi cột tối thiểu đủ chứa từ dài nhất, phần còn lại chia theo căn bậc
+    hai độ dài ô dài nhất (tiêu đề tính theo hai dòng) – cột nhiều chữ rộng hơn, cột ít chữ không chiếm chỗ thừa. Tên
+    định danh được ngắt sau "_"; khi bảng chật (tổng tối thiểu > 60 % khổ) còn được ngắt ở chỗ đổi chữ hoa (fn_NguoiDung / HienTai)."""
+    LE = 2 * 100 + 60                     # lề trái + phải của ô (cell_fmt) + dư
+
+    def toi_thieu(camel):
+        out = []
+        for col in texts:
+            mn = 0.0
+            for k, t in enumerate(col):
+                for w in re.split(r"\s+|(?<=_)", t.replace(ZWSP, "")):
+                    for seg in (CAMEL.split(w) if camel and "_" in t else [w]):
+                        if seg:
+                            mn = max(mn, rong_chu(seg, size, k == 0))
+            out.append(mn + LE)
+        return out
+
+    mins = toi_thieu(False)
+    if sum(mins) > 0.6 * W_TRANG:
+        mins = toi_thieu(True)
+    def hai_dong(t):                      # độ rộng nhỏ nhất để tiêu đề nằm gọn trong hai dòng
+        w = t.split()
+        return min((max(rong_chu(" ".join(w[:k]), size, True), rong_chu(" ".join(w[k:]), size, True))
+                    for k in range(1, len(w))), default=rong_chu(t, size, True))
+
+    # tiêu đề được phép xuống hai dòng: cột chỉ có "X", số ngắn không bị tiêu đề dài kéo rộng
+    maxs = [max(max(hai_dong(t.replace(ZWSP, "")) if k == 0 else rong_chu(t.replace(ZWSP, ""), size, False)
+                    for k, t in enumerate(col)) + LE, m) for col, m in zip(texts, mins)]
+    if sum(maxs) <= W_TRANG:              # mọi ô vừa một dòng: dãn cho đủ khổ, giữ tỷ lệ nội dung
+        return [int(W_TRANG * m / sum(maxs)) for m in maxs]
+    if sum(mins) >= W_TRANG:              # quá nhiều cột: chia theo tỷ lệ độ rộng tối thiểu
+        return [int(W_TRANG * m / sum(mins)) for m in mins]
+    trong_so = [m ** 0.5 for m in maxs]
+    co_dinh: set[int] = set()             # cột giữ ở mức tối thiểu; phần còn lại chia theo trọng số cho cột khác
     while True:
-        con_lai = W_TRANG - sum(toi_thieu[i] for i in co_dinh)
-        tong = sum(w for i, w in enumerate(weights) if i not in co_dinh)
-        widths = [toi_thieu[i] if i in co_dinh else int(con_lai * w / tong) for i, w in enumerate(weights)]
-        thieu = {i for i, (w, m) in enumerate(zip(widths, toi_thieu)) if w < m} - co_dinh
+        con_lai = W_TRANG - sum(mins[i] for i in co_dinh)
+        tong = sum(w for i, w in enumerate(trong_so) if i not in co_dinh)
+        widths = [mins[i] if i in co_dinh else con_lai * w / tong for i, w in enumerate(trong_so)]
+        # cột không cần rộng hơn nội dung dài nhất của nó: trả phần thừa cho cột khác
+        thieu = {i for i, (w, m) in enumerate(zip(widths, mins)) if w < m} - co_dinh
         if not thieu:
-            return widths
+            du = {i for i, (w, mx) in enumerate(zip(widths, maxs)) if w > mx} - co_dinh
+            if not du:
+                return [int(w) for w in widths]
+            for i in du:
+                mins[i] = maxs[i]
+            co_dinh |= du
+            continue
         co_dinh |= thieu
 
 
@@ -361,10 +459,30 @@ def spacer(doc):
 
 
 # ============================================================================= Markdown → docx
+NGANG_RONG, NGANG_CAO = 24.6, 14.4     # cm – vùng hình trên trang A4 ngang: 29,7 − 2 × 2,5 lề; 21 − 2 × 2,54 lề − chú thích
+DOC_RONG, DOC_CAO = 15.0, 17.5         # cm – hình trên trang dọc: thấp hơn ~ 3/4 trang để hình cùng chú thích còn vừa
+                                       # phần trang trống phía dưới, không bị đẩy sang trang sau để trống cả trang
+
+
+def sect_pr(doc, ngang: bool):
+    """sectPr cho một section mới (dọc / ngang) – cùng lề, tiêu đề chạy, chân trang với section cuối của mẫu; số trang
+    nối tiếp (bỏ start), tach_phan_dau đặt lại số 1 cho section đầu của thân bài."""
+    sp = copy.deepcopy(doc.element.body.sectPr)
+    sp.find(qn("w:pgNumType")).attrib.pop(qn("w:start"), None)
+    sz = sp.find(qn("w:pgSz"))
+    w, h = int(sz.get(qn("w:w"))), int(sz.get(qn("w:h")))
+    if ngang:
+        sz.set(qn("w:w"), str(max(w, h))); sz.set(qn("w:h"), str(min(w, h))); sz.set(qn("w:orient"), "landscape")
+    else:
+        sz.set(qn("w:w"), str(min(w, h))); sz.set(qn("w:h"), str(max(w, h))); sz.set(qn("w:orient"), "portrait")
+    return sp
+
+
 class DocxWriter:
-    def __init__(self, doc, src: Path):
-        self.doc, self.src = doc, src
+    def __init__(self, doc, src: Path, ma_consolas=True, ma_xanh=True):
+        self.doc, self.src, self.ma_consolas, self.ma_xanh = doc, src, ma_consolas, ma_xanh
         self.num_id = 100
+        self.ngang = False                # dòng <!-- trang-ngang --> trước hình: hình + chú thích sang trang ngang
 
     # ----- inline
     def inline(self, p, children, bold=False, italic=False, size=None, color=None, ngat=False):
@@ -393,13 +511,16 @@ class DocxWriter:
                     p.add_run().add_break()
             elif t.type in ("text", "code_inline"):
                 code = t.type == "code_inline"
-                csize = (size or 13) - 1 if code else size
+                mono = code and self.ma_consolas
+                csize = (size or 13) - 1 if mono else size
                 text = t.content.replace("_", "_" + ZWSP) if ngat else t.content
+                if ngat and "_" in t.content:
+                    text = CAMEL.sub(ZWSP, text)
                 if href and not href.startswith("#"):
-                    hyperlink(p, href, text, bold, italic, code, csize)
+                    hyperlink(p, href, text, bold, italic, mono, csize)
                 else:
-                    r = run_fmt(p.add_run(text), "Consolas" if code else "Times New Roman", csize, bold, italic,
-                                color or (NAVY if code else None))
+                    r = run_fmt(p.add_run(text), "Consolas" if mono else "Times New Roman", csize, bold, italic,
+                                color or (NAVY if code and (mono or self.ma_xanh) else None))
                     if vt:
                         r.font.subscript, r.font.superscript = vt == "sub", vt == "sup"
             elif t.type == "softbreak":
@@ -413,22 +534,35 @@ class DocxWriter:
         p = self.doc.add_paragraph(style=f"Heading {min(level, 4)}")
         if level == 1:
             p.paragraph_format.page_break_before = True
+            # đoạn đệm rỗng sau bảng / khối mã cuối chương bị đẩy sang trang mới sẽ thành một trang trắng: bỏ đi
+            prev = p._p.getprevious()
+            if (prev is not None and prev.tag == qn("w:p") and not "".join(prev.itertext()).strip()
+                    and prev.find(".//" + qn("w:drawing")) is None and prev.find(".//" + qn("w:sectPr")) is None):
+                prev.getparent().remove(prev)
         p.paragraph_format.keep_with_next = True          # tiêu đề không nằm một mình cuối trang
         run_fmt(p.add_run(text), size=13)
 
     def paragraph(self, children, raw):
         p = self.doc.add_paragraph()
         dan = raw.rstrip().endswith(":")                  # câu dẫn của bảng / danh sách / khối mã: đi cùng phần sau
-        p_fmt(p, first=None if dan else 284, keep_next=dan)
+        p_fmt(p, first=284, keep_next=dan)                 # mọi đoạn thân bài thụt 0,5 cm, kể cả câu dẫn
         self.inline(p, children)
 
     def image(self, src):
         path = (self.src.parent / src).resolve()
         with Image.open(path) as im:
             w, h = im.size
-        width = 15.0 if w >= 700 else min(15.0, w / 96 * 2.54)
-        if width * h / w > 20.0:
-            width = 20.0 * w / h
+        rong, cao = (NGANG_RONG, NGANG_CAO) if self.ngang else (DOC_RONG, DOC_CAO)
+        width = rong if w >= 700 else min(rong, w / 96 * 2.54)
+        if width * h / w > cao:
+            width = cao * w / h
+        body = self.doc.element.body
+        truoc = body[-2] if len(body) > 1 and body[-1].tag == qn("w:sectPr") else body[-1]
+        sz = truoc.find(f'./{qn("w:pPr")}/{qn("w:sectPr")}/{qn("w:pgSz")}')
+        ngay_sau_ngang = sz is not None and sz.get(qn("w:orient")) == "landscape"
+        if self.ngang and not ngay_sau_ngang:             # kết thúc section dọc phía trước bằng một đoạn trống
+            # (hình ngang ngay sau một hình ngang khác thì không: đoạn trống đó sẽ thành một trang dọc trắng)
+            self.doc.add_paragraph()._p.get_or_add_pPr().append(sect_pr(self.doc, ngang=False))
         p = self.doc.add_paragraph()
         p_fmt(p, align="center", after=0, line=240, keep_next=True)
         p.add_run().add_picture(str(path), width=Cm(width))
@@ -437,31 +571,30 @@ class DocxWriter:
         p = self.doc.add_paragraph(style="FigureCaption" if figure else "TableCaption")
         p_fmt(p, align="center", after=160 if figure else 60, before=160 if figure else 120, line=240, first=0,
               keep_next=not figure)
-        self.inline(p, md_parser().parseInline(chu_thich(raw))[0].children, italic=True, color=GREY)
+        self.inline(p, md_parser().parseInline(chu_thich(raw))[0].children, italic=True, color=GREY, size=CO_CHU)
+        if figure and self.ngang:                         # chú thích là đoạn cuối của section ngang
+            p._p.get_or_add_pPr().append(sect_pr(self.doc, ngang=True))
+            self.ngang = False
 
     def table(self, rows, aligns):
         ncol = max(len(r) for r in rows)
-        size = 12 if ncol <= 4 else 11 if ncol <= 6 else 10
         texts = [["".join(c.content for c in (r[i] or []) if c.type in ("text", "code_inline")) if i < len(r) else ""
                   for r in rows] for i in range(ncol)]
-        # trọng số theo độ dài trung bình (cột nhiều chữ được rộng hơn) cộng một phần độ dài lớn nhất
-        weights = [min(sum(len(t) for t in col[1:]) / max(len(col) - 1, 1), 150) + 0.3 * min(max(len(t) for t in col), 60) + 3
-                   for col in texts]
-        widths = cot_rong(texts, weights, size)
+        size, widths = co_bang(texts)                     # 13 pt như thân bài; bảng nhiều chữ 12 / 11 / 10,5 pt
         tbl = self.doc.add_table(rows=len(rows), cols=ncol)
         table_fmt(tbl, widths)
-        ngan = len(rows) <= BANG_NGAN
+        ngan = cao_bang(texts, widths, size) <= CAO_GIU
         for ri, cells in enumerate(rows):
             tr = tbl.rows[ri]._tr
             trpr = tr.get_or_add_trPr()
-            trpr.append(el("w:cantSplit", w_val=0))
+            trpr.append(el("w:cantSplit", w_val=1))           # một dòng không bị cắt đôi qua hai trang
             trpr.append(el("w:tblHeader", w_val=1 if ri == 0 else 0))
             for ci in range(ncol):
                 cell = tbl.cell(ri, ci)
                 cell_fmt(cell, fill=NAVY if ri == 0 else None, width=widths[ci])
                 p = cell.paragraphs[0]
                 a = "center" if ri == 0 else (aligns[ci] if ci < len(aligns) else "left")
-                # keep_next trên mọi dòng trừ dòng cuối: Word giữ cả bảng ngắn trên một trang; bảng dài vẫn giữ
+                # keep_next trên mọi dòng trừ dòng cuối: Word giữ cả bảng thấp trên một trang; bảng cao vẫn giữ
                 # tiêu đề cột đi cùng ít nhất một dòng dữ liệu
                 p_fmt(p, align=a, after=0, line=252, keep_next=(ngan and ri < len(rows) - 1) or ri == 0)
                 if ci < len(cells):
@@ -600,6 +733,8 @@ class DocxWriter:
                 continue
             if t.type in ("fence", "code_block"):
                 self.code(t.content, t.info or "")
+            if t.type == "html_block" and "trang-ngang" in t.content:
+                self.ngang = True
             i += 1
 
 
@@ -675,19 +810,68 @@ def tach_phan_dau(doc):
     p = phan_dau.footer.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     chen_truong(p, "PAGE", "ii")
+    # section đầu của thân bài đánh số lại từ 1 (các section sau – trang ngang – đánh số nối tiếp)
+    sau = [x for x in body.iter(qn("w:sectPr")) if x is not sp]
+    dau_than_bai = next((x for x in sau if x.getparent().tag == qn("w:pPr")
+                         and body.index(x.getparent().getparent()) > body.index(dau)), body.sectPr)
+    for x in sau:
+        x.find(qn("w:pgNumType")).attrib.pop(qn("w:start"), None)
+    dau_than_bai.find(qn("w:pgNumType")).set(qn("w:start"), "1")
+    # Y của "Trang X/Y" = số trang của trang cuối (bookmark _TrangCuoi): đúng cả khi thân bài có nhiều section
     for it in doc.sections[-1].footer._element.iter(qn("w:instrText")):
-        if it.text.strip() == "NUMPAGES":
-            it.text = "SECTIONPAGES"
+        if it.text.strip() in ("NUMPAGES", "SECTIONPAGES"):
+            it.text = "PAGEREF _TrangCuoi"
+    cuoi_p = [e for e in body if e.tag == qn("w:p")][-1]
+    cuoi_p.append(el("w:bookmarkStart", w_id=9999, w_name="_TrangCuoi"))
+    cuoi_p.append(el("w:bookmarkEnd", w_id=9999))
+
+
+def phong_mac_dinh(doc, font="Times New Roman"):
+    """Phông mặc định của tài liệu (docDefaults) và style Normal: mẫu Lab 04 để trống nên chữ không khai báo phông riêng
+    (bìa, mục lục, danh mục, tiêu đề chạy, chân trang) phụ thuộc máy – đặt Times New Roman cho thống nhất."""
+    st = doc.styles.element
+    dd = st.find(qn("w:docDefaults"))
+    if dd is None:
+        dd = el("w:docDefaults"); st.insert(0, dd)
+    rpd = dd.find(qn("w:rPrDefault"))
+    if rpd is None:
+        rpd = el("w:rPrDefault"); dd.insert(0, rpd)
+    rpr = rpd.find(qn("w:rPr"))
+    if rpr is None:
+        rpr = el("w:rPr"); rpd.append(rpr)
+    for e in rpr.findall(qn("w:rFonts")):
+        rpr.remove(e)
+    rpr.insert(0, el("w:rFonts", w_ascii=font, w_hAnsi=font, w_eastAsia=font, w_cs=font))
+    doc.styles["Normal"].font.name = font
+    # phông chủ đề (theme) của mẫu là Calibri / Cambria: style dùng phông chủ đề (toc 4–9…) và dấu cuối đoạn của mục lục
+    # sẽ in bằng Calibri – đổi phông chủ đề sang cùng phông
+    for rel in doc.part.rels.values():
+        if rel.reltype.endswith("/theme"):
+            part = rel.target_part
+            xml = part.blob.decode("utf-8")
+            xml = re.sub(r'(<a:(?:major|minor)Font>\s*<a:latin typeface=")[^"]*"', rf'\g<1>{font}"', xml)
+            part._blob = xml.encode("utf-8")
+    # ký hiệu đầu dòng / số thứ tự của danh sách: mẫu không khai báo phông nên Word dùng Arial
+    num = doc.part.numbering_part.element
+    for lvl in num.iter(qn("w:lvl")):
+        lrpr = lvl.find(qn("w:rPr"))
+        if lrpr is None:
+            lrpr = el("w:rPr"); lvl.append(lrpr)
+        for e in lrpr.findall(qn("w:rFonts")):
+            lrpr.remove(e)
+        lrpr.insert(0, el("w:rFonts", w_ascii=font, w_hAnsi=font, w_eastAsia=font, w_cs=font))
 
 
 def build_docx(cfg) -> Path:
     doc = Document(TEMPLATE)
+    phong_mac_dinh(doc)
     body = doc.element.body
     paras = {("".join(t.text or "" for t in p.iter(qn("w:t")))): p for p in body.iter(qn("w:p"))}
     # bìa: bớt 3 dòng trống để dòng ngày không bị đẩy sang trang 2
     trong = [e for e in list(body)[:body.index(paras["«NGAY»"])] if e.tag == qn("w:p") and not "".join(e.itertext()).strip()]
     for e in trong[-3:]:
         body.remove(e)
+    doc.styles["FigureCaption"].font.size = Pt(13)          # mẫu để 11 pt; chú thích hình / bảng cùng cỡ thân bài
     if "TableCaption" not in [s.name for s in doc.styles]:
         tc = doc.styles.add_style("TableCaption", WD_STYLE_TYPE.PARAGRAPH)
         tc.base_style = doc.styles["FigureCaption"]
@@ -736,11 +920,11 @@ def build_docx(cfg) -> Path:
             field(tmp, 'TOC \\h \\z \\t "TableCaption,1"', goi_y)
         else:
             body.remove(tmp._p)
-            w = DocxWriter(doc, cfg["src"][0])
+            w = DocxWriter(doc, cfg["src"][0], cfg["ma_consolas"], cfg["ma_xanh"])
             w.bat_buoc_chu_thich = False
             w.write(viet_tat_md(noi_dung))
     for src in cfg["src"]:
-        DocxWriter(doc, src).write(src.read_text(encoding="utf-8"))
+        DocxWriter(doc, src, cfg["ma_consolas"], cfg["ma_xanh"]).write(src.read_text(encoding="utf-8"))
     tach_phan_dau(doc)
     settings = doc.settings.element
     if settings.find(qn("w:updateFields")) is None:
@@ -762,16 +946,17 @@ CSS = """
 @page front { @bottom-center { content: "Trang " counter(page, lower-roman); font: 10.5pt 'Times New Roman'; color: #888; } }
 @page front:first { @top-center { content: none; } @bottom-center { content: none; } }
 .front { page: front; }
+@page ngang { size: A4 landscape; } .ngang { page: ngang; } .ngang p.fig img { max-width: 24cm; max-height: 13.6cm; }
 body { font: 13pt/1.15 'Times New Roman', serif; color: #000; margin: 0; }
 .pb { break-before: page; }
 h1 { font-size: 13pt; color: #1f3864; break-before: page; margin: 12pt 0 8pt; }
 h2 { font-size: 13pt; color: #2e75b6; margin: 10pt 0 6pt; } h3, h4 { font-size: 13pt; margin: 8pt 0 5pt; }
 h1, h2, h3, h4 { break-after: avoid; }
-p { text-align: justify; margin: 0 0 6pt; text-indent: 0.5cm; } p.lead { text-indent: 0; break-after: avoid; }
+p { text-align: justify; margin: 0 0 6pt; text-indent: 0.5cm; } p.lead { break-after: avoid; }
 li { text-align: justify; margin-bottom: 4pt; } li p { text-indent: 0; margin: 0; }
 a { color: #2e75b6; text-decoration: none; }
-code { font: 12pt Consolas, Menlo, monospace; color: #1f3864; }
-table { border-collapse: collapse; width: 100%; margin: 0 0 3pt; font-size: 11.5pt; line-height: 1.05; }
+code { font: inherit; color: inherit; }             /* tên mã trong câu: cùng phông với chữ xung quanh */
+table { border-collapse: collapse; width: 100%; margin: 0 0 3pt; font-size: 13pt; line-height: 1.1; }
 th, td { border: 0.5pt solid #bbb; padding: 3pt 5pt; vertical-align: middle; overflow-wrap: break-word; }
 /* Chrome thu nhỏ CẢ tài liệu khi một phần tử rộng hơn trang (tên dài như sp_TinhLuongGiaoVien_SetBased trong bảng
    nhiều cột) → chữ còn ~8pt. Trong ô bảng, tên định danh có ký tự ngắt vô hình sau mỗi "_" (xem ZWSP) nên xuống dòng
@@ -800,7 +985,7 @@ def build_pdf(cfg):
     phan, muc, hinh, bang, n = [], [], [], [], 0
     for src in cfg["src"]:
         tokens = md.parse(src.read_text(encoding="utf-8"))
-        out, i, trong_bang = [], 0, False
+        out, i, trong_bang, ngang = [], 0, False, False
         while i < len(tokens):
             t = tokens[i]
             if t.type == "table_open":
@@ -845,10 +1030,15 @@ def build_pdf(cfg):
                     n += 1
                     hinh.append((f"h{n}", html.unescape(re.sub(r"<[^>]+>", "", md.renderInline(chu_thich(raw))))))
                     out.append(_html(f'<p class="fcap" id="h{n}">{md.renderInline(chu_thich(raw))}</p>\n'))
+                    if ngang:
+                        out.append(_html("</section>\n"))
+                        ngang = False
                     i += 3
                     continue
                 if len(kids) == 1 and kids[0].type == "image":
                     t.attrSet("class", "fig")
+                    if ngang:
+                        out.append(_html('<section class="ngang">\n'))
                 elif raw.endswith(":"):
                     t.attrSet("class", "lead")
             if t.type in ("fence", "code_block"):
@@ -858,6 +1048,10 @@ def build_pdf(cfg):
                 head = f'<div class="ctitle">{html.escape(title)}</div>' if title else ""
                 cls = "code" + (" titled" if title else "") + (" short" if len(lines) <= MA_NGAN else "")
                 out.append(_html(f'{head}<pre class="{cls}">{body}</pre>\n'))
+                i += 1
+                continue
+            if t.type == "html_block" and "trang-ngang" in t.content:
+                ngang = True
                 i += 1
                 continue
             if t.type == "html_block" and t.content.lstrip().startswith("<!--"):
@@ -898,7 +1092,8 @@ def build_pdf(cfg):
     db = "".join(f'<li><a href="#{a}">{html.escape(tx)}</a></li>' for a, tx in bang)
     vt = md.render(viet_tat_md("\n".join(src.read_text(encoding="utf-8") for src in cfg["src"]))).replace("<table>", "<table class='vt'>", 1)
     page = (f"<!doctype html><html lang='vi'><head><meta charset='utf-8'><title>{html.escape(cfg['tieu_de'])}</title>"
-            f"<style>{CSS.replace('%HEADER%', cfg['header'])}</style></head><body>{bia}{extra}"
+            f"<style>{CSS.replace('%HEADER%', cfg['header'])}{'code { font: 12pt Consolas, Menlo, monospace; }' if cfg['ma_consolas'] else ''}{'code { color: #1f3864; }' if cfg['ma_xanh'] else ''}</style>"
+            f"</head><body>{bia}{extra}"
             f"<section class='pb toc front'><p class='title'>MỤC LỤC</p><ul>{ml}</ul></section>"
             f"<section class='pb toc front'><p class='title'>DANH MỤC HÌNH ẢNH</p><ul>{dh}</ul></section>"
             f"<section class='pb toc front'><p class='title'>DANH MỤC BẢNG</p><ul>{db}</ul></section>"
