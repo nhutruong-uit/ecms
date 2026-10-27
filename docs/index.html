@@ -15,18 +15,31 @@
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="#tong-quan"><span class="logo">EC</span><span class="txt">ECMS · IE103</span></a>
-      <nav class="nav" aria-label="Mục lục">
+      <!-- Ba mục dùng nhiều để thẳng trên thanh, các mục còn lại gom vào hai dropdown để thanh không tràn ngang;
+           màn hình hẹp thì cả mục lục thu vào nút ☰ (app.js: initNav) -->
+      <nav class="nav" id="nav" aria-label="Mục lục">
         <a href="#tong-quan">Tổng quan</a>
         <a href="#tai-lieu">Tài liệu</a>
         <a href="#web-app">Xem web app</a>
-        <a href="#thanh-vien">Thành viên</a>
-        <a href="#lo-trinh">Lộ trình</a>
-        <a href="#cong-viec">Công việc</a>
-        <a href="#de-cuong">Bám đề cương</a>
-        <a href="#thiet-ke">Thiết kế CSDL</a>
-        <a href="#cong-nghe">Công nghệ</a>
-        <a href="#quy-uoc">Quy ước</a>
+        <div class="nav-group">
+          <button class="nav-btn" type="button" aria-expanded="false" aria-controls="navKeHoach">Kế hoạch</button>
+          <div class="nav-menu" id="navKeHoach">
+            <a href="#thanh-vien">Thành viên</a>
+            <a href="#lo-trinh">Lộ trình</a>
+            <a href="#cong-viec">Công việc</a>
+            <a href="#de-cuong">Bám đề cương</a>
+          </div>
+        </div>
+        <div class="nav-group">
+          <button class="nav-btn" type="button" aria-expanded="false" aria-controls="navKyThuat">Kỹ thuật</button>
+          <div class="nav-menu" id="navKyThuat">
+            <a href="#thiet-ke">Thiết kế CSDL</a>
+            <a href="#cong-nghe">Công nghệ</a>
+            <a href="#quy-uoc">Quy ước</a>
+          </div>
+        </div>
       </nav>
+      <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Mở mục lục">☰</button>
       <button class="theme-btn" id="themeBtn" type="button" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">◐</button>
     </div>
   </header>
