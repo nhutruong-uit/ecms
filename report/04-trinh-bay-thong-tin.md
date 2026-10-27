@@ -60,11 +60,11 @@ Sau khi đăng nhập, thanh bên chỉ hiện các nhóm chức năng của vai
 
 ![Trang chủ của Quản lý](images/ch4/02_trang_chu.jpg)
 
-*Hình 4.3 – Trang chủ và menu đầy đủ của vai trò Quản lý (tài khoản `quanly`)*
+*Hình 4.3 – Trang chủ và menu đầy đủ của vai trò Quản lý*
 
 ![Trang chủ của Giáo viên](images/ch4/02b_trang_chu_giao_vien.jpg)
 
-*Hình 4.4 – Trang chủ và menu rút gọn của vai trò Giáo viên (tài khoản `giaovien`)*
+*Hình 4.4 – Trang chủ và menu rút gọn của vai trò Giáo viên*
 
 ## 4.2 Thiết kế form
 
@@ -82,7 +82,7 @@ Trang có nhiều đối tượng cùng loại được chia thành các **thẻ
 
 ![Danh mục chi nhánh](images/ch4/03_danh_muc_chi_nhanh.jpg)
 
-*Hình 4.5 – Khuôn bố cục chung trên trang danh mục chi nhánh (tài khoản Quản lý)*
+*Hình 4.5 – Bố cục chung trên trang danh mục chi nhánh (tài khoản Quản lý)*
 
 ### 4.2.2 Đối chiếu nguyên tắc thiết kế form
 
@@ -151,17 +151,17 @@ Bảng 4.4 cho biết mỗi form đọc dữ liệu từ đâu và ghi dữ li�
 
 ![Lớp học](images/ch4/06_lop_hoc.jpg)
 
-*Hình 4.9 – Danh sách lớp học, vòng đời lớp và form mở lớp mới (tài khoản Giáo vụ)*
+*Hình 4.9 – Danh sách lớp, vòng đời lớp và form mở lớp (tài khoản Giáo vụ)*
 
 ![Xếp lịch và buổi học](images/ch4/07_xep_lich.jpg)
 
-*Hình 4.10 – Lịch cố định và danh sách buổi học của một lớp đã điểm danh (tài khoản Giáo vụ)*
+*Hình 4.10 – Lịch cố định và buổi học của một lớp (tài khoản Giáo vụ)*
 
 **Học viên.** Trang hồ sơ học viên dùng procedure tìm kiếm nhiều tiêu chí, phân trang 15 dòng; câu mô tả đầu trang nhắc người dùng rằng dữ liệu đã được lọc theo chi nhánh. Chọn một học viên thì các thẻ lớp đã học và điểm, kiểm tra đầu vào, học phí và sửa hồ sơ hiện ngay bên dưới. Trang kiểm tra đầu vào là form nhập **dữ liệu XML**: bốn kỹ năng, mỗi kỹ năng gồm điểm và nhận xét; procedure dựng tài liệu XML và CSDL kiểm tra theo lược đồ, nên điểm ngoài khoảng 0 – 10 hay thiếu kỹ năng đều bị từ chối. Thẻ "Xem chi tiết" đọc ngược lại từ XML và vẽ biểu đồ điểm từng kỹ năng. Trang ghi danh hiển thị kết quả kiểm tra gần nhất cùng khoá được đề xuất và mặc định chỉ liệt kê các lớp phù hợp; công tắc "Chỉ hiện lớp của khoá đề xuất" cho phép bỏ lọc khi cần.
 
 ![Hồ sơ học viên](images/ch4/08_ho_so_hoc_vien.jpg)
 
-*Hình 4.11 – Tìm kiếm, phân trang và xem chi tiết hồ sơ học viên (tài khoản Giáo vụ)*
+*Hình 4.11 – Tìm kiếm và xem chi tiết hồ sơ học viên (tài khoản Giáo vụ)*
 
 ![Kiểm tra đầu vào](images/ch4/09_kiem_tra_dau_vao.jpg)
 
@@ -169,9 +169,9 @@ Bảng 4.4 cho biết mỗi form đọc dữ liệu từ đâu và ghi dữ li�
 
 ![Ghi danh](images/ch4/10_ghi_danh.jpg)
 
-*Hình 4.13 – Ghi danh với khoá học được đề xuất từ kết quả kiểm tra (tài khoản Giáo vụ)*
+*Hình 4.13 – Ghi danh theo khoá học được đề xuất (tài khoản Giáo vụ)*
 
-**Học tập.** Hai lưới nhập hàng loạt phục vụ giáo viên: điểm danh cả lớp trong một lần lưu và nhập điểm giữa kỳ, cuối kỳ. Danh sách lớp chỉ gồm các lớp giáo viên phụ trách, và trang điểm danh chỉ liệt kê lớp ở trạng thái Đang học. Ở trang điểm danh, buổi đã điểm danh được đánh dấu riêng; chỉ cột Trạng thái và Ghi chú được sửa. Ở trang nhập điểm, điểm trung bình được tính theo công thức 0,4 × GK + 0,6 × CK và kết quả Đạt khi điểm trung bình từ 5 trở lên – các giá trị này do cột tính toán và trigger quyết định, giao diện chỉ hiển thị lại; xoá trắng một ô rồi lưu để huỷ điểm nhập nhầm. Trang cảnh báo chuyên cần gọi procedure dùng cursor (mục 3.3.4) theo ngưỡng chọn bằng thanh trượt, phân mức Nghiêm trọng (vắng trên 30%) và Nhắc nhở, kèm số điện thoại học viên và họ tên phụ huynh để liên hệ.
+**Học tập.** Hai lưới nhập hàng loạt phục vụ giáo viên: điểm danh cả lớp trong một lần lưu và nhập điểm giữa kỳ, cuối kỳ. Danh sách lớp chỉ gồm các lớp giáo viên phụ trách, và trang điểm danh chỉ liệt kê lớp ở trạng thái Đang học. Ở trang điểm danh, buổi đã điểm danh được đánh dấu riêng; chỉ cột Trạng thái và Ghi chú được sửa. Ở trang nhập điểm, điểm trung bình được tính theo công thức 0,4 × GK + 0,6 × CK và kết quả Đạt khi điểm trung bình từ 5 trở lên – các giá trị này do cột tính toán và trigger quyết định, giao diện chỉ hiển thị lại; xoá trắng một ô rồi lưu để huỷ điểm nhập nhầm. Trang cảnh báo chuyên cần gọi procedure dùng cursor (mục 3.3.4) theo ngưỡng chọn bằng thanh trượt, phân mức Nghiêm trọng (vắng trên 30%) và Nhắc nhở, kèm số điện thoại học viên và họ tên phụ huynh để liên hệ. Hình 4.16 chụp bằng tài khoản giáo vụ, quét toàn bộ lớp của chi nhánh CN01, vì các lớp của tài khoản giáo viên mẫu không có học viên vắng quá ngưỡng.
 
 ![Điểm danh](images/ch4/11_diem_danh.jpg)
 
@@ -183,7 +183,7 @@ Bảng 4.4 cho biết mỗi form đọc dữ liệu từ đâu và ghi dữ li�
 
 ![Cảnh báo chuyên cần](images/ch4/13_canh_bao.jpg)
 
-*Hình 4.16 – Danh sách cảnh báo chuyên cần sau khi quét (tài khoản Giáo vụ, phạm vi chi nhánh CN01)*
+*Hình 4.16 – Cảnh báo chuyên cần sau khi quét (tài khoản Giáo vụ)*
 
 **Tài chính.** Phiếu thu là ví dụ master – detail đầy đủ nhất: phần master gồm học viên, hình thức thanh toán, ghi chú; phần detail là lưới các đăng ký còn nợ, mọi khoản được **tích sẵn** với số tiền bằng số còn nợ – người dùng bỏ tích khoản chưa thu hoặc sửa cột "Thu lần này" để thu một phần; khoản quá hạn có dấu cảnh báo. Tổng phiếu được tính ngay trên màn hình để người dùng đối chiếu, nhưng số chính thức do trigger cập nhật trong CSDL. Lưu xong, hệ thống báo "Đã lập phiếu thu PTxxxxxx" và hiện nút in phiếu thu PDF (Hình 4.22). Trang công nợ đặt ba chỉ số tóm tắt ở trên cùng và tô màu theo mức độ – đỏ đậm khi quá hạn trên 30 ngày, đỏ nhạt khi đã quá hạn, vàng khi chưa đóng đồng nào – theo nguyên tắc làm nổi bật ngoại lệ.
 
@@ -246,7 +246,7 @@ Hình 4.21 là báo cáo doanh thu theo chi nhánh và tháng, thể hiện đ�
 
 ![Báo cáo doanh thu PDF](images/ch4/20_pdf_doanh_thu.jpg)
 
-*Hình 4.21 – Báo cáo doanh thu có nhóm, tổng phụ, thống kê và tổng cộng (A4 dọc)*
+*Hình 4.21 – Báo cáo doanh thu có nhóm, tổng phụ và tổng cộng (A4 dọc)*
 
 ![Phiếu thu PDF](images/ch4/19_pdf_phieu_thu.jpg)
 
@@ -274,7 +274,7 @@ Người dùng chọn báo cáo (tên báo cáo có ghi kèm loại), nhập tha
 
 ![Báo cáo và xuất file](images/ch4/15_bao_cao_danh_sach.jpg)
 
-*Hình 4.23 – Trang chọn báo cáo, nhập tham số, xem trước có tô màu và tải tệp (tài khoản Quản lý)*
+*Hình 4.23 – Chọn báo cáo, xem trước và tải tệp (tài khoản Quản lý)*
 
 ### 4.3.3 Dashboard
 

@@ -8,7 +8,7 @@ Mô hình quan hệ là lựa chọn trung tâm của đồ án, nhưng không p
 
 CSDL hướng đối tượng (OODB) lưu trữ trực tiếp các **đối tượng** của ngôn ngữ lập trình thay vì các dòng trong bảng. Các khái niệm chính theo chuẩn ODMG 3.0 và cách chúng thể hiện trên bài toán ECMS như sau:
 
-*Bảng 5.1 – Các khái niệm của mô hình hướng đối tượng theo ODMG 3.0 trên bài toán ECMS*
+*Bảng 5.1 – Khái niệm hướng đối tượng theo ODMG 3.0 trên bài toán ECMS*
 
 | Khái niệm | Ý nghĩa | Ví dụ trên ECMS |
 |---|---|---|
@@ -23,7 +23,7 @@ CSDL hướng đối tượng (OODB) lưu trữ trực tiếp các **đối tư�
 
 Giữa hai cực "quan hệ thuần" và "đối tượng thuần" còn có mô hình **đối tượng – quan hệ** (ORDBMS) do chuẩn SQL:1999 đưa vào: giữ bảng và SQL nhưng bổ sung kiểu do người dùng định nghĩa, kiểu phức và kế thừa. Ba thế hệ hệ quản trị được so sánh như sau:
 
-*Bảng 5.2 – So sánh hệ quản trị quan hệ, hướng đối tượng và đối tượng – quan hệ*
+*Bảng 5.2 – So sánh RDBMS, OODBMS và ORDBMS*
 
 | Tiêu chí | Quan hệ (RDBMS) | Hướng đối tượng (OODBMS) | Đối tượng – quan hệ (ORDBMS) |
 |---|---|---|---|
@@ -92,7 +92,7 @@ Khi lưu một cây kế thừa vào CSDL quan hệ – trường hợp của m�
 
 ![Ba chiến lược ánh xạ kế thừa](images/ch5/ke-thua.png)
 
-*Hình 5.1 – Ba chiến lược ánh xạ cây kế thừa NhanVien ← GiaoVien sang bảng*
+*Hình 5.1 – Ba cách ánh xạ cây kế thừa NhanVien ← GiaoVien sang bảng*
 
 *Bảng 5.4 – So sánh ba chiến lược ánh xạ kế thừa trên dữ liệu mẫu*
 
@@ -183,7 +183,7 @@ rollback                   → DANGKY còn 539 dòng
 
 ### 5.1.5 So sánh mô hình quan hệ và hướng đối tượng cho ECMS
 
-*Bảng 5.6 – So sánh mô hình quan hệ và mô hình hướng đối tượng cho ECMS*
+*Bảng 5.6 – So sánh mô hình quan hệ và hướng đối tượng cho ECMS*
 
 | Tiêu chí | Mô hình quan hệ (ECMS hiện tại) | Mô hình hướng đối tượng |
 |---|---|---|
@@ -226,13 +226,13 @@ Với ba chi nhánh, mỗi nơi khoảng một trăm học viên, mô hình tậ
 Theo kiến trúc tham chiếu của CSDL phân tán, lược đồ được tách thành nhiều tầng để mỗi tầng che giấu một loại chi tiết (Hình 5.2):
 
 - **Lược đồ toàn cục** mô tả dữ liệu như thể CSDL là tập trung. Trong thử nghiệm, đó là các view trùng tên bảng gốc tại CSDL `ECMS_TOANCUC`.
-- **Lược đồ phân mảnh** định nghĩa cách chia mỗi quan hệ toàn cục thành các mảnh bằng phép chọn σ, phép chiếu π hoặc nửa kết ⋉.
+- **Lược đồ phân mảnh** định nghĩa cách chia mỗi quan hệ toàn cục thành các mảnh bằng phép chọn σ, phép chiếu π hoặc phép nửa kết (semi-join).
 - **Lược đồ cấp phát** cho biết mảnh nào đặt ở trạm nào, kể cả các bản sao.
 - **Lược đồ cục bộ** tại mỗi trạm ánh xạ mảnh thành bảng của hệ quản trị tại chỗ – ở đây mỗi trạm là một CSDL SQL Server.
 
 ![Kiến trúc ba lược đồ và cấp phát mảnh](images/ch5/phan-manh.png)
 
-*Hình 5.2 – Kiến trúc lược đồ của CSDL phân tán ECMS và cấp phát mảnh cho bốn trạm*
+*Hình 5.2 – Kiến trúc lược đồ và cấp phát mảnh cho bốn trạm*
 
 Nhóm áp dụng đủ các kiểu phân mảnh của môn học, mỗi kiểu xuất phát từ một nhu cầu nghiệp vụ cụ thể:
 
@@ -242,8 +242,8 @@ Nhóm áp dụng đủ các kiểu phân mảnh của môn học, mỗi kiểu x
 |---|---|---|---|
 | HOCVIEN | Ngang chính | HOCVIEN<sub>i</sub> = σ<sub>MaCN = 'CN0i'</sub>(HOCVIEN) | Học viên do chi nhánh lập hồ sơ quản lý |
 | LOPHOC | Ngang chính | LOPHOC<sub>i</sub> = σ<sub>MaCN = 'CN0i'</sub>(LOPHOC) | Lớp mở tại một chi nhánh |
-| DANGKY | Ngang dẫn xuất | DANGKY<sub>i</sub> = DANGKY ⋉ LOPHOC<sub>i</sub> | Đăng ký đi theo lớp: điểm danh, nhập điểm, thu phí của một lớp nằm cùng một trạm |
-| DIEMDANH | Ngang dẫn xuất | DIEMDANH<sub>i</sub> = DIEMDANH ⋉ DANGKY<sub>i</sub> | Như trên |
+| DANGKY | Ngang dẫn xuất | DANGKY<sub>i</sub> = DANGKY nửa kết LOPHOC<sub>i</sub> | Đăng ký đi theo lớp: điểm danh, nhập điểm, thu phí của một lớp nằm cùng một trạm |
+| DIEMDANH | Ngang dẫn xuất | DIEMDANH<sub>i</sub> = DIEMDANH nửa kết DANGKY<sub>i</sub> | Như trên |
 | NHANVIEN | Dọc | NV_CHUNG = π<sub>MaNV, HoNV, TenNV, ChucVu, SĐT, Email, MaCN</sub>(NHANVIEN); NV_LUONG = π<sub>MaNV, LuongCoBan</sub>(NHANVIEN) | Lương là dữ liệu nhạy cảm, chỉ trung tâm cần |
 | NV_CHUNG | Hỗn hợp (dọc rồi ngang) | NV_CHUNG<sub>i</sub> = σ<sub>MaCN = 'CN0i'</sub>(NV_CHUNG) | Danh bạ nhân viên tại từng chi nhánh |
 | CHUONGTRINH, KHOAHOC, CAHOC | Nhân bản toàn phần | Mỗi trạm có một bản sao | Ít thay đổi, mọi nghiệp vụ đều cần đọc |
@@ -349,7 +349,7 @@ Có hai cách đồng bộ. **Đồng bộ ngay** (synchronous, eager) cập nh�
 
 Trong thử nghiệm, bản sao danh mục ở các trạm được tạo bằng `SELECT INTO`, tức là một ảnh chụp (snapshot). Procedure `sp_DongBoDanhMuc` mô phỏng snapshot replication bằng lệnh `MERGE` bảng gốc vào bản sao ở mọi trạm. Để thấy độ trễ nhất quán, nhóm tăng học phí khoá IE55 thêm 500.000 đồng ở bản gốc trong một giao dịch, đọc giá ở bốn nơi trước và sau khi đồng bộ, rồi hoàn tác:
 
-*Bảng 5.15 – Học phí khoá IE55 ở bản gốc và các bản sao trước, sau khi đồng bộ*
+*Bảng 5.15 – Học phí khoá IE55 ở bản gốc và bản sao trước, sau đồng bộ*
 
 | Thời điểm | Bản gốc | Bản sao CN01 | Bản sao CN02 | Bản sao CN03 |
 |---|--:|--:|--:|--:|
@@ -363,11 +363,11 @@ Trước khi đồng bộ, một chi nhánh ghi danh khoá IE55 sẽ tính học
 Trong CSDL phân tán, chi phí chủ yếu của truy vấn là **dữ liệu truyền qua mạng** chứ không phải số trang đọc. Xét câu hỏi tại trạm CN01: những học viên nào học lớp của CN01 nhưng hồ sơ thuộc chi nhánh khác? Có hai cách thực hiện (Hình 5.3):
 
 - **Chuyển nguyên mảnh**: CN02 và CN03 gửi toàn bộ mảnh HOCVIEN về CN01 rồi kết nối tại đó.
-- **Nửa kết** (semi-join): CN01 gửi danh sách mã học viên π<sub>MaHV</sub>(DANGKY<sub>1</sub>) sang CN02 và CN03; mỗi trạm chỉ trả về các dòng HOCVIEN khớp với danh sách, tức HOCVIEN<sub>j</sub> ⋉ DANGKY<sub>1</sub>; CN01 kết các dòng nhận được với DANGKY<sub>1</sub>.
+- **Nửa kết** (semi-join): CN01 gửi danh sách mã học viên π<sub>MaHV</sub>(DANGKY<sub>1</sub>) sang CN02 và CN03; mỗi trạm chỉ trả về các dòng HOCVIEN khớp với danh sách, tức HOCVIEN<sub>j</sub> nửa kết DANGKY<sub>1</sub>; CN01 kết các dòng nhận được với DANGKY<sub>1</sub>.
 
 ![Nửa kết so với chuyển nguyên mảnh](images/ch5/nua-ket.png)
 
-*Hình 5.3 – Dữ liệu truyền qua mạng khi chuyển nguyên mảnh và khi dùng nửa kết tại trạm CN01*
+*Hình 5.3 – Dữ liệu truyền qua mạng: chuyển nguyên mảnh và nửa kết*
 
 Vì ba trạm nằm trên cùng một máy, nhóm ước lượng lượng dữ liệu truyền bằng tổng `DATALENGTH` của các cột phải gửi thay vì đo thời gian:
 
@@ -466,7 +466,7 @@ Nhóm chọn MongoDB để thử nghiệm vì đây là mô hình có nhiều �
 
 ![Thiết kế document MongoDB](images/ch5/mongo-document.png)
 
-*Hình 5.5 – Bốn collection MongoDB của ECMS: phần nhúng, phần nhúng bản sao và tham chiếu*
+*Hình 5.5 – Bốn collection MongoDB: nhúng, nhúng bản sao và tham chiếu*
 
 *Bảng 5.22 – Thiết kế nhúng và tham chiếu của bốn collection*
 
@@ -509,7 +509,7 @@ Cấu trúc một tài liệu học viên (đã lược bớt):
 
 Chương trình `nosql/migrate.py` đọc dữ liệu từ SQL Server bằng pyodbc, tách XML kết quả kiểm tra thành tài liệu lồng, gom đăng ký và điểm danh theo học viên, ghi vào MongoDB bằng pymongo và tạo chỉ mục trên các trường thường tìm kiếm (số điện thoại, lớp đăng ký, ngày thu, chi nhánh kèm trạng thái lớp). Chương trình chuyển **14 bảng nghiệp vụ** – KHOAHOC, CHUONGTRINH, LOPHOC, LICHHOC, CAHOC, NHANVIEN, GIAOVIEN, HOCVIEN, KIEMTRA_DAUVAO, DANGKY, BUOIHOC, DIEMDANH, PHIEUTHU, CT_PHIEUTHU – thành **4 collection**. Tám bảng còn lại là danh mục, dữ liệu hệ thống hoặc kết quả tính toán (CHINHANH, PHONGHOC, CHUNGCHI_GV, NGAYLE, TAIKHOAN, NHATKY, CANHBAO_CHUYENCAN, BANGLUONG) nên vẫn để ở SQL Server. Kết quả đối chiếu số lượng giữa hai hệ:
 
-*Bảng 5.23 – Đối chiếu số lượng giữa MongoDB và SQL Server sau khi chuyển*
+*Bảng 5.23 – Đối chiếu số lượng MongoDB và SQL Server sau khi chuyển*
 
 | MongoDB | SQL Server | Số lượng |
 |---|---|--:|
@@ -528,7 +528,7 @@ Dữ liệu sau khi chuyển chiếm khoảng 1.197 KB BSON, quá trình chuyể
 
 Nhóm viết sáu cặp truy vấn đọc trả lời cùng một câu hỏi trên hai hệ và ba thao tác ghi tương đương, kiểm tra kết quả giống nhau rồi đo thời gian. Mỗi phép đo chạy một lần khởi động rồi **30 lần**; bảng ghi trung vị (median), phân vị 95 (p95) và độ lệch chuẩn (σ). Chênh lệch nhỏ hơn độ lệch chuẩn được coi là nằm trong nhiễu đo. Thao tác ghi được hoàn tác sau mỗi lần đo nên dữ liệu không đổi. Cả SQL Server 2025 và MongoDB 7 cùng chạy trong Docker trên một máy, truy vấn qua trình điều khiển Python.
 
-*Bảng 5.24 – Sáu cặp truy vấn đọc tương đương trên SQL Server và MongoDB (ms, N = 30)*
+*Bảng 5.24 – Sáu truy vấn đọc trên SQL Server và MongoDB (ms, N = 30)*
 
 | Câu | Câu hỏi | SQL Server | MongoDB | Số dòng | SQL median / p95 / σ | MongoDB median / p95 / σ | Khớp |
 |:-:|---|---|---|--:|--:|--:|:-:|
@@ -539,7 +539,7 @@ Nhóm viết sáu cặp truy vấn đọc trả lời cùng một câu hỏi tr�
 | 5 | Chuỗi khoá tiên quyết của IE65 và TC850 | CTE đệ quy | `$graphLookup` | 4 | 0,74 / 1,44 / 0,21 | 1,29 / 1,74 / 0,26 | Có |
 | 6 | Lớp đang mở còn chỗ kèm tên khoá | Kết nối | `$lookup` | 8 | 0,70 / 1,46 / 0,22 | 1,45 / 1,96 / 0,26 | Có |
 
-*Bảng 5.25 – Ba thao tác ghi tương đương trên SQL Server và MongoDB (ms, N = 30)*
+*Bảng 5.25 – Ba thao tác ghi trên SQL Server và MongoDB (ms, N = 30)*
 
 | Thao tác | SQL Server | MongoDB | Bị sửa | SQL median / p95 / σ | MongoDB median / p95 / σ |
 |---|---|---|---|--:|--:|

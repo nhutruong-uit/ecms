@@ -53,9 +53,9 @@ Cả 22 yêu cầu chức năng từ FR01 đến FR22 đều đã được cài 
 | NFR07 Dễ dùng | Đạt. Menu hai cấp, kiểm tra dữ liệu ngay tại trường, hỏi xác nhận trước khi xoá, thông báo lỗi bằng tiếng Việt (Chương 4) |
 | NFR08 Tái lập | Đạt. Một lệnh duy nhất dựng lại toàn bộ CSDL từ đầu (`run_all.sh` trên macOS, Linux; `run_all.ps1` trên Windows); container chỉ báo sẵn sàng khi SQL Server đổi xong bảng mã, nên lệnh dựng không còn chạy quá sớm |
 
-Để kiểm chứng NFR05 mà không làm thay đổi CSDL, nhóm nhân bản dữ liệu mẫu 29 lần vào bảng tạm (10.121 học viên, 15.631 đăng ký, 14.732 dòng chi tiết phiếu thu) với cùng các chỉ mục như bảng thật, rồi chạy mỗi thao tác 11 lần, bỏ lần đầu:
+Để kiểm chứng NFR05 mà không làm thay đổi CSDL, nhóm nhân bản dữ liệu mẫu 29 lần vào bảng tạm (10.121 học viên, 15.631 đăng ký, 14.732 dòng chi tiết phiếu thu) với cùng các chỉ mục như bảng thật, rồi chạy mỗi thao tác 11 lần trên SQL Server 2025 trong Docker, bỏ lần đầu:
 
-*Bảng 6.4 – Thời gian tra cứu trên 10.121 học viên (SQL Server 2025 trong Docker)*
+*Bảng 6.4 – Thời gian tra cứu với 10.121 học viên (SQL Server 2025)*
 
 | Thao tác | Số dòng kết quả | Trung vị | Chậm nhất |
 |---|--:|--:|--:|

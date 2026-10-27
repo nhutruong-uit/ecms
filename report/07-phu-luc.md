@@ -44,7 +44,7 @@ Từ điển dữ liệu mô tả từng cột của 22 bảng sau khi cài đ�
 | TrinhDo | Trình độ học vấn | NVARCHAR(30) | | Cử nhân, Thạc sĩ hoặc Tiến sĩ |
 | DonGiaBuoi | Đơn giá mỗi buổi dạy (đồng) | DECIMAL(10,0) | | Từ 100.000 đến 5.000.000 |
 
-*Bảng C.4 – Bảng CHUNGCHI_GV (chứng chỉ của giáo viên – thuộc tính đa trị)*
+*Bảng C.4 – Bảng CHUNGCHI_GV (chứng chỉ giáo viên – thuộc tính đa trị)*
 
 | Cột | Ý nghĩa | Kiểu | NULL | Ràng buộc |
 |---|---|---|:---:|---|
@@ -179,7 +179,7 @@ Từ điển dữ liệu mô tả từng cột của 22 bảng sau khi cài đ�
 | MaKHDeXuat | Khoá học đề xuất | VARCHAR(6) | Có | FK → KHOAHOC |
 | MaNVCham | Nhân viên chấm | CHAR(6) | Có | FK → NHANVIEN |
 
-*Bảng C.15 – Bảng DANGKY (đăng ký học – mối kết hợp N – M có thuộc tính)*
+*Bảng C.15 – Bảng DANGKY (đăng ký học – mối kết hợp N – M)*
 
 | Cột | Ý nghĩa | Kiểu | NULL | Ràng buộc |
 |---|---|---|:---:|---|
@@ -208,7 +208,7 @@ Từ điển dữ liệu mô tả từng cột của 22 bảng sau khi cài đ�
 | TrangThai | Trạng thái | NVARCHAR(10) | | Có mặt, Vắng, Muộn hoặc Có phép; mặc định Có mặt |
 | GhiChu | Ghi chú | NVARCHAR(200) | Có | |
 
-*Bảng C.17 – Bảng CANHBAO_CHUYENCAN (cảnh báo chuyên cần – bảng phụ trợ)*
+*Bảng C.17 – Bảng CANHBAO_CHUYENCAN (cảnh báo chuyên cần)*
 
 | Cột | Ý nghĩa | Kiểu | NULL | Ràng buộc |
 |---|---|---|:---:|---|

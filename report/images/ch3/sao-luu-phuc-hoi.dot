@@ -1,35 +1,64 @@
-// Diễn tập sự cố: chuỗi sao lưu Full → Diff → Log và phục hồi về thời điểm T0 (Chương 3, mục 3.2.4)
-// Số liệu: lần chạy database/11_backup_restore.sql ngày 25/10/2026. Nguồn sinh sao-luu-phuc-hoi.png:
-//   dot -Tpng -Gdpi=200 sao-luu-phuc-hoi.dot -o sao-luu-phuc-hoi.png
+// Diễn tập sự cố: chuỗi sao lưu Full → Diff → Log và phục hồi về thời điểm T0 (Hình 3.4, mục 3.2.4)
+// Số liệu: lần chạy database/11_backup_restore.sql ngày 25/10/2026.
+//   neato -n -Tpng -Gdpi=200 report/images/ch3/sao-luu-phuc-hoi.dot -o report/images/ch3/sao-luu-phuc-hoi.png
+// Toạ độ cố định (pos, đơn vị point): hai cột cùng bề rộng, mỗi bước một hàng; ô phục hồi nằm cùng hàng với bản sao lưu
+// nó dùng, mũi tên nét đứt là file sao lưu (.bak / .trn). Mũi tên là đoạn thẳng nối điểm neo ẩn trên mép ô; bước chép
+// dữ liệu về (6 → 7) là đường gấp khúc vuông góc chạy dưới khung phục hồi. Ảnh rộng ~ 18,2 cm → in 15 cm, chữ 14 pt
+// in ~ 11,5 pt. Phông Times New Roman như thân báo cáo (dấu phẩy cuối tên phông bắt buộc với Pango).
 digraph SaoLuuPhucHoi {
-  rankdir=TB; nodesep=0.5; ranksep=0.28; fontname="Arial"; bgcolor="white"; newrank=true;
-  node [fontname="Arial", fontsize=12, shape=box, style="filled,rounded", color="#94a3b8", fillcolor="#f1f5f9",
-        fontcolor="#0f172a", margin="0.12,0.07", width=3.3];
-  edge [fontname="Arial", fontsize=11, color="#475569", arrowsize=0.7];
+  graph [splines=line, pad=0.06, bgcolor="white"];
+  node  [fontname="Times New Roman,", fontsize=14, fontcolor="#0f172a"];
+  edge  [color="#475569", penwidth=1.2, arrowsize=0.75, fontname="Times New Roman,", fontsize=14];
 
-  subgraph cluster_ecms {
-    label="CSDL ECMS (đang hoạt động)"; fontsize=12; fontcolor="#1f3864"; style="rounded"; color="#cbd5e1";
-    F  [label="① 00:19:35.068  sao lưu Full\n364 dòng điểm danh · 501 phiếu thu", fillcolor="#dbeafe"];
-    D  [label="② thêm 1 phiếu, sao lưu Diff\n502 phiếu thu", fillcolor="#dbeafe"];
-    T0 [label="③ 00:19:36.150  thêm 1 phiếu\nMỐC T0 · 503 phiếu thu", fillcolor="#fef3c7"];
-    X  [label="④ 00:19:37.214  SỰ CỐ\nxoá nhầm điểm danh lớp GT2-2601\n0 dòng điểm danh", fillcolor="#fee2e2"];
-    L  [label="⑤ sao lưu nhật ký\n(mọi giao dịch sau bản Diff)", fillcolor="#dbeafe"];
-    C  [label="⑦ 00:19:38.427  chép lại dữ liệu\n364 dòng điểm danh · 503 phiếu thu", fillcolor="#dcfce7"];
-    F -> D -> T0 -> X -> L;
-  }
-  subgraph cluster_kp {
-    label="CSDL ECMS_KhoiPhuc (phục hồi song song)"; fontsize=12; fontcolor="#1f3864"; style="rounded"; color="#cbd5e1";
-    R1 [label="RESTORE DATABASE … Full\nWITH NORECOVERY"];
-    R2 [label="RESTORE DATABASE … Diff\nWITH NORECOVERY"];
-    R3 [label="RESTORE LOG …\nWITH STOPAT = T0, RECOVERY"];
-    R4 [label="⑥ DBCC CHECKDB: không lỗi\n364 dòng điểm danh · 503 phiếu thu\nRTO đo được 723 – 810 ms", fillcolor="#dcfce7"];
-    R1 -> R2 -> R3 -> R4;
-  }
-  F -> R1 [style=dashed, label=" .bak"];
-  D -> R2 [style=dashed, label=" .bak"];
-  L -> R3 [style=dashed, label=" .trn"];
-  R4 -> C [label=" chỉ chép các dòng bị xoá"];
-  {rank=same; F; R1}
-  {rank=same; D; R2}
-  {rank=same; L; R3}
+  // ---- hai khung CSDL (vẽ trước, không tô nền)
+  node [shape=box, style="rounded", fixedsize=true, label="", color="#cbd5e1", penwidth=1.2];
+  k1 [pos="118,259!", width=3.2778, height=7.1944];
+  k2 [pos="398,296!", width=3.2778, height=6.1667];
+  node [shape=plain, style="", fixedsize=false, width=0, height=0, fontcolor="#1f3864"];
+  t1 [pos="118,494.5!", label="CSDL ECMS\n(đang hoạt động)"];
+  t2 [pos="398,494.5!", label="CSDL ECMS_KhoiPhuc\n(phục hồi song song)"];
+
+  // ---- các bước
+  node [shape=box, style="rounded,filled", fixedsize=true, width=3.0000, margin=0, color="#94a3b8", penwidth=1.2,
+        fontcolor="#0f172a"];
+  F  [pos="118,449!", height=0.6389, fillcolor="#dbeafe", label="1. 00:19:35.068  sao lưu Full\n364 dòng điểm danh · 501 phiếu thu"];
+  D  [pos="118,387!", height=0.6389, fillcolor="#dbeafe", label="2. thêm 1 phiếu, sao lưu Diff\n502 phiếu thu"];
+  T0 [pos="118,325!", height=0.6389, fillcolor="#fef3c7", label="3. 00:19:36.150  thêm 1 phiếu\nMỐC T0 · 503 phiếu thu"];
+  X  [pos="118,255!", height=0.8611, fillcolor="#fee2e2", label="4. 00:19:37.214  SỰ CỐ\nxoá nhầm điểm danh lớp GT2-2601\n0 dòng điểm danh"];
+  L  [pos="118,185!", height=0.6389, fillcolor="#dbeafe", label="5. sao lưu nhật ký\n(mọi giao dịch sau bản Diff)"];
+  C  [pos="118,33!", height=0.6389, fillcolor="#dcfce7", label="7. 00:19:38.427  chép lại dữ liệu\n364 dòng điểm danh · 503 phiếu thu"];
+  R1 [pos="398,449!", height=0.6389, fillcolor="#f1f5f9", label="RESTORE DATABASE … Full\nWITH NORECOVERY"];
+  R2 [pos="398,387!", height=0.6389, fillcolor="#f1f5f9", label="RESTORE DATABASE … Diff\nWITH NORECOVERY"];
+  R3 [pos="398,185!", height=0.6389, fillcolor="#f1f5f9", label="RESTORE LOG …\nWITH STOPAT = T0, RECOVERY"];
+  R4 [pos="398,115!", height=0.8611, fillcolor="#dcfce7", label="6. DBCC CHECKDB: không lỗi\n364 dòng điểm danh · 503 phiếu thu\nRTO đo được 723 – 810 ms"];
+
+  // ---- điểm neo ẩn trên mép ô
+  node [shape=point, width=0.01, height=0.01, style=invis, label=""];
+  // cột trái: 1 → 2 → 3 → 4 → 5
+  a1 [pos="118,426!"]; b1 [pos="118,410!"];
+  a2 [pos="118,364!"]; b2 [pos="118,348!"];
+  a3 [pos="118,302!"]; b3 [pos="118,286!"];
+  a4 [pos="118,224!"]; b4 [pos="118,208!"];
+  // cột phải: Full → Diff → Log → CHECKDB
+  c1 [pos="398,426!"]; d1 [pos="398,410!"];
+  c2 [pos="398,364!"]; d2 [pos="398,208!"];
+  c3 [pos="398,162!"]; d3 [pos="398,146!"];
+  // file sao lưu: cột trái → cột phải, cùng hàng
+  e1 [pos="226,449!"]; f1 [pos="290,449!"];
+  e2 [pos="226,387!"]; f2 [pos="290,387!"];
+  e5 [pos="226,185!"]; f5 [pos="290,185!"];
+  // 6 → 7: xuống dưới khung phục hồi rồi sang trái
+  g1 [pos="398,84!"]; g2 [pos="398,33!"]; g3 [pos="226,33!"];
+
+  // ---- nhãn
+  node [shape=plain, style="", fixedsize=false, width=0, height=0, fontcolor="#334155"];
+  n1 [pos="258,460!", label=".bak"];
+  n2 [pos="258,398!", label=".bak"];
+  n5 [pos="258,196!", label=".trn"];
+  n7 [pos="312,45!", label="chỉ chép các dòng bị xoá"];
+
+  a1 -> b1; a2 -> b2; a3 -> b3; a4 -> b4;
+  c1 -> d1; c2 -> d2; c3 -> d3;
+  e1 -> f1 [style=dashed]; e2 -> f2 [style=dashed]; e5 -> f5 [style=dashed];
+  g1 -> g2 [arrowhead=none]; g2 -> g3;
 }

@@ -71,7 +71,9 @@ Bản phát hành: [**v1.0.0**](https://github.com/nhutruong-uit/ecms/releases/t
 |---|---|---|
 | Báo cáo đồ án | [`report/BaoCao_IE103_Nhom1.docx`](report/BaoCao_IE103_Nhom1.docx) · [`.pdf`](report/BaoCao_IE103_Nhom1.pdf) | `report/01-…07-*.md` |
 | Hướng dẫn sử dụng | [`report/HuongDanSuDung_ECMS.docx`](report/HuongDanSuDung_ECMS.docx) · [`.pdf`](report/HuongDanSuDung_ECMS.pdf) | [`docs/user-guide/huong-dan-su-dung.md`](docs/user-guide/huong-dan-su-dung.md) |
-| Slide thuyết trình | [`slides/ECMS_Nhom1.pptx`](slides/ECMS_Nhom1.pptx) | `scripts/build_slides.py` |
+| Slide thuyết trình | [`slides/ECMS_Nhom1.pptx`](slides/ECMS_Nhom1.pptx) · [`.pdf`](slides/ECMS_Nhom1.pdf) | `scripts/build_slides.py` |
+
+Tải nhanh bản PDF mới nhất: mục [Tài liệu nộp](https://nhutruong-uit.github.io/ecms/#tai-lieu) trên trang kế hoạch (GitHub Pages).
 
 Dựng lại từ nguồn:
 
@@ -80,7 +82,7 @@ pip install -r scripts/requirements-docs.txt
 python scripts/chup_anh.py           # chụp lại ảnh màn hình (cần CSDL vừa dựng và ứng dụng đang chạy, xem đầu file)
 python scripts/build_report.py       # → report/*.docx
 scripts/export_pdf.sh                # macOS + Word: cập nhật mục lục, số trang, xuất PDF  (Windows: .\scripts\export_pdf.ps1)
-python scripts/build_slides.py
+python scripts/build_slides.py       # → slides/ECMS_Nhom1.pptx; PDF xuất bằng PowerPoint (File → Export → PDF)
 ```
 
 ## Cài đặt & chạy
