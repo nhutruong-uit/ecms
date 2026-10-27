@@ -438,15 +438,53 @@
     }
   }
 
-  // ---------- nav highlight ----------
+  // ---------- nav: highlight, dropdown nhóm, nút ☰ trên màn hình hẹp ----------
   function initNav() {
+    const topbar = $('.topbar');
+    const menuBtn = $('#menuBtn');
     const links = [...document.querySelectorAll('.nav a')];
+    const groupBtns = [...document.querySelectorAll('.nav-btn')];
     const byId = Object.fromEntries(links.map((a) => [a.getAttribute('href').slice(1), a]));
+
+    const closeGroups = (except) => groupBtns.forEach((b) => { if (b !== except) b.setAttribute('aria-expanded', 'false'); });
+    const setPanel = (open) => {
+      topbar.classList.toggle('nav-open', open);
+      menuBtn.setAttribute('aria-expanded', String(open));
+      menuBtn.setAttribute('aria-label', open ? 'Đóng mục lục' : 'Mở mục lục');
+      menuBtn.textContent = open ? '✕' : '☰';
+    };
+
+    groupBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') !== 'true';
+        closeGroups(btn);
+        btn.setAttribute('aria-expanded', String(open));
+        if (open && btn.matches(':focus-visible')) btn.nextElementSibling.querySelector('a')?.focus();
+      });
+      // Tab ra khỏi nhóm thì đóng dropdown
+      btn.parentElement.addEventListener('focusout', (e) => {
+        if (!btn.parentElement.contains(e.relatedTarget)) btn.setAttribute('aria-expanded', 'false');
+      });
+    });
+    menuBtn.addEventListener('click', () => setPanel(!topbar.classList.contains('nav-open')));
+    links.forEach((a) => a.addEventListener('click', () => { closeGroups(); setPanel(false); }));
+    document.addEventListener('click', (e) => {
+      if (!topbar.contains(e.target)) { closeGroups(); setPanel(false); }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const openBtn = groupBtns.find((b) => b.getAttribute('aria-expanded') === 'true');
+      if (openBtn) { closeGroups(); openBtn.focus(); } else if (topbar.classList.contains('nav-open')) { setPanel(false); menuBtn.focus(); }
+    });
+
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
           links.forEach((a) => a.classList.remove('active'));
-          byId[e.target.id]?.classList.add('active');
+          const link = byId[e.target.id];
+          link?.classList.add('active');
+          // Mục đang xem nằm trong dropdown thì nút của nhóm cũng sáng
+          groupBtns.forEach((b) => b.classList.toggle('active', !!link && b.parentElement.contains(link)));
         }
       }
     }, { rootMargin: '-45% 0px -50% 0px' });
