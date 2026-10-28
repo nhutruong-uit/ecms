@@ -126,4 +126,4 @@ Codespace là máy ảo Linux của GitHub chạy trong trình duyệt. Repo có
 | Mở Codespace bằng `gh` thay vì VS Code (`start.sh` không tự chạy) | `gh codespace ssh -c <tên> -- 'cd /workspaces/ecms && nohup setsid bash .devcontainer/start.sh > /tmp/ecms.log 2>&1 < /dev/null &'` rồi `gh codespace ports visibility 8501:public -c <tên>` |
 | Muốn dữ liệu về như ban đầu | `RESET_DB=1 bash .devcontainer/start.sh` (dừng Streamlit đang chạy bằng `Ctrl+C` trước) |
 | Người xem gặp trang đăng nhập GitHub | Cổng 8501 vẫn là Private – làm lại bước 3 |
-| Codespace ngủ giữa buổi | Mở lại Codespace, `start.sh` tự chạy lại; link giữ nguyên (kiểm tra cổng 8501 vẫn là Public) |
+| Codespace ngủ giữa buổi | Mở lại Codespace, `start.sh` tự chạy lại; link giữ nguyên nhưng cổng 8501 về Private – làm lại bước 3 |
