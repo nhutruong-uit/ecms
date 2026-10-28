@@ -1,0 +1,31 @@
+// GitHub Codespaces cho buổi demo: mở Codespace là có SQL Server 2025 (Docker trong container), CSDL ECMS dựng sẵn
+// và Streamlit chạy ở cổng 8501. Đặt cổng 8501 thành Public để người xem mở link không cần tài khoản GitHub
+// (xem docs/SETUP.md mục 6).
+{
+  "name": "ECMS – SQL Server 2025 + Streamlit",
+  // Debian 12 + Python 3.11 + ODBC Driver 18 (xem Dockerfile)
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    // Docker chạy BÊN TRONG Codespace: bind mount ./database, ./data của docker-compose.yml trỏ đúng thư mục repo
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  // SQL Server cần ≥ 2 GB RAM; máy 2 lõi / 8 GB của Codespaces là đủ và tốn ít giờ miễn phí nhất
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb"
+  },
+  "forwardPorts": [8501],
+  "portsAttributes": {
+    "8501": { "label": "ECMS web app", "onAutoForward": "openBrowser" },
+    "1433": { "label": "SQL Server", "onAutoForward": "silent" }
+  },
+  // Chạy một lần khi tạo Codespace: thư viện Python, .env
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  // Mỗi lần mở Codespace (kể cả sau khi nó ngủ): khởi động SQL Server, dựng CSDL nếu chưa có, chạy Streamlit
+  "postAttachCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-mssql.mssql"]
+    }
+  }
+}
