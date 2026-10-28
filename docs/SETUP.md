@@ -28,7 +28,7 @@ docker compose up -d --wait          # lần đầu tải image ~1,5 GB; chờ t
 
 - Image mặc định là `mssql/server:2025-latest`. Không dùng image 2022 cho Linux: các bản CU24 → CU27 lỗi *Could not load the DLL (server internal)* (Msg 17750) khi gọi `sp_executesql`, `sp_set_session_context`, `sp_xml_preparedocument`.
 - Apple Silicon (M1/M2/M3): bật **Settings → General → Use Rosetta for x86/amd64 emulation** trong Docker Desktop.
-- Container chỉ báo **healthy** khi SQL Server đã đổi xong collation máy chủ sang `Vietnamese_CI_AS` (`database/healthcheck.sql`). Lần khởi động đầu mất khoảng 15–20 giây; `run_all.sh` cũng tự chờ. Tạo CSDL giữa lúc đang đổi collation làm máy chủ tự tắt (Msg 3434).
+- Container chỉ báo **healthy** khi SQL Server đã đổi xong collation máy chủ sang `Vietnamese_CI_AS` (`database/healthcheck.sh`). Lần khởi động đầu mất khoảng 15–20 giây; `run_all.sh` cũng tự chờ. Kết nối hay tạo CSDL giữa lúc đang đổi collation làm máy chủ tự tắt (Msg 3434), nên healthcheck đọc errorlog từ file và chỉ kết nối khi đã đổi xong.
 - Container chạy theo giờ Việt Nam (`TZ: Asia/Ho_Chi_Minh`) để ngày lập phiếu thu, nhật ký không lệch 7 giờ.
 - SQL Server Agent **tắt** ở lần khởi động đầu: Agent khởi động song song với việc đổi collation sẽ tranh chấp khoá (Msg 1205) và làm máy chủ tự tắt (Msg 3434). Cần lịch sao lưu bằng Agent (`database/11_backup_restore.sql`) thì khi container đã healthy, đặt `MSSQL_AGENT_ENABLED=true` trong `.env` rồi chạy lại `docker compose up -d`.
 - Dữ liệu nằm trong volume `mssql-data`, xoá container không mất dữ liệu. Muốn làm lại từ đầu: `docker compose down -v`.
