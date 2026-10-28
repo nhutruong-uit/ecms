@@ -110,3 +110,19 @@ Login SQL Server minh hoạ từng vai trò (`ecms_quanly`, `ecms_giaovu`, …) 
 | `Login timeout expired` | Container chưa chạy xong (`docker compose ps`), hoặc Windows chưa bật TCP/IP |
 | `Login failed for user 'sa'` | `SA_PASSWORD` trong `.env` khác mật khẩu lúc tạo container – `docker compose down -v` rồi `up -d` lại |
 | Tiếng Việt bị lỗi font trong kết quả `sqlcmd` | Chạy kèm `-f 65001` (run_all đã có sẵn) |
+
+## 6. Demo trên GitHub Codespaces (không cần máy của nhóm)
+
+Codespace là máy ảo Linux của GitHub chạy trong trình duyệt. Repo có sẵn cấu hình `.devcontainer/`, nên mở Codespace là có SQL Server 2025 (Docker), CSDL `ECMS` và Streamlit, không phải cài gì. Codespace tự ngủ khi không ai dùng (mặc định 30 phút), hợp cho buổi demo chứ không chạy 24/7. Giờ dùng miễn phí hằng tháng xem ở **Settings → Billing** của tài khoản GitHub; máy 2 lõi là đủ.
+
+1. Trên trang repo: **Code → Codespaces → Create codespace on main** (lần sau chọn lại Codespace cũ trong danh sách, khỏi tạo mới).
+2. Lần đầu chờ khoảng 5 phút: dựng image (`Dockerfile`, có ODBC Driver 18), `setup.sh` cài thư viện Python, rồi `start.sh` khởi động SQL Server, dựng CSDL (01 → 09) và chạy Streamlit ngay trong terminal. Lần mở sau chỉ còn khoảng 1 phút vì CSDL đã có.
+3. Tab **Ports** → cổng **8501** → chuột phải → **Port Visibility → Public**, rồi **Copy Local Address**. Link dạng `https://<tên-codespace>-8501.app.github.dev` mở được trên mọi máy, kể cả điện thoại, không cần đăng nhập GitHub.
+4. Gửi link cho người xem. Giữ tab Codespace mở trong lúc demo; xong thì **Stop codespace** để không tốn giờ miễn phí.
+
+| Tình huống | Cách xử lý |
+|---|---|
+| Lỡ đóng terminal, ứng dụng dừng | Chạy lại `bash .devcontainer/start.sh` |
+| Muốn dữ liệu về như ban đầu | `RESET_DB=1 bash .devcontainer/start.sh` (dừng Streamlit đang chạy bằng `Ctrl+C` trước) |
+| Người xem gặp trang đăng nhập GitHub | Cổng 8501 vẫn là Private – làm lại bước 3 |
+| Codespace ngủ giữa buổi | Mở lại Codespace, `start.sh` tự chạy lại; link giữ nguyên (kiểm tra cổng 8501 vẫn là Public) |

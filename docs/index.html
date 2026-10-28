@@ -138,21 +138,21 @@
     </section>
 
     <!-- ================= Xem web app ================= -->
-    <!-- Ứng dụng chạy trên laptop Windows của nhóm (SQL Server + Streamlit), người xem cùng mạng Wi-Fi mở bằng trình
-         duyệt qua IP của máy đó. IP đổi theo từng mạng nên không ghi cố định ở đây – nhóm gửi link mỗi buổi. -->
+    <!-- Buổi demo: ứng dụng (SQL Server + Streamlit) chạy trên GitHub Codespaces, người xem mở link *.app.github.dev từ
+         bất kỳ mạng nào. Link đổi theo từng Codespace nên không ghi cố định ở đây – nhóm gửi link mỗi buổi.
+         Cách cũ (laptop Windows, người xem cùng mạng Wi-Fi) giữ lại ở cuối thẻ bên phải. -->
     <section class="block" id="web-app">
       <div class="section-head">
         <div>
           <h2>Xem web app</h2>
-          <p>Ứng dụng chạy trên laptop của nhóm. Thầy và các bạn chỉ cần kết nối <b>cùng mạng Wi-Fi</b> rồi mở link nhóm gửi bằng trình duyệt (Safari, Chrome, Edge – macOS, Windows hay điện thoại đều được), không cần clone repo hay cài SQL Server.</p>
+          <p>Ứng dụng chạy trên <b>GitHub Codespaces</b> (máy ảo của GitHub). Thầy và các bạn chỉ cần mở link nhóm gửi bằng trình duyệt (Safari, Chrome, Edge – macOS, Windows hay điện thoại đều được), ở mạng nào cũng được, không cần tài khoản GitHub, clone repo hay cài SQL Server.</p>
         </div>
       </div>
       <div class="grid-2">
         <div class="card pad">
           <h3 style="margin-top:0">Người xem</h3>
           <ol class="steps-list">
-            <li><div>Kết nối cùng mạng Wi-Fi với máy đang chạy ứng dụng (hoặc cùng hotspot nhóm phát)</div></li>
-            <li><div>Mở link nhóm gửi, dạng <code>http://&lt;IP-máy-nhóm&gt;:8501</code>, ví dụ <code>http://192.168.1.25:8501</code></div></li>
+            <li><div>Mở link nhóm gửi, dạng <code>https://&lt;tên-codespace&gt;-8501.app.github.dev</code></div></li>
             <li><div>Đăng nhập bằng một tài khoản demo bên dưới; danh sách này cũng hiện ngay ở trang Đăng nhập</div></li>
           </ol>
           <div class="table-wrap" style="margin-top:14px">
@@ -167,23 +167,23 @@
               </tbody>
             </table>
           </div>
-          <p class="note" style="margin-bottom:0">Dữ liệu là dữ liệu mẫu, có thể thử thêm, sửa, xoá thoải mái: chạy lại <code>run_all.ps1</code> là về như ban đầu.</p>
+          <p class="note" style="margin-bottom:0">Dữ liệu là dữ liệu mẫu, có thể thử thêm, sửa, xoá thoải mái: nhóm dựng lại CSDL là về như ban đầu.</p>
         </div>
         <div class="card pad">
-          <h3 style="margin-top:0">Nhóm chạy máy chủ (Windows)</h3>
+          <h3 style="margin-top:0">Nhóm mở ứng dụng (Codespaces)</h3>
           <ol class="steps-list">
-            <li><div>Lần đầu (hoặc muốn làm mới dữ liệu): dựng CSDL – <code>.\database\run_all.ps1 -Server "localhost\&lt;instance&gt;"</code>, khoảng 20 giây</div></li>
-            <li><div>Khởi động ứng dụng ở thư mục repo: <code>.\.venv\Scripts\python.exe -m streamlit run app/main.py</code></div></li>
-            <li><div>Lấy link ở dòng <code>Network URL</code> Streamlit in ra (hoặc <code>ipconfig | findstr IPv4</code>, chọn IP của Wi-Fi) rồi gửi vào nhóm chat</div></li>
-            <li><div>Windows hỏi có cho Python dùng mạng không thì chọn <b>Allow</b>; giữ máy bật, không cho ngủ trong lúc mọi người xem</div></li>
+            <li><div>Trang repo → <b>Code → Codespaces</b> → mở Codespace cũ hoặc <b>Create codespace on main</b>. Lần đầu chờ khoảng 5 phút (cài thư viện, dựng CSDL), lần sau khoảng 1 phút</div></li>
+            <li><div>Terminal tự chạy <code>.devcontainer/start.sh</code>: SQL Server 2025 → CSDL ECMS → Streamlit ở cổng 8501</div></li>
+            <li><div>Tab <b>Ports</b> → cổng 8501 → chuột phải → <b>Port Visibility → Public</b> → <b>Copy Local Address</b>, gửi link vào nhóm chat</div></li>
+            <li><div>Giữ tab Codespace mở trong lúc mọi người xem; xong thì <b>Stop codespace</b> để không tốn giờ miễn phí</div></li>
           </ol>
           <h3>Không vào được?</h3>
           <ul style="margin:0;padding-left:18px">
-            <li>Đổi mạng là đổi IP: lấy lại link mới ở bước 3, link hôm trước không dùng lại được</li>
-            <li>Điện thoại cùng Wi-Fi cũng không mở được thì mạng đang chặn các máy kết nối với nhau (thường gặp ở Wi-Fi trường): phát hotspot từ điện thoại, cho cả hai máy vào hotspot đó</li>
-            <li>Kiểm tra trên chính máy chủ: <code>http://localhost:8501</code> mở được là ứng dụng đang chạy, lỗi nằm ở mạng</li>
+            <li>Người xem gặp trang đăng nhập GitHub: cổng 8501 còn Private, làm lại bước 3</li>
+            <li>Codespace ngủ (mặc định sau 30 phút không ai dùng): mở lại Codespace, ứng dụng tự chạy lại, link giữ nguyên</li>
+            <li>Lỡ đóng terminal: chạy <code>bash .devcontainer/start.sh</code>; dữ liệu về như ban đầu: <code>RESET_DB=1 bash .devcontainer/start.sh</code></li>
           </ul>
-          <p class="note" style="margin-bottom:0">Cài đặt đầy đủ (SQL Server, ODBC, <code>.env</code>): xem <a href="https://github.com/nhutruong-uit/ecms/blob/main/docs/SETUP.md" target="_blank" rel="noopener">docs/SETUP.md</a>.</p>
+          <p class="note" style="margin-bottom:0">Chi tiết: <a href="https://github.com/nhutruong-uit/ecms/blob/main/docs/SETUP.md#6-demo-trên-github-codespaces-không-cần-máy-của-nhóm" target="_blank" rel="noopener">docs/SETUP.md mục 6</a>. Vẫn chạy được trên laptop cho người xem cùng mạng Wi-Fi: <code>streamlit run app/main.py</code> rồi gửi link <code>Network URL</code> (xem mục 4).</p>
         </div>
       </div>
     </section>
