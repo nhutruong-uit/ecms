@@ -7,7 +7,9 @@
   "build": { "dockerfile": "Dockerfile" },
   "features": {
     // Docker chạy BÊN TRONG Codespace: bind mount ./database, ./data của docker-compose.yml trỏ đúng thư mục repo
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    // SSH để khởi động ECMS từ máy mình mà không mở VS Code: gh codespace ssh -c <tên> (docs/SETUP.md mục 6)
+    "ghcr.io/devcontainers/features/sshd:1": {}
   },
   // SQL Server cần ≥ 2 GB RAM; máy 2 lõi / 8 GB của Codespaces là đủ và tốn ít giờ miễn phí nhất
   "hostRequirements": {
