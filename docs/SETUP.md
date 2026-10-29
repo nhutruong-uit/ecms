@@ -28,7 +28,7 @@ docker compose up -d --wait          # lần đầu tải image ~1,5 GB; chờ t
 
 - Image mặc định là `mssql/server:2025-latest`. Không dùng image 2022 cho Linux: các bản CU24 → CU27 lỗi *Could not load the DLL (server internal)* (Msg 17750) khi gọi `sp_executesql`, `sp_set_session_context`, `sp_xml_preparedocument`.
 - Apple Silicon (M1/M2/M3): bật **Settings → General → Use Rosetta for x86/amd64 emulation** trong Docker Desktop.
-- Container chỉ báo **healthy** khi SQL Server đã đổi xong collation máy chủ sang `Vietnamese_CI_AS` (`database/healthcheck.sql`). Lần khởi động đầu mất khoảng 15–20 giây; `run_all.sh` cũng tự chờ. Tạo CSDL giữa lúc đang đổi collation làm máy chủ tự tắt (Msg 3434).
+- Container chỉ báo **healthy** khi SQL Server đã đổi xong collation máy chủ sang `Vietnamese_CI_AS` (`database/healthcheck.sh`). Lần khởi động đầu mất khoảng 15–20 giây; `run_all.sh` cũng tự chờ. Kết nối hay tạo CSDL giữa lúc đang đổi collation làm máy chủ tự tắt (Msg 3434), nên healthcheck đọc errorlog từ file và chỉ kết nối khi đã đổi xong.
 - Container chạy theo giờ Việt Nam (`TZ: Asia/Ho_Chi_Minh`) để ngày lập phiếu thu, nhật ký không lệch 7 giờ.
 - SQL Server Agent **tắt** ở lần khởi động đầu: Agent khởi động song song với việc đổi collation sẽ tranh chấp khoá (Msg 1205) và làm máy chủ tự tắt (Msg 3434). Cần lịch sao lưu bằng Agent (`database/11_backup_restore.sql`) thì khi container đã healthy, đặt `MSSQL_AGENT_ENABLED=true` trong `.env` rồi chạy lại `docker compose up -d`.
 - Dữ liệu nằm trong volume `mssql-data`, xoá container không mất dữ liệu. Muốn làm lại từ đầu: `docker compose down -v`.
@@ -110,3 +110,36 @@ Login SQL Server minh hoạ từng vai trò (`ecms_quanly`, `ecms_giaovu`, …) 
 | `Login timeout expired` | Container chưa chạy xong (`docker compose ps`), hoặc Windows chưa bật TCP/IP |
 | `Login failed for user 'sa'` | `SA_PASSWORD` trong `.env` khác mật khẩu lúc tạo container – `docker compose down -v` rồi `up -d` lại |
 | Tiếng Việt bị lỗi font trong kết quả `sqlcmd` | Chạy kèm `-f 65001` (run_all đã có sẵn) |
+
+## 6. Demo trên GitHub Codespaces (không cần máy của nhóm)
+
+Codespace là máy ảo Linux của GitHub chạy trong trình duyệt. Repo có sẵn cấu hình `.devcontainer/`, nên mở Codespace là có SQL Server 2025 (Docker), CSDL `ECMS` và Streamlit, không phải cài gì. Codespace tự ngủ khi không ai dùng (mặc định 30 phút), hợp cho buổi demo chứ không chạy 24/7. Giờ dùng miễn phí hằng tháng xem ở **Settings → Billing** của tài khoản GitHub; máy 2 lõi là đủ.
+
+1. Trên trang repo: **Code → Codespaces → Create codespace on main** (lần sau chọn lại Codespace cũ trong danh sách, khỏi tạo mới).
+2. Lần đầu chờ khoảng 5 phút: dựng image (`Dockerfile`, có ODBC Driver 18), `setup.sh` cài thư viện Python, rồi `start.sh` khởi động SQL Server, dựng CSDL (01 → 09) và chạy Streamlit ngay trong terminal. Lần mở sau chỉ còn khoảng 1 phút vì CSDL đã có.
+3. Tab **Ports** → cổng **8501** → chuột phải → **Port Visibility → Public**, rồi **Copy Local Address**. Link dạng `https://<tên-codespace>-8501.app.github.dev` mở được trên mọi máy, kể cả điện thoại, không cần đăng nhập GitHub.
+4. Gửi link cho người xem. Giữ tab Codespace mở trong lúc demo; xong thì **Stop codespace** để không tốn giờ miễn phí.
+
+### Link demo hiện tại
+
+Codespace **ECMS demo** (`ecms-demo-7vj9gq5977vpc97r`, tài khoản `nhutruong-uit`) – link cố định, ghi cả ở mục *Xem web app* trên trang GitHub Pages:
+
+**https://ecms-demo-7vj9gq5977vpc97r-8501.app.github.dev** – tài khoản demo ở mục 4 (ví dụ `quanly` / `Ecms@2026`); lần đầu mở bấm **Continue** ở trang cảnh báo của GitHub.
+
+Bật / tắt từ máy mình bằng `scripts/demo-codespace.sh` (cần `gh` đăng nhập `nhutruong-uit`, có quyền `codespace`: `gh auth refresh -h github.com -s codespace`):
+
+```bash
+bash scripts/demo-codespace.sh bat         # bật Codespace, chạy ECMS, đặt cổng 8501 Public, in link (1–2 phút)
+bash scripts/demo-codespace.sh tat         # tắt: link ngừng hoạt động, không tốn giờ miễn phí
+bash scripts/demo-codespace.sh trangthai   # đang bật hay tắt, link mở được chưa
+```
+
+Không có `gh`: github.com/codespaces → **ECMS demo** → **Open in browser** (bật, rồi làm bước 3) hoặc **… → Stop codespace** (tắt). Tạo Codespace mới thì link đổi theo tên mới: sửa link ở trang Pages và `CS` trong script.
+
+| Tình huống | Cách xử lý |
+|---|---|
+| Lỡ đóng terminal, ứng dụng dừng | Chạy lại `bash .devcontainer/start.sh` |
+| Mở Codespace bằng `gh` thay vì VS Code (`start.sh` không tự chạy) | `bash scripts/demo-codespace.sh bat` (Codespace khác: thêm `CODESPACE=<tên>` phía trước) |
+| Muốn dữ liệu về như ban đầu | `RESET_DB=1 bash .devcontainer/start.sh` (dừng Streamlit đang chạy bằng `Ctrl+C` trước) |
+| Người xem gặp trang đăng nhập GitHub | Cổng 8501 vẫn là Private – làm lại bước 3, hoặc `bash scripts/demo-codespace.sh bat` |
+| Codespace ngủ giữa buổi | `bash scripts/demo-codespace.sh bat`, hoặc mở lại Codespace (`start.sh` tự chạy) rồi làm lại bước 3 – link giữ nguyên nhưng cổng 8501 về Private |
