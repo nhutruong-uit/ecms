@@ -120,10 +120,26 @@ Codespace là máy ảo Linux của GitHub chạy trong trình duyệt. Repo có
 3. Tab **Ports** → cổng **8501** → chuột phải → **Port Visibility → Public**, rồi **Copy Local Address**. Link dạng `https://<tên-codespace>-8501.app.github.dev` mở được trên mọi máy, kể cả điện thoại, không cần đăng nhập GitHub.
 4. Gửi link cho người xem. Giữ tab Codespace mở trong lúc demo; xong thì **Stop codespace** để không tốn giờ miễn phí.
 
+### Link demo hiện tại
+
+Codespace **ECMS demo** (`ecms-demo-7vj9gq5977vpc97r`, tài khoản `nhutruong-uit`) – link cố định, ghi cả ở mục *Xem web app* trên trang GitHub Pages:
+
+**https://ecms-demo-7vj9gq5977vpc97r-8501.app.github.dev** – tài khoản demo ở mục 4 (ví dụ `quanly` / `Ecms@2026`); lần đầu mở bấm **Continue** ở trang cảnh báo của GitHub.
+
+Bật / tắt từ máy mình bằng `scripts/demo-codespace.sh` (cần `gh` đăng nhập `nhutruong-uit`, có quyền `codespace`: `gh auth refresh -h github.com -s codespace`):
+
+```bash
+bash scripts/demo-codespace.sh bat         # bật Codespace, chạy ECMS, đặt cổng 8501 Public, in link (1–2 phút)
+bash scripts/demo-codespace.sh tat         # tắt: link ngừng hoạt động, không tốn giờ miễn phí
+bash scripts/demo-codespace.sh trangthai   # đang bật hay tắt, link mở được chưa
+```
+
+Không có `gh`: github.com/codespaces → **ECMS demo** → **Open in browser** (bật, rồi làm bước 3) hoặc **… → Stop codespace** (tắt). Tạo Codespace mới thì link đổi theo tên mới: sửa link ở trang Pages và `CS` trong script.
+
 | Tình huống | Cách xử lý |
 |---|---|
 | Lỡ đóng terminal, ứng dụng dừng | Chạy lại `bash .devcontainer/start.sh` |
-| Mở Codespace bằng `gh` thay vì VS Code (`start.sh` không tự chạy) | `gh codespace ssh -c <tên> -- 'cd /workspaces/ecms && nohup setsid bash .devcontainer/start.sh > /tmp/ecms.log 2>&1 < /dev/null &'` rồi `gh codespace ports visibility 8501:public -c <tên>` |
+| Mở Codespace bằng `gh` thay vì VS Code (`start.sh` không tự chạy) | `bash scripts/demo-codespace.sh bat` (Codespace khác: thêm `CODESPACE=<tên>` phía trước) |
 | Muốn dữ liệu về như ban đầu | `RESET_DB=1 bash .devcontainer/start.sh` (dừng Streamlit đang chạy bằng `Ctrl+C` trước) |
-| Người xem gặp trang đăng nhập GitHub | Cổng 8501 vẫn là Private – làm lại bước 3 |
-| Codespace ngủ giữa buổi | Mở lại Codespace, `start.sh` tự chạy lại; link giữ nguyên nhưng cổng 8501 về Private – làm lại bước 3 |
+| Người xem gặp trang đăng nhập GitHub | Cổng 8501 vẫn là Private – làm lại bước 3, hoặc `bash scripts/demo-codespace.sh bat` |
+| Codespace ngủ giữa buổi | `bash scripts/demo-codespace.sh bat`, hoặc mở lại Codespace (`start.sh` tự chạy) rồi làm lại bước 3 – link giữ nguyên nhưng cổng 8501 về Private |

@@ -301,7 +301,8 @@ td.chap { font-weight: 600; }
 td.chap small { display: block; color: var(--muted); font-weight: 400; }
 
 /* ---------- Design ---------- */
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* minmax(0, …): bảng, mã dài trong thẻ cuộn trong .table-wrap thay vì đẩy cột rộng ra, tràn ngang trên điện thoại */
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .rel { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; font-size: 14px; }
 .rel dt { font-weight: 600; }
 .rel dd { margin: 0; color: var(--muted); }
@@ -350,7 +351,8 @@ footer { color: var(--muted); font-size: 13px; padding: 40px 0 48px; border-top:
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .members { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sprints, .grid-2, .tech, .docs { grid-template-columns: 1fr; }
+  .sprints, .tech, .docs { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: minmax(0, 1fr); }
   .tbody { grid-template-columns: 1fr; }
   details.task > summary { grid-template-columns: auto 1fr; }
   details.task > summary .badge { grid-column: 2; justify-self: start; }
