@@ -44,8 +44,8 @@ wait_ready() {
     if [[ "$MODE" == "local" ]]; then
       sqlcmd -S "$SERVER" -U sa -P "$SA_PASSWORD" -C -b -f 65001 -i "$ROOT/database/healthcheck.sql" -o /dev/null 2>/dev/null && return 0
     else
-      docker exec -i "$CONTAINER" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" \
-        -C -b -f 65001 -i /database/healthcheck.sql -o /dev/null 2>/dev/null && return 0
+      # healthcheck.sh không kết nối khi máy chủ đang đổi collation (kết nối lúc đó gây deadlock, Msg 3434)
+      docker exec "$CONTAINER" bash /database/healthcheck.sh 2>/dev/null && return 0
     fi
     [[ $i -eq 1 ]] && echo "… chờ SQL Server sẵn sàng"
     sleep 2

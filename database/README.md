@@ -19,7 +19,8 @@ Script SQL Server, đánh số theo **thứ tự chạy**. Mỗi file chạy l�
 | `13_distributed.sql` | CSDL phân tán theo chi nhánh (demo) | T26 | Phú |
 | `13b_2pc_msdtc.sql` | Cam kết hai pha qua MSDTC giữa hai máy: trạm CN01 trên Windows, trạm CN02 trên máy thứ hai (`tram_cn02/`) (demo) | T30 | Như |
 | `14_encryption_audit.sql` | TLS, TDE, mã hoá cột, Dynamic Data Masking, SQL Server Audit, ledger (demo) | T30 | Như |
-| `healthcheck.sql` | SQL Server đã sẵn sàng chưa (chờ đổi collation xong) – dùng bởi Docker healthcheck và `run_all` | T30 | Như |
+| `healthcheck.sql` | SQL Server đã sẵn sàng chưa (chờ đổi collation xong) – dùng bởi `healthcheck.sh` và `run_all` | T30 | Như |
+| `healthcheck.sh` | Healthcheck Docker: đọc errorlog từ file, chỉ kết nối (chạy `healthcheck.sql`) khi không còn đổi collation – kết nối lúc đang đổi gây deadlock (Msg 1205 → 3434) | T30 | Như |
 
 `run_all.sh` / `run_all.ps1` (T03) chờ SQL Server sẵn sàng (`healthcheck.sql`) rồi chạy lần lượt các file 01 → 09 để dựng CSDL
 đầy đủ cho ứng dụng. Các file 10 → 14 là kịch bản demo, chạy riêng trong SSMS hoặc sqlcmd (11, 13, 14 cần quyền `sa`).

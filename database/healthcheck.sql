@@ -1,6 +1,7 @@
 /* =====================================================================
    healthcheck.sql – SQL Server trong Docker đã sẵn sàng để dựng CSDL ECMS chưa?
-   Dùng bởi healthcheck của docker-compose.yml và database/run_all.sh (chạy với -b: lỗi → exit code 1).
+   Dùng bởi database/healthcheck.sh (Docker: healthcheck của docker-compose.yml, run_all.sh chế độ docker) và
+   run_all.sh / run_all.ps1 khi chạy sqlcmd trên máy (chạy với -b: lỗi → exit code 1).
 
    Lần khởi động đầu, container đổi collation máy chủ sang Vietnamese_CI_AS (biến MSSQL_COLLATION).
    SQL Server đã nhận kết nối và SERVERPROPERTY('Collation') đã trả về giá trị mới TRƯỚC khi việc đổi
