@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ECMS · Báo cáo tiến độ</title>
+  <meta name="description" content="Slide báo cáo tiến độ đồ án IE103 – Hệ thống Quản lý Trung tâm Tiếng Anh (Nhóm 1, UIT).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='21' font-size='13' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>EC</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="viewport" id="viewport">
+<main class="stage" id="stage">
+
+  <!-- ================= 1. Bìa ================= -->
+  <section class="slide cover" data-id="bia" data-sec="Mở đầu" data-title="Trang bìa">
+    <div class="cover-main">
+      <div class="eyebrow">Báo cáo tiến độ đồ án · IE103 – Quản lý thông tin</div>
+      <h1>ECMS<br><span>Hệ thống Quản lý Trung tâm Tiếng Anh</span></h1>
+      <div class="cover-info">
+      <p class="cover-sub">Lớp: <b>IE103.Q21.VB2</b><br>Giảng viên: <b>TS. Võ Phương Bình</b><br>Nhóm: <b>01</b></p>
+      <table class="cover-team">
+        <thead><tr><th>Họ và tên</th><th>MSSV</th></tr></thead>
+        <tbody>
+          <tr><td>Trương Quang Như</td><td>25540022</td></tr>
+          <tr><td>Đỗ Phạm Minh Trâm</td><td>25540042</td></tr>
+          <tr><td>Nguyễn Việt Phú</td><td>25540025</td></tr>
+          <tr><td>Đỗ Bình Dương</td><td>25540008</td></tr>
+          <tr><td>Nguyễn Bảo Giang</td><td>25540009</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="cover-foot">
+      <span>Số liệu cập nhật <b data-bind="capNhat"></b></span>
+      <span class="hint">Phím ← → để chuyển slide · O mục lục · S xem schema · N ghi chú · F toàn màn hình</span>
+    </div>
+    <aside class="notes">Như mở đầu: Em xin báo cáo tiến độ đồ án của nhóm 1. Bố cục: giới thiệu đề tài, tiến độ so với kế hoạch, những gì đã làm, việc còn lại, rồi demo. Trong lúc trình bày, thầy muốn xem chi tiết phần nào nhóm mở ngay được, ví dụ quan hệ giữa các bảng.</aside>
+  </section>
+
+  <!-- ================= 2. Tóm tắt ================= -->
+  <section class="slide" data-id="tom-tat" data-sec="Mở đầu" data-title="Tóm tắt tiến độ">
+    <header><div class="kicker">Tóm tắt</div><h2>Đang ở <span data-bind="sprintTen"></span>, đã xong <span data-bind="viecXong"></span>/<span data-bind="viecTong"></span> việc</h2></header>
+    <div class="stats two-by-two">
+      <button class="stat stat-btn" type="button" data-modal="sprint" aria-haspopup="dialog"><span class="n"><span data-bind="sprintSo"></span><small>/4</small></span><span class="l">Sprint theo kế hoạch, hiện tại: <span data-bind="sprintKhoang"></span></span><span class="more">Xem chi tiết ›</span></button>
+      <button class="stat stat-btn" type="button" data-modal="viec" aria-haspopup="dialog"><span class="n"><span data-bind="viecXong"></span><small>/<span data-bind="viecTong"></span></small></span><span class="l">Công việc đã xong, còn T29, T30 của Sprint 4</span><span class="more">Xem chi tiết ›</span></button>
+    </div>
+    <div class="cols two">
+      <div class="card tone-ok"><h3>Đã hoàn thành: Sprint 1–3</h3><ul>
+        <li><b>Sprint 1:</b> Khảo sát, ERD, lược đồ quan hệ, cài đặt CSDL, dữ liệu mẫu</li>
+        <li><b>Sprint 2:</b> Truy vấn SQL, XML; lập trình CSDL; an ninh; đăng nhập, menu</li>
+        <li><b>Sprint 3:</b> Các phân hệ web, báo cáo, dashboard; Chương 5</li>
+      </ul></div>
+      <div class="card tone-info"><h3>Còn lại: Sprint 4 (02–04/11)</h3><ul>
+        <li><b>T29:</b> Tổng hợp báo cáo, slide, tổng duyệt</li>
+        <li><b>T30:</b> Khắc phục sau rà soát</li>
+      </ul></div>
+    </div>
+    <aside class="notes">Câu chốt: theo lịch nhóm đang ở sprint được ghi trên slide, các phần việc đã có sản phẩm và đang được rà soát. Bấm vào ô 3/4 hoặc 28/30 để mở chi tiết từng sprint, từng công việc. Nếu thầy chỉ có một phút, slide này là đủ.</aside>
+  </section>
+
+  <!-- ================= 3. Đề tài ================= -->
+  <section class="slide" data-id="de-tai" data-sec="Đề tài" data-title="Bài toán">
+    <header><div class="kicker">Giới thiệu đề tài</div><h2>Quản lý bằng Excel rời: Nhiều dữ liệu, thiếu thông tin</h2></header>
+    <div class="cols two wide-left">
+      <div class="card">
+        <h3>Bối cảnh</h3>
+        <div class="facts">
+          <div><b>3</b><span>Chi nhánh: Thủ Đức, Quận 1, Bình Thạnh</span></div>
+          <div><b>4</b><span>Chương trình: IELTS, TOEIC, Giao tiếp, Thiếu nhi</span></div>
+          <div><b>12</b><span>Phòng học, mỗi chi nhánh 4 phòng</span></div>
+          <div><b>6</b><span>Nhóm người dùng: Quản lý, giáo vụ, kế toán, giáo viên, học viên, quản trị</span></div>
+        </div>
+        <p class="solution"><b>Giải pháp:</b> CSDL quan hệ tập trung có ràng buộc toàn vẹn, phân quyền, kiểm toán và sao lưu, kèm ứng dụng web có form tự kiểm tra và báo cáo tự động.</p>
+      </div>
+      <div class="card">
+        <h3>Vấn đề của cách làm hiện tại</h3>
+        <table class="plain">
+          <tr><th>Trùng lặp</th><td>Họ tên, số điện thoại lặp ở mỗi dòng ghi danh</td></tr>
+          <tr><th>Sai lệch khi sửa, xoá</th><td>Một học viên có hai số điện thoại khác nhau ở hai dòng<br>Xoá dòng của học viên là mất luôn mức học phí đã thoả thuận</td></tr>
+          <tr><th>Tổng hợp chậm</th><td>Doanh thu chép tay từ ba tệp, mất 1–2 ngày mỗi cuối tháng</td></tr>
+          <tr><th>Không ràng buộc</th><td>Vượt sĩ số, trùng phòng, thiếu khoá tiên quyết vẫn nhập được</td></tr>
+          <tr><th>Không phân quyền</th><td>Ai có tệp cũng xem được lương; không biết ai sửa phiếu thu</td></tr>
+          <tr><th>Rủi ro mất dữ liệu</th><td>Tệp nằm trên máy cá nhân, không sao lưu định kỳ</td></tr>
+        </table>
+      </div>
+    </div>
+    <aside class="notes">Đề tài ECMS: quản lý một chuỗi ba chi nhánh. Điểm cần nói: nguyên nhân nằm ở mô hình lưu trữ phẳng, nên cẩn thận hơn khi nhập liệu không giải quyết được; vì vậy cần CSDL quan hệ tập trung. Lưu ý dữ liệu là dữ liệu mẫu do nhóm sinh, không phải của trung tâm thật.</aside>
+  </section>
+
+  <!-- ================= 4. Mục tiêu ================= -->
+  <section class="slide" data-id="muc-tieu" data-sec="Đề tài" data-title="Mục tiêu và phạm vi">
+    <header><div class="kicker">Giới thiệu đề tài</div><h2>5 mục tiêu, <span data-bind="ycChucNang"></span> yêu cầu chức năng</h2></header>
+    <div class="cols two wide-left">
+      <div class="goals">
+        <div class="goal"><i>1</i><div><b>Tổ chức thông tin</b><span>CSDL quan hệ chuẩn hoá, đủ loại ràng buộc, dựng lại từ đầu bằng một lệnh</span></div></div>
+        <div class="goal"><i>2</i><div><b>Xử lý thông tin</b><span>Truy vấn, view, procedure, function, trigger, cursor; quy tắc nghiệp vụ kiểm tra ngay tại CSDL</span></div></div>
+        <div class="goal"><i>3</i><div><b>An toàn thông tin</b><span>Xác thực, quyền tối thiểu, băm mật khẩu, mã hoá, kiểm toán, phục hồi theo thời điểm</span></div></div>
+        <div class="goal"><i>4</i><div><b>Trình bày thông tin</b><span>Web app có menu theo vai trò, form, báo cáo PDF/Excel/Word, dashboard</span></div></div>
+        <div class="goal"><i>5</i><div><b>Mô hình tiên tiến</b><span>Chuyển dữ liệu ECMS sang hướng đối tượng, phân tán, NoSQL để so sánh, đánh giá</span></div></div>
+      </div>
+      <div class="stack">
+        <div class="stats two-by-two">
+          <button class="stat small stat-btn" type="button" data-modal="chucNang" aria-haspopup="dialog"><span class="n" data-bind="ycChucNang"></span><span class="l">Yêu cầu chức năng</span><span class="more">Xem chi tiết ›</span></button>
+          <button class="stat small stat-btn" type="button" data-modal="phiChucNang" aria-haspopup="dialog"><span class="n" data-bind="ycPhiChucNang"></span><span class="l">Yêu cầu phi chức năng</span><span class="more">Xem chi tiết ›</span></button>
+          <button class="stat small stat-btn" type="button" data-modal="baoCao" aria-haspopup="dialog"><span class="n" data-bind="ycBaoCao"></span><span class="l">Báo cáo</span><span class="more">Xem chi tiết ›</span></button>
+          <button class="stat small stat-btn" type="button" data-modal="nhom" aria-haspopup="dialog"><span class="n" data-bind="ycNhom"></span><span class="l">Nhóm người dùng, mỗi nhóm một role</span><span class="more">Xem chi tiết ›</span></button>
+        </div>
+        <div class="card tone-muted"><h3>Ngoài phạm vi</h3><ul>
+          <li>Tuyển dụng, kho giáo trình, thanh toán trực tuyến</li>
+          <li>Thuế và bảo hiểm trong tính lương</li>
+          <li>Ứng dụng di động</li>
+        </ul></div>
+      </div>
+    </div>
+    <aside class="notes">Số trong ô tròn là chương tương ứng trong báo cáo. Cả 22 yêu cầu đã được đối chiếu lại ở mục 6.1.1 của báo cáo. Bấm vào từng ô số để xem danh sách đầy đủ; nội dung lấy từ mục 1.5 của báo cáo.</aside>
+  </section>
+
+  <!-- ================= 5. Quy trình ================= -->
+  <section class="slide" data-id="quy-trinh" data-sec="Đề tài" data-title="Quy trình nghiệp vụ">
+    <header><div class="kicker">Giới thiệu đề tài</div><h2>Quy trình nghiệp vụ gồm bảy bước</h2></header>
+    <div class="flow">
+      <a class="step" href="#/schema/HOCVIEN"><i>1</i><b>Tư vấn</b><span>Giáo vụ</span><code>HOCVIEN</code></a>
+      <a class="step" href="#/schema/KIEMTRA_DAUVAO"><i>2</i><b>Kiểm tra đầu vào</b><span>Giáo vụ, giáo viên</span><code>KIEMTRA_DAUVAO</code></a>
+      <a class="step" href="#/schema/DANGKY"><i>3</i><b>Xếp lớp, ghi danh</b><span>Giáo vụ</span><code>DANGKY</code></a>
+      <a class="step" href="#/schema/PHIEUTHU"><i>4</i><b>Thu học phí</b><span>Kế toán</span><code>PHIEUTHU</code></a>
+      <a class="step" href="#/schema/DIEMDANH"><i>5</i><b>Học, điểm danh</b><span>Giáo viên</span><code>DIEMDANH</code></a>
+      <a class="step" href="#/schema/DANGKY"><i>6</i><b>Thi, đánh giá</b><span>Giáo viên</span><code>DANGKY</code></a>
+      <a class="step" href="#/schema/DANGKY"><i>7</i><b>Cấp chứng nhận</b><span>Quản lý</span><code>DANGKY</code></a>
+    </div>
+    <h3 class="sub">Từ dữ liệu đến hành động (DIKW), số liệu lấy từ CSDL mẫu</h3>
+    <div class="dikw">
+      <div><em>Dữ liệu</em><b>10.063</b><span>Lượt điểm danh</span></div>
+      <div><em>Thông tin</em><b>56,25%</b><span>Chuyên cần của học viên HV0021, lớp TC650-2601</span></div>
+      <div><em>Tri thức</em><b>33,3% / 11,1%</b><span>Tỷ lệ không đạt: Nhóm chuyên cần dưới 80% so với nhóm còn lại (mẫu nhỏ, chỉ minh hoạ)</span></div>
+      <div><em>Trí tuệ</em><b>Hành động</b><span>Giáo vụ gọi điện, đề xuất học bù hoặc đổi lớp</span></div>
+    </div>
+    <aside class="notes">Bấm vào một bước để nhảy tới bảng tương ứng trong sơ đồ schema. Phần DIKW là cách gắn đề tài với Chương 1. Lưu ý nói rõ nhóm tri thức chỉ có 12 đăng ký và dữ liệu là dữ liệu sinh, nên đây là minh hoạ, không phải kết luận thống kê.</aside>
+  </section>
+
+  <!-- ================= 6. Kế hoạch so với thực tế ================= -->
+  <section class="slide" data-id="tien-do" data-sec="Tiến độ" data-title="Lộ trình 4 sprint">
+    <header><div class="kicker">Tiến độ</div><h2>Đang ở <span data-bind="sprintTen"></span></h2></header>
+    <div class="plan-line" id="planLine"></div>
+    <div class="sprints" id="sprints"></div>
+    <p class="foot-note wide">Thứ tự đi theo quy trình quản lý thông tin: Tổ chức → xử lý → trình bày, rồi tới mô hình tiên tiến và tổng hợp. Mã xanh là việc đã xong, mã cam là việc còn lại; bấm để mở issue trên GitHub.</p>
+    <aside class="notes">Lộ trình gồm 4 sprint từ 12/10 đến 04/11; theo lịch, nhóm đang ở sprint được đánh dấu. Đã xong 28/30 việc; còn T29 (tổng hợp, tổng duyệt) và T30 (khắc phục sau rà soát) của Sprint 4.</aside>
+  </section>
+
+  <!-- ================= 7. Phân công ================= -->
+  <section class="slide" data-id="phan-cong" data-sec="Tiến độ" data-title="Phân công">
+    <header><div class="kicker">Tiến độ</div><h2>Mỗi thành viên phụ trách 5–7 công việc</h2></header>
+    <div class="members">
+      <article class="member" data-ai="nhu" style="--m:#2563eb"><div class="av">N</div><h3>Trương Quang Như</h3><div class="role">Nhóm trưởng · 25540022</div><p>Khảo sát, yêu cầu; môi trường, Docker, CI; xác thực, phân quyền; đăng nhập, menu, danh mục; kiểm thử; tổng hợp báo cáo</p><div class="chips"></div><div class="done"></div></article>
+      <article class="member" data-ai="tram" style="--m:#7c3aed"><div class="av">T</div><h3>Đỗ Phạm Minh Trâm</h3><div class="role">Thiết kế CSDL · 25540042</div><p>ERD, sơ đồ lớp, lược đồ quan hệ, chuẩn hoá, DDL; phân hệ Đào tạo; CSDL hướng đối tượng</p><div class="chips"></div><div class="done"></div></article>
+      <article class="member" data-ai="phu" style="--m:#059669"><div class="av">P</div><h3>Nguyễn Việt Phú</h3><div class="role">Lập trình CSDL · 25540025</div><p>Procedure, function, trigger, cursor; phân hệ Học tập; CSDL phân tán</p><div class="chips"></div><div class="done"></div></article>
+      <article class="member" data-ai="duong" style="--m:#d97706"><div class="av">D</div><h3>Đỗ Bình Dương</h3><div class="role">Truy vấn, dữ liệu · 25540008</div><p>Dữ liệu mẫu, truy vấn SQL, XML, nhập xuất; phân hệ Học viên; NoSQL</p><div class="chips"></div><div class="done"></div></article>
+      <article class="member" data-ai="giang" style="--m:#db2777"><div class="av">G</div><h3>Nguyễn Bảo Giang</h3><div class="role">Trình bày thông tin · 25540009</div><p>View, sao lưu, phục hồi; thu học phí; báo cáo, dashboard; Chương 4</p><div class="chips"></div><div class="done"></div></article>
+    </div>
+    <p class="foot-note">Mỗi mã là một issue trên GitHub, bấm để mở. Quy trình: Nhánh riêng → Pull Request → nhóm trưởng review → gộp vào <code>develop</code> → CI xanh mới vào <code>main</code>.</p>
+    <aside class="notes">Mỗi người tự giới thiệu phần mình một câu. Nhóm trưởng ngoài phần việc riêng còn đảm nhận hạ tầng dùng chung và đợt T30, nên khối lượng mã không đều; báo cáo mục 6.6 ghi rõ số liệu.</aside>
+  </section>
+
+  <!-- ================= 8. Đối chiếu đề cương ================= -->
+  <section class="slide" data-id="de-cuong" data-sec="Tiến độ" data-title="Đối chiếu đề cương">
+    <header><div class="kicker">Tiến độ</div><h2>Tình hình từng chương theo đề cương</h2></header>
+    <table class="grid" id="coverage">
+      <thead><tr><th>Chương</th><th>Nội dung chính</th><th>Công việc</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        <tr data-t="T02"><th>1. Tổng quan</th><td>Quy trình 7 bước, 22 FR, 8 NFR, 7 báo cáo; DIKW; so sánh 3 nhóm công cụ</td><td class="ts"></td><td class="st"></td></tr>
+        <tr data-t="T04,T05,T06,T07,T08"><th>2. Tổ chức thông tin</th><td>ERD 14 thực thể, UML, 22 lược đồ phân tích dạng chuẩn; 33 FK, 53 CHECK, 21 RBTV; so sánh phẳng, có cấu trúc, quan hệ, XML</td><td class="ts"></td><td class="st"></td></tr>
+        <tr data-t="T09,T10,T11,T12,T13,T14,T15,T16,T17,T18"><th>3. Xử lý thông tin</th><td>31 truy vấn SQL, 18 XML; 27 view, 40 procedure, 17 function, 14 trigger; 6 role; sao lưu, phục hồi; nhập xuất 4 định dạng</td><td class="ts"></td><td class="st"></td></tr>
+        <tr data-t="T19,T20,T21,T22,T23,T24,T28"><th>4. Trình bày thông tin</th><td>Menu 2 cấp theo vai trò, 20 trang, 2 form master–detail; 7 báo cáo PDF, Excel, Word; dashboard KPI</td><td class="ts"></td><td class="st"></td></tr>
+        <tr data-t="T25,T26,T27"><th>5. CSDL tiên tiến</th><td>ODL 16 lớp, OID; phân mảnh 3 trạm, nửa kết, 2PC; 4 collection MongoDB; so sánh 4 mô hình</td><td class="ts"></td><td class="st"></td></tr>
+        <tr data-t="T01,T03,T29,T30"><th>Tổng hợp</th><td>Kế hoạch, môi trường, CI; báo cáo, hướng dẫn sử dụng, slide; đợt khắc phục sau rà soát</td><td class="ts"></td><td class="st"></td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">Cột Công việc và Trạng thái đọc từ dữ liệu GitHub. Chi tiết từng dòng đề cương vẫn nằm ở trang kế hoạch, mục Bám đề cương.</aside>
+  </section>
+
+  <!-- ================= 9. ERD ================= -->
+  <section class="slide" data-id="erd" data-sec="Đã làm" data-title="Mô hình khái niệm (ERD)">
+    <header><div class="kicker">Đã làm · Tổ chức thông tin · Trâm</div><h2>ERD 14 thực thể</h2></header>
+    <div class="cols two wide-left">
+      <button class="card figure" type="button" data-zoom="../design/erd.svg" data-cap="ERD ký hiệu Chen"><img src="../design/erd.svg" alt="Sơ đồ ERD của ECMS"><span class="zoom-tag">Bấm để phóng to</span></button>
+      <div class="card">
+        <h3>Các dạng đặc biệt trong ERD</h3>
+        <dl class="rel">
+          <dt>Thực thể yếu</dt><dd>PHONGHOC, BUOIHOC mượn khoá của CHINHANH, LOPHOC</dd>
+          <dt>Chuyên biệt hoá</dt><dd>NHANVIEN → GIAOVIEN, rời nhau, không toàn phần</dd>
+          <dt>Ba ngôi</dt><dd>LICHHOC nối lớp, ca học, phòng học</dd>
+          <dt>Đệ quy</dt><dd>Người quản lý trực tiếp; khoá tiên quyết</dd>
+          <dt>Đa trị</dt><dd>Chứng chỉ giáo viên tách thành bảng</dd>
+          <dt>Suy diễn</dt><dd>Tuổi, thành tiền, điểm TB, sĩ số, tổng tiền</dd>
+        </dl>
+        <p class="links"><button class="ghost" type="button" data-zoom="../design/erd-thuoc-tinh.png" data-cap="ERD đầy đủ thuộc tính">ERD đầy đủ thuộc tính</button> <button class="ghost" type="button" data-zoom="../design/class-diagram.svg" data-cap="Sơ đồ lớp UML">Sơ đồ lớp UML</button></p>
+      </div>
+    </div>
+    <aside class="notes">Trâm trình bày. Bấm ảnh để phóng to, cuộn chuột để zoom, kéo để di chuyển, Esc để đóng.</aside>
+  </section>
+
+  <!-- ================= 10. Schema tương tác ================= -->
+  <section class="slide schema-slide" data-id="schema" data-sec="Đã làm" data-title="Sơ đồ schema tương tác">
+    <header class="tight"><div class="kicker">Đã làm · Tổ chức thông tin · Bấm một bảng để xem quan hệ</div><h2>22 bảng, 33 khoá ngoại</h2></header>
+    <div class="schema-wrap">
+      <div class="schema-main">
+        <div class="scenes" id="scenes" role="group" aria-label="Tình huống"></div>
+        <svg id="schemaSvg" viewBox="0 0 1090 690" role="img" aria-label="Sơ đồ quan hệ giữa 22 bảng"></svg>
+        <div class="schema-legend" id="schemaLegend"></div>
+      </div>
+      <aside class="schema-panel" id="schemaPanel" aria-live="polite"></aside>
+    </div>
+    <aside class="notes">Sơ đồ sinh trực tiếp từ database/01_schema.sql nên luôn khớp mã. Bấm một bảng: bên phải hiện cột, khoá, dạng chuẩn, số dòng mẫu; mũi tên tím là khoá ngoại bảng này trỏ đi, mũi tên cam là bảng khác trỏ tới. Các nút phía trên mở sẵn những tình huống thầy hay hỏi. Esc để bỏ chọn. Phím S mở slide này từ bất kỳ đâu.</aside>
+  </section>
+
+  <!-- ================= 11. Chuẩn hoá ================= -->
+  <section class="slide" data-id="chuan-hoa" data-sec="Đã làm" data-title="Chuẩn hoá">
+    <header><div class="kicker">Đã làm · Tổ chức thông tin · Trâm</div><h2>16/22 quan hệ đạt BCNF, 6 phi chuẩn có chủ đích</h2></header>
+    <div class="nf">
+      <button class="stat small stat-btn" type="button" data-modal="bcnf" aria-haspopup="dialog"><span class="n" data-bind="nfBcnf"></span><span class="l">Đạt BCNF</span><span class="more">Xem chi tiết ›</span></button>
+      <button class="stat small stat-btn" type="button" data-modal="nf2" aria-haspopup="dialog"><span class="n" data-bind="nf2"></span><span class="l">Chỉ đạt 2NF: Lưu giá trị suy diễn</span><span class="more">Xem chi tiết ›</span></button>
+      <button class="stat small stat-btn" type="button" data-modal="nf1" aria-haspopup="dialog"><span class="n" data-bind="nf1"></span><span class="l">Vi phạm 2NF: Phục vụ khoá ngoại phức hợp</span><span class="more">Xem chi tiết ›</span></button>
+    </div>
+    <table class="grid compact">
+      <thead><tr><th>Quan hệ</th><th>Phụ thuộc chưa chuẩn hoá</th><th>Lý do giữ</th><th>Cơ chế bảo đảm nhất quán</th></tr></thead>
+      <tbody>
+        <tr><th><a href="#/schema/LICHHOC">LICHHOC</a></th><td>MaLop → MaCN</td><td>Bắt phòng phải thuộc chi nhánh của lớp</td><td>FK (MaLop, MaCN) → LOPHOC</td></tr>
+        <tr><th><a href="#/schema/DIEMDANH">DIEMDANH</a></th><td>MaDK → MaLop</td><td>Bắt buổi học thuộc đúng lớp của đăng ký</td><td>FK (MaDK, MaLop) → DANGKY</td></tr>
+        <tr><th><a href="#/schema/DANGKY">DANGKY</a></th><td>ThanhTien, HanDongHP, DiemTB, KetQua</td><td>Tra công nợ, bảng điểm nhanh</td><td>Cột PERSISTED; <code>trg_DangKy_KetQua</code></td></tr>
+        <tr><th><a href="#/schema/KIEMTRA_DAUVAO">KIEMTRA_DAUVAO</a></th><td>KetQuaChiTiet → DiemTong</td><td>Lọc mà không phải phân tích XML</td><td>Chỉ ghi qua <code>sp_GhiKetQuaKiemTra</code></td></tr>
+        <tr><th><a href="#/schema/BANGLUONG">BANGLUONG</a></th><td>(LuongCoBan, SoBuoiDay, DonGiaBuoi) → TongLuong</td><td>Chứng từ chốt theo tháng</td><td>Cột PERSISTED</td></tr>
+        <tr><th><a href="#/schema/CANHBAO_CHUYENCAN">CANHBAO_CHUYENCAN</a></th><td>TyLeVang, MucDo</td><td>Ảnh chụp tại ngày cảnh báo</td><td>Do <code>sp_CanhBaoChuyenCan</code> ghi một lần</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">Nhóm xét dạng chuẩn trên khoá dự tuyển, không chỉ khoá chính khai báo. Khoá chính DIEMDANH (MaDK, MaLop, STT) không tối tiểu; nhóm đã ghi nhận sẽ sửa thành (MaDK, STT) nếu thiết kế lại. Bấm tên bảng để mở trong sơ đồ.</aside>
+  </section>
+
+  <!-- ================= 12. Truy vấn ================= -->
+  <section class="slide" data-id="truy-van" data-sec="Đã làm" data-title="Truy vấn và chỉ mục">
+    <header><div class="kicker">Đã làm · Xử lý thông tin · Dương</div><h2>31 truy vấn SQL, 18 truy vấn XML, đo bằng số trang đọc</h2></header>
+    <div class="cols two">
+      <div class="card">
+        <h3>31 truy vấn, 6 nhóm kỹ thuật</h3>
+        <table class="plain tight-rows">
+          <tr><th>Cơ bản</th><td>LIKE, BETWEEN, TOP … WITH TIES</td></tr>
+          <tr><th>Kết nối</th><td>INNER, LEFT, RIGHT, FULL JOIN, kết nối với chính nó</td></tr>
+          <tr><th>Gom nhóm</th><td>GROUP BY, HAVING, ROLLUP</td></tr>
+          <tr><th>Lồng</th><td>IN, NOT EXISTS, tương quan, ALL</td></tr>
+          <tr><th>Tập hợp</th><td>UNION, INTERSECT, EXCEPT, phép chia</td></tr>
+          <tr><th>Nâng cao</th><td>CTE đệ quy, hàm cửa sổ, PIVOT</td></tr>
+        </table>
+        <p class="foot-note">XML có XML Schema: <code>query() value() exist() nodes() modify()</code>, FOR XML, OPENXML.</p>
+      </div>
+      <div class="card">
+        <h3>Có chỉ mục thì đọc ít trang hơn</h3>
+        <p class="foot-note">Trang là phần dữ liệu phải đọc, càng ít càng nhanh. Mũi tên: chưa có chỉ mục → có chỉ mục, đo trên bảng điểm danh 1.000.000 dòng.</p>
+        <div class="measure"><span>Tra chuyên cần của một đăng ký</span><b>6.023 → 3 trang</b><em>−99,9%</em></div>
+        <div class="measure"><span>Thống kê một lớp</span><b>6.023 → 150 trang</b><em>−97,5%</em></div>
+        <div class="measure"><span>Lọc phiếu thu theo tháng, đã có chỉ mục: Viết theo khoảng ngày thay vì <code>YEAR()</code>, <code>MONTH()</code></span><b>4 → 2 trang</b><em>−50%</em></div>
+        <h3 class="mt">Chỉ mục XML không phải lúc nào cũng có lợi</h3>
+        <div class="measure"><span>Dữ liệu mẫu, 357 bài kiểm tra</span><b>1.969 → 707 trang</b><em>có lợi</em></div>
+        <div class="measure warn"><span>Nhân lên 30 lần, 10.710 bài kiểm tra</span><b>1.956 → 40.490 trang</b><em>bất lợi</em></div>
+      </div>
+    </div>
+    <aside class="notes">Dương trình bày. Điểm nhấn: Q24 (phép chia bằng NOT EXISTS lồng) được kiểm chứng bằng cách viết thứ hai, đều ra 36 dòng. Q09 dùng FULL OUTER JOIN cho cung và cầu. Số trang đọc logic ổn định giữa các lần chạy nên dùng làm thước đo chính.</aside>
+  </section>
+
+  <!-- ================= 13. An ninh ================= -->
+  <section class="slide" data-id="an-ninh" data-sec="Đã làm" data-title="An ninh và sao lưu">
+    <header><div class="kicker">Đã làm · Xử lý thông tin · Như, Giang</div><h2>Bảo vệ dữ liệu theo 7 lớp</h2></header>
+    <div class="cols two wide-left">
+      <ol class="layers">
+        <li><i>1</i><b>Mã hoá đường truyền</b><span>TLS giữa ứng dụng và SQL Server</span></li>
+        <li><i>2</i><b>Xác thực</b><span>Băm lặp 10.000 vòng SHA2_256 có salt; sai 5 lần tạm khoá 15 phút</span></li>
+        <li><i>3</i><b>Quyền tối thiểu</b><span>6 role; login ứng dụng bị DENY mọi bảng, chỉ gọi procedure, đọc view</span></li>
+        <li><i>4</i><b>Phân quyền theo dòng</b><span>SESSION_CONTEXT chỉ đọc; thiếu ngữ cảnh thì từ chối</span></li>
+        <li><i>5</i><b>Che, ẩn theo cột</b><span>View bảo mật ẩn lương <u>Dynamic Data Masking</u></span></li>
+        <li><i>6</i><b>Mã hoá lưu trữ</b><span><u>TDE</u> <u>mã hoá cột</u> <u>bản sao lưu AES-256</u></span></li>
+        <li><i>7</i><b>Kiểm toán</b><span>Trigger nhật ký JSON <u>SQL Server Audit</u> <u>ledger</u></span></li>
+      </ol>
+      <div class="stack">
+        <div class="stats two-by-two">
+          <div class="stat small"><div class="n">15 phút</div><div class="l">RPO theo lịch sao lưu</div></div>
+          <div class="stat small"><div class="n">&lt; 1 giây</div><div class="l">RTO đo được: 607–810 ms trên CSDL mẫu</div></div>
+        </div>
+        <div class="card"><h3>Lịch sao lưu</h3><p class="tight">Full hằng tuần, vi sai hằng ngày, nhật ký 15 phút. Đã diễn tập phục hồi đúng thời điểm (STOPAT), <code>DBCC CHECKDB</code> không lỗi.</p>
+        <p class="links"><button class="ghost" type="button" data-zoom="img/lop-bao-ve.png" data-cap="Bảy lớp bảo vệ">Sơ đồ 7 lớp</button> <button class="ghost" type="button" data-zoom="img/xac-thuc-phien.png" data-cap="Xác thực và ngữ cảnh phiên">Luồng xác thực</button> <button class="ghost" type="button" data-zoom="img/sao-luu-phuc-hoi.png" data-cap="Sao lưu và phục hồi">Sao lưu</button></p></div>
+        <p class="foot-note"><u class="demo-key">gạch chân</u> = đã chạy thử trên CSDL demo, chưa bật trên CSDL ECMS chính.</p>
+      </div>
+    </div>
+    <aside class="notes">Như trình bày xác thực và phân quyền, Giang trình bày view và sao lưu. Cần nói rõ phần gạch chân mới chạy thử trên CSDL demo. Phân quyền theo dòng làm bằng view và function dựa trên ngữ cảnh phiên, không dùng SECURITY POLICY.</aside>
+  </section>
+
+  <!-- ================= 14. Lập trình CSDL ================= -->
+  <section class="slide" data-id="lap-trinh" data-sec="Đã làm" data-title="Lập trình CSDL">
+    <header><div class="kicker">Đã làm · Xử lý thông tin · Phú</div><h2>Luật nghiệp vụ nằm trong CSDL</h2></header>
+    <div class="objs">
+      <button type="button" data-modal="procedure" aria-haspopup="dialog"><b data-bind="ltProcedure"></b><span class="t"><span>Procedure</span><em class="more">Xem chi tiết ›</em></span></button>
+      <button type="button" data-modal="function" aria-haspopup="dialog"><b data-bind="ltFunction"></b><span class="t"><span>Function</span><em class="more">Xem chi tiết ›</em></span></button>
+      <button type="button" data-modal="trigger" aria-haspopup="dialog"><b data-bind="ltTrigger"></b><span class="t"><span>Trigger</span><em class="more">Xem chi tiết ›</em></span></button>
+      <button type="button" data-modal="view" aria-haspopup="dialog"><b data-bind="ltView"></b><span class="t"><span>View</span><em class="more">Xem chi tiết ›</em></span></button>
+      <button type="button" data-modal="cursor" aria-haspopup="dialog"><b data-bind="ltCursor"></b><span class="t"><span>Nghiệp vụ dùng cursor</span><em class="more">Xem chi tiết ›</em></span></button>
+    </div>
+    <div class="cols two">
+      <div class="card">
+        <h3>Một lượt ghi danh đi qua CSDL</h3>
+        <ol class="chain">
+          <li><b>Giao diện</b> gọi <code>sp_DangKyHoc</code></li>
+          <li><b>Khoá dòng lớp</b> bằng <code>UPDLOCK, HOLDLOCK</code>: Hai người ghi danh cùng lúc phải chờ nhau</li>
+          <li><b>Kiểm tra</b> phạm vi chi nhánh, trùng đăng ký, sĩ số, khoá tiên quyết</li>
+          <li><b>Trigger</b> cập nhật sĩ số, ghi nhật ký</li>
+          <li><b>COMMIT</b> hoặc <code>THROW 50004</code>; giao diện hiện “Lớp đã đủ sĩ số.”</li>
+        </ol>
+        <p class="links"><button class="ghost" type="button" data-zoom="img/giao-dich-thu-hoc-phi.png" data-cap="Giao dịch thu học phí">Giao dịch thu học phí</button></p>
+      </div>
+      <div class="card chart-card">
+        <h3>Cursor so với xử lý theo tập hợp (trung bình 20 lần, ms)</h3>
+        <div class="legend"><span><i style="background:var(--s-cursor)"></i>Cursor</span><span><i style="background:var(--accent)"></i>Theo tập hợp</span></div>
+        <div id="cursorBars" class="hbars"></div>
+        <p class="foot-note">Nguyên tắc: Mặc định theo tập hợp; chỉ dùng <code>LOCAL FAST_FORWARD</code> khi bài toán thực sự tuần tự, như sinh buổi học.</p>
+      </div>
+    </div>
+    <aside class="notes">Phú trình bày. Phép so sánh công bằng: hai phiên bản làm đúng cùng một việc, kể cả ghi dữ liệu; kết quả được đối chiếu bằng EXCEPT hai chiều. Tiện thể nêu sp_DangNhap không THROW khi sai mật khẩu, vì THROW sẽ làm mất lệnh đếm số lần sai.</aside>
+  </section>
+
+  <!-- ================= 15. Giao diện ================= -->
+  <section class="slide" data-id="giao-dien" data-sec="Đã làm" data-title="Ứng dụng web">
+    <header><div class="kicker">Đã làm · Trình bày thông tin · Giang</div><h2>Web app 20 trang, 7 báo cáo</h2></header>
+    <div class="shots">
+      <button type="button" data-zoom="img/10_ghi_danh.jpg" data-cap="Giáo vụ · Ghi danh"><img src="img/10_ghi_danh.jpg" alt="Trang ghi danh" loading="lazy"><span><b>Giáo vụ</b> Ghi danh</span></button>
+      <button type="button" data-zoom="img/07_xep_lich.jpg" data-cap="Giáo vụ · Xếp lịch"><img src="img/07_xep_lich.jpg" alt="Trang xếp lịch" loading="lazy"><span><b>Giáo vụ</b> Xếp lịch</span></button>
+      <button type="button" data-zoom="img/14_phieu_thu.jpg" data-cap="Kế toán · Phiếu thu master–detail"><img src="img/14_phieu_thu.jpg" alt="Trang phiếu thu" loading="lazy"><span><b>Kế toán</b> Phiếu thu master–detail</span></button>
+      <button type="button" data-zoom="img/19_pdf_phieu_thu.jpg" data-cap="Kế toán · Phiếu thu PDF A5"><img src="img/19_pdf_phieu_thu.jpg" alt="Phiếu thu PDF" loading="lazy"><span><b>Kế toán</b> Phiếu thu PDF A5</span></button>
+      <button type="button" data-zoom="img/11_diem_danh.jpg" data-cap="Giáo viên · Điểm danh cả lớp"><img src="img/11_diem_danh.jpg" alt="Trang điểm danh" loading="lazy"><span><b>Giáo viên</b> Điểm danh cả lớp</span></button>
+      <button type="button" data-zoom="../user-guide/images/hoc_vien_cua_toi.jpg" data-cap="Giáo viên · Học viên của tôi"><img src="../user-guide/images/hoc_vien_cua_toi.jpg" alt="Trang học viên của tôi" loading="lazy"><span><b>Giáo viên</b> Học viên của tôi</span></button>
+      <button type="button" data-zoom="img/16_dashboard.jpg" data-cap="Quản lý · Dashboard KPI"><img src="img/16_dashboard.jpg" alt="Dashboard" loading="lazy"><span><b>Quản lý</b> Dashboard KPI</span></button>
+      <button type="button" data-zoom="img/18_nhat_ky.jpg" data-cap="Quản lý · Nhật ký hệ thống"><img src="img/18_nhat_ky.jpg" alt="Nhật ký hệ thống" loading="lazy"><span><b>Quản lý</b> Nhật ký hệ thống</span></button>
+    </div>
+    <aside class="notes">Giang trình bày. Form kiểm tra hai lớp: lỗi hiện ngay dưới ô nhập, rồi CSDL kiểm tra lại. Form chỉ gọi view, procedure. Bấm ảnh để phóng to; muốn xem thật thì sang slide Demo.</aside>
+  </section>
+
+  <!-- ================= 16. Khó khăn ================= -->
+  <section class="slide" data-id="kho-khan" data-sec="Đã làm" data-title="Khó khăn và cách xử lý">
+    <header><div class="kicker">Khó khăn</div><h2>Khó khăn và cách xử lý</h2></header>
+    <table class="grid compact">
+      <thead><tr><th style="width:44%">Khó khăn</th><th>Cách xử lý</th></tr></thead>
+      <tbody>
+        <tr><td>Nhóm dùng cả Windows và macOS; SQL Server không chạy trực tiếp trên macOS</td><td>Docker cho macOS, Linux; script dựng CSDL cho cả shell và PowerShell</td></tr>
+        <tr><td>SQL Server 2022 cho Linux báo Msg 17750 với <code>sp_executesql</code>, <code>sp_set_session_context</code></td><td>Docker và CI chuyển sang SQL Server 2025; vẫn đổi được phiên bản bằng biến môi trường</td></tr>
+        <tr><td>CI thất bại ngẫu nhiên: Dựng CSDL khi máy chủ đang đổi collation; SQL Agent và chính healthcheck tranh chấp khoá (Msg 1205 → 3434)</td><td>Healthcheck đọc errorlog từ tệp, chỉ kết nối khi đổi xong; Agent tắt ở lần khởi động đầu</td></tr>
+        <tr><td>Connection pool của ODBC giữ ngữ cảnh phiên chỉ đọc của người dùng trước</td><td>Tắt pooling, mỗi phiên một kết nối riêng; thêm khoảng 135 ms một lần khi đăng nhập</td></tr>
+        <tr><td>Đếm số lần sai mật khẩu không có hiệu lực vì THROW làm giao dịch huỷ theo</td><td>Trả kết quả qua tham số ra thay vì ném lỗi</td></tr>
+        <tr><td>Dữ liệu mẫu ngẫu nhiên từng bảng dễ mâu thuẫn</td><td>Mô phỏng nghiệp vụ theo thời gian với hạt giống cố định, kiểm tra nhất quán 11 điều kiện</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">Bảng đầy đủ ở báo cáo mục 6.2. Chọn một hoặc hai dòng để kể kỹ; dòng connection pool và dòng đếm số lần sai là hai bài học hay nhất.</aside>
+  </section>
+
+  <!-- ================= 17. Còn lại ================= -->
+  <section class="slide" data-id="con-lai" data-sec="Còn lại" data-title="Việc còn lại">
+    <header><div class="kicker">Còn lại</div><h2>Việc còn lại trước khi nộp</h2></header>
+    <div class="cols two">
+      <div class="card">
+        <h3>Kế hoạch đến hạn nộp (T29, T30)</h3>
+        <ol class="mile next">
+          <li><time>đến 01/11</time><span>Đồng bộ số liệu giữa README, báo cáo, slide; dựng lại Word, PDF</span></li>
+          <li><time>02–03/11</time><span>Tổng duyệt thuyết trình và demo; mỗi thành viên ôn phần của mình</span></li>
+          <li><time>04/11</time><span>Nộp bản cuối (hạn dự kiến, chờ thầy chốt lịch)</span></li>
+        </ol>
+        <h3 class="mt">Nếu còn thời gian</h3>
+        <ul><li>Bật branch protection cho <code>main</code></li><li>Thêm kiểm thử tải với nhiều người dùng đồng thời</li></ul>
+      </div>
+      <div class="card tone-muted">
+        <h3>Hạn chế đã biết</h3>
+        <ul>
+          <li><b>Tải:</b> Tra cứu đã đo với 10.121 học viên, chưa kiểm thử tải đồng thời</li>
+          <li><b>Bảo mật khi triển khai:</b> Web chưa HTTPS, chưa xác thực hai lớp; TDE, Audit, ledger mới chạy trên CSDL demo</li>
+          <li><b>Phân tán:</b> Phần lớn mô phỏng trên một máy; lược đồ toàn cục chưa chịu được sự cố trạm</li>
+          <li><b>NoSQL:</b> Bản sao một chiều, chưa đồng bộ liên tục</li>
+          <li><b>Giao diện:</b> Streamlit tải lại toàn trang, chưa tối ưu cho điện thoại</li>
+          <li><b>CI:</b> Chỉ chạy trên Linux, cho nhánh <code>main</code></li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">Đây là slide quan trọng nhất của báo cáo tiến độ sau slide tóm tắt: thầy muốn biết còn gì và có kịp không. Nói thẳng hạn chế trước khi thầy hỏi.</aside>
+  </section>
+
+  <!-- ================= 18. Demo ================= -->
+  <section class="slide" data-id="demo" data-sec="Demo" data-title="Demo">
+    <header><div class="kicker">Demo</div><h2>Một vòng nghiệp vụ qua năm vai trò</h2></header>
+    <div class="cols two wide-left">
+      <ol class="demo-steps">
+        <li><i>1</i><div><b>Giáo vụ</b> ghi danh học viên vào lớp đã đầy</div><span>CSDL chặn: “Lớp đã đủ sĩ số.”</span></li>
+        <li><i>2</i><div><b>Kế toán</b> lập phiếu thu hai khoản, in PDF A5</div><span>Master–detail trong một giao dịch</span></li>
+        <li><i>3</i><div><b>Giáo viên</b> điểm danh cả lớp, quét cảnh báo</div><span>Trigger tính kết quả, cursor cảnh báo</span></li>
+        <li><i>4</i><div><b>Học viên</b> xem lịch học, điểm, học phí</div><span>Chỉ thấy dữ liệu của chính mình</span></li>
+        <li><i>5</i><div><b>Quản lý</b> mở dashboard, rồi nhật ký hệ thống</div><span>Ai đã thao tác gì, lúc nào</span></li>
+      </ol>
+      <div class="card">
+        <a class="btn" href="https://ecms-demo-7vj9gq5977vpc97r-8501.app.github.dev" target="_blank" rel="noopener">▶ Mở web app ECMS</a>
+        <p class="tight">Chỉ mở được khi nhóm đang bật Codespace. Lần đầu GitHub hiện cảnh báo, bấm <b>Continue</b>.</p>
+        <table class="plain tight-rows accounts">
+          <tr><th>Tài khoản</th><td><b>Mật khẩu</b></td></tr>
+          <tr><th><code>quanly</code> <code>giaovu</code> <code>ketoan</code> <code>giaovien</code></th><td><code>Ecms@2026</code></td></tr>
+          <tr><th><code>hocvien</code></th><td><code>Hocvien@2026</code></td></tr>
+        </table>
+        <p class="foot-note">Dữ liệu là dữ liệu mẫu. Giáo vụ, kế toán thuộc chi nhánh CN01.</p>
+      </div>
+    </div>
+    <aside class="notes">Chuẩn bị: chạy bash scripts/demo-codespace.sh bat trước giờ báo cáo (1–2 phút), mở sẵn năm tab đã đăng nhập. Mạng lỗi thì quay lại slide Ứng dụng web và dùng ảnh chụp.</aside>
+  </section>
+
+  <!-- ================= 19. Góp ý ================= -->
+  <section class="slide closing" data-id="gop-y" data-sec="Demo" data-title="Cần thầy góp ý">
+    <header><div class="kicker">Kết thúc</div><h2>Nhóm mong thầy góp ý</h2></header>
+    <ol class="asks">
+      <li><b>Lịch và hình thức nộp, bảo vệ:</b> Hạn 04/11 hiện là dự kiến; thầy chốt giúp hình thức nộp và thời gian trình bày.</li>
+      <li><b>Phần CSDL tiên tiến:</b> Mô phỏng phân tán trên một máy kèm một kịch bản MSDTC thật đã đủ yêu cầu chưa?</li>
+      <li><b>An ninh:</b> Có cần bật TDE, Audit, ledger trên CSDL chính, hay chạy thử trên CSDL demo là đủ?</li>
+    </ol>
+    <div class="closing-links">
+      <a class="btn" href="#/schema">Xem schema</a>
+      <a class="btn ghostish" href="#/so-do">Thư viện sơ đồ</a>
+      <a class="btn ghostish" href="#/ma-nguon">Bản đồ mã nguồn</a>
+      <a class="btn ghostish" href="../index.html">Trang kế hoạch chi tiết</a>
+    </div>
+    <p class="thanks">Em cảm ơn thầy đã lắng nghe.</p>
+    <aside class="notes">Ba câu hỏi này là đề xuất, nhóm có thể sửa theo điều thực sự cần hỏi thầy. Hai slide sau là phụ lục, chỉ mở khi thầy hỏi.</aside>
+  </section>
+
+  <!-- ================= 20. Phụ lục: Sơ đồ ================= -->
+  <section class="slide" data-id="so-do" data-sec="Phụ lục" data-title="Thư viện sơ đồ">
+    <header><div class="kicker">Phụ lục</div><h2>Thư viện sơ đồ</h2></header>
+    <div class="library">
+      <button type="button" data-zoom="../design/quy-trinh-nghiep-vu.png" data-cap="Quy trình nghiệp vụ"><img src="../design/quy-trinh-nghiep-vu.png" alt="" loading="lazy"><span>Quy trình nghiệp vụ</span></button>
+      <button type="button" data-zoom="../design/dikw.png" data-cap="Tháp DIKW"><img src="../design/dikw.png" alt="" loading="lazy"><span>Tháp DIKW</span></button>
+      <button type="button" data-zoom="../design/erd.svg" data-cap="ERD"><img src="../design/erd.svg" alt="" loading="lazy"><span>ERD</span></button>
+      <button type="button" data-zoom="../design/erd-thuoc-tinh.png" data-cap="ERD đầy đủ thuộc tính"><img src="../design/erd-thuoc-tinh.png" alt="" loading="lazy"><span>ERD đầy đủ thuộc tính</span></button>
+      <button type="button" data-zoom="../design/class-diagram.svg" data-cap="Sơ đồ lớp UML"><img src="../design/class-diagram.svg" alt="" loading="lazy"><span>Sơ đồ lớp UML</span></button>
+      <button type="button" data-zoom="../design/db-diagram.png" data-cap="Sơ đồ CSDL"><img src="../design/db-diagram.png" alt="" loading="lazy"><span>Sơ đồ CSDL</span></button>
+      <button type="button" data-zoom="../design/menu-tree.png" data-cap="Cây chức năng"><img src="../design/menu-tree.png" alt="" loading="lazy"><span>Cây chức năng</span></button>
+      <button type="button" data-zoom="img/lop-bao-ve.png" data-cap="Bảy lớp bảo vệ"><img src="img/lop-bao-ve.png" alt="" loading="lazy"><span>Bảy lớp bảo vệ</span></button>
+      <button type="button" data-zoom="img/xac-thuc-phien.png" data-cap="Xác thực và ngữ cảnh phiên"><img src="img/xac-thuc-phien.png" alt="" loading="lazy"><span>Xác thực, ngữ cảnh phiên</span></button>
+      <button type="button" data-zoom="img/giao-dich-thu-hoc-phi.png" data-cap="Giao dịch thu học phí"><img src="img/giao-dich-thu-hoc-phi.png" alt="" loading="lazy"><span>Giao dịch thu học phí</span></button>
+      <button type="button" data-zoom="img/phan-manh.png" data-cap="Phân mảnh và cấp phát"><img src="img/phan-manh.png" alt="" loading="lazy"><span>Phân mảnh, cấp phát</span></button>
+      <button type="button" data-zoom="img/hai-pha.png" data-cap="Cam kết hai pha"><img src="img/hai-pha.png" alt="" loading="lazy"><span>Cam kết hai pha</span></button>
+    </div>
+    <aside class="notes">Chỉ mở khi thầy hỏi tới.</aside>
+  </section>
+
+  <!-- ================= 21. Phụ lục: Mã nguồn ================= -->
+  <section class="slide" data-id="ma-nguon" data-sec="Phụ lục" data-title="Bản đồ mã nguồn">
+    <header><div class="kicker">Phụ lục</div><h2>Bản đồ mã nguồn</h2></header>
+    <div class="codemap" id="codemap"></div>
+    <aside class="notes">Bấm để mở tệp trên GitHub ở tab mới. Thầy hỏi tới procedure nào thì mở đúng tệp đó.</aside>
+  </section>
+
+</main>
+</div>
+
+<nav class="bar" id="bar" aria-label="Điều khiển slide">
+  <button type="button" id="prevBtn" aria-label="Slide trước">‹</button>
+  <span class="count" id="count"></span>
+  <button type="button" id="nextBtn" aria-label="Slide sau">›</button>
+  <div class="secs" id="secs"></div>
+  <button type="button" id="schemaBtn" title="Phím S">Schema</button>
+  <button type="button" id="tocBtn" title="Phím O">Mục lục</button>
+  <button type="button" id="notesBtn" title="Phím N" aria-pressed="false">Ghi chú</button>
+  <button type="button" id="fullBtn" title="Phím F" aria-label="Toàn màn hình">⛶</button>
+  <div class="progress"><span id="progress"></span></div>
+</nav>
+
+<div class="notes-drawer" id="notesDrawer" hidden></div>
+
+<div class="toc" id="toc" hidden role="dialog" aria-label="Mục lục">
+  <div class="toc-box">
+    <div class="toc-head"><h2>Mục lục</h2><button type="button" id="tocClose" aria-label="Đóng">✕</button></div>
+    <div class="toc-list" id="tocList"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="modalTitle"></h2><button type="button" id="modalClose" aria-label="Đóng">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-label="Phóng to">
+  <div class="lb-canvas" id="lbCanvas"><img id="lbImg" alt=""></div>
+  <div class="lb-bar"><span id="lbCap"></span><button type="button" id="lbOut" aria-label="Thu nhỏ">−</button><button type="button" id="lbIn" aria-label="Phóng to">+</button><button type="button" id="lbFit">Vừa khung</button><button type="button" id="lbClose">Đóng (Esc)</button></div>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script src="data/tien-do.js"></script>
+<script src="deck.js"></script>
+</body>
+</html>
