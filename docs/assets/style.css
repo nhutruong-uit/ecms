@@ -310,6 +310,7 @@ td.chap small { display: block; color: var(--muted); font-weight: 400; }
 .erd pre.mermaid { background: none; border: 0; padding: 0; margin: 0; min-width: 640px; text-align: center; }
 .erd pre.mermaid svg { max-width: 100%; height: auto; }
 .note { font-size: 13px; color: var(--muted); }
+.demo-video { display: block; width: 100%; max-width: 960px; margin: 0 auto 12px; aspect-ratio: 16 / 9; border-radius: 10px; background: #0f172a; }
 .tables-list td:first-child { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 600; font-size: 13px; white-space: nowrap; }
 
 /* ---------- Tech / conventions ---------- */
