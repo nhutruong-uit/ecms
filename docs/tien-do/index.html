@@ -38,15 +38,15 @@
       <span>Số liệu cập nhật <b data-bind="capNhat"></b></span>
       <span class="hint">Phím ← → để chuyển slide · O mục lục · S xem schema · N ghi chú · F toàn màn hình</span>
     </div>
-    <aside class="notes">Như mở đầu: Em xin báo cáo tiến độ đồ án của nhóm 1. Bố cục: giới thiệu đề tài, tiến độ so với kế hoạch, những gì đã làm, việc còn lại, rồi demo. Trong lúc trình bày, thầy muốn xem chi tiết phần nào nhóm mở ngay được, ví dụ quan hệ giữa các bảng.</aside>
+    <aside class="notes">Như mở đầu: Em xin báo cáo tiến độ đồ án của nhóm 1. Bố cục: giới thiệu đề tài, tiến độ so với kế hoạch, những gì đã làm, hạn chế còn lại, rồi demo. Trong lúc trình bày, thầy muốn xem chi tiết phần nào nhóm mở ngay được, ví dụ quan hệ giữa các bảng.</aside>
   </section>
 
   <!-- ================= 2. Tóm tắt ================= -->
   <section class="slide" data-id="tom-tat" data-sec="Mở đầu" data-title="Tóm tắt tiến độ">
-    <header><div class="kicker">Tóm tắt</div><h2>Đang ở <span data-bind="sprintTen"></span>, đã xong <span data-bind="viecXong"></span>/<span data-bind="viecTong"></span> việc</h2></header>
+    <header><div class="kicker">Tóm tắt</div><h2>Đã hoàn thành <span data-bind="viecXong"></span>/<span data-bind="viecTong"></span> việc, đủ cả bốn sprint</h2></header>
     <div class="stats two-by-two">
-      <button class="stat stat-btn" type="button" data-modal="sprint" aria-haspopup="dialog"><span class="n"><span data-bind="sprintSo"></span><small>/4</small></span><span class="l">Sprint theo kế hoạch, hiện tại: <span data-bind="sprintKhoang"></span></span><span class="more">Xem chi tiết ›</span></button>
-      <button class="stat stat-btn" type="button" data-modal="viec" aria-haspopup="dialog"><span class="n"><span data-bind="viecXong"></span><small>/<span data-bind="viecTong"></span></small></span><span class="l">Công việc đã xong, còn T29, T30 của Sprint 4</span><span class="more">Xem chi tiết ›</span></button>
+      <button class="stat stat-btn" type="button" data-modal="sprint" aria-haspopup="dialog"><span class="n">4<small>/4</small></span><span class="l">Sprint theo kế hoạch, đã hoàn thành cả bốn (12/10 – 04/11)</span><span class="more">Xem chi tiết ›</span></button>
+      <button class="stat stat-btn" type="button" data-modal="viec" aria-haspopup="dialog"><span class="n"><span data-bind="viecXong"></span><small>/<span data-bind="viecTong"></span></small></span><span class="l">Công việc đã xong, gồm T29, T30 của Sprint 4</span><span class="more">Xem chi tiết ›</span></button>
     </div>
     <div class="cols two">
       <div class="card tone-ok"><h3>Đã hoàn thành: Sprint 1–3</h3><ul>
@@ -54,12 +54,12 @@
         <li><b>Sprint 2:</b> Truy vấn SQL, XML; lập trình CSDL; an ninh; đăng nhập, menu</li>
         <li><b>Sprint 3:</b> Các phân hệ web, báo cáo, dashboard; Chương 5</li>
       </ul></div>
-      <div class="card tone-info"><h3>Còn lại: Sprint 4 (02–04/11)</h3><ul>
+      <div class="card tone-ok"><h3>Đã hoàn thành: Sprint 4 (02–04/11)</h3><ul>
         <li><b>T29:</b> Tổng hợp báo cáo, slide, tổng duyệt</li>
-        <li><b>T30:</b> Khắc phục sau rà soát</li>
+        <li><b>T30:</b> Khắc phục sau rà soát; phát hành <b>v1.0.0</b> (29/10), CI xanh trên <code>main</code></li>
       </ul></div>
     </div>
-    <aside class="notes">Câu chốt: theo lịch nhóm đang ở sprint được ghi trên slide, các phần việc đã có sản phẩm và đang được rà soát. Bấm vào ô 3/4 hoặc 28/30 để mở chi tiết từng sprint, từng công việc. Nếu thầy chỉ có một phút, slide này là đủ.</aside>
+    <aside class="notes">Câu chốt: cả 30 việc của bốn sprint đã xong, bản v1.0.0 đã phát hành. Bấm vào ô 4/4 hoặc 30/30 để mở chi tiết từng sprint, từng công việc. Nếu thầy chỉ có một phút, slide này là đủ.</aside>
   </section>
 
   <!-- ================= 3. Đề tài ================= -->
@@ -143,11 +143,11 @@
 
   <!-- ================= 6. Kế hoạch so với thực tế ================= -->
   <section class="slide" data-id="tien-do" data-sec="Tiến độ" data-title="Lộ trình 4 sprint">
-    <header><div class="kicker">Tiến độ</div><h2>Đang ở <span data-bind="sprintTen"></span></h2></header>
+    <header><div class="kicker">Tiến độ</div><h2>Hoàn thành cả bốn sprint</h2></header>
     <div class="plan-line" id="planLine"></div>
     <div class="sprints" id="sprints"></div>
-    <p class="foot-note wide">Thứ tự đi theo quy trình quản lý thông tin: Tổ chức → xử lý → trình bày, rồi tới mô hình tiên tiến và tổng hợp. Mã xanh là việc đã xong, mã cam là việc còn lại; bấm để mở issue trên GitHub.</p>
-    <aside class="notes">Lộ trình gồm 4 sprint từ 12/10 đến 04/11; theo lịch, nhóm đang ở sprint được đánh dấu. Đã xong 28/30 việc; còn T29 (tổng hợp, tổng duyệt) và T30 (khắc phục sau rà soát) của Sprint 4.</aside>
+    <p class="foot-note wide">Thứ tự đi theo quy trình quản lý thông tin: Tổ chức → xử lý → trình bày, rồi tới mô hình tiên tiến và tổng hợp. Mã xanh là việc đã xong (cả 30 việc); bấm để mở issue trên GitHub.</p>
+    <aside class="notes">Lộ trình gồm 4 sprint từ 12/10 đến 04/11; cả bốn sprint đã qua. Đã xong 30/30 việc, kể cả T29 (tổng hợp, tổng duyệt) và T30 (khắc phục sau rà soát) của Sprint 4.</aside>
   </section>
 
   <!-- ================= 7. Phân công ================= -->
@@ -360,17 +360,17 @@
   </section>
 
   <!-- ================= 17. Còn lại ================= -->
-  <section class="slide" data-id="con-lai" data-sec="Còn lại" data-title="Việc còn lại">
-    <header><div class="kicker">Còn lại</div><h2>Việc còn lại trước khi nộp</h2></header>
+  <section class="slide" data-id="con-lai" data-sec="Còn lại" data-title="Hạn chế còn lại">
+    <header><div class="kicker">Hoàn thành</div><h2>Việc đã chốt và hạn chế còn lại</h2></header>
     <div class="cols two">
       <div class="card">
-        <h3>Kế hoạch đến hạn nộp (T29, T30)</h3>
+        <h3>Sprint 4 (T29, T30): đã xong</h3>
         <ol class="mile next">
-          <li><time>đến 01/11</time><span>Đồng bộ số liệu giữa README, báo cáo, slide; dựng lại Word, PDF</span></li>
-          <li><time>02–03/11</time><span>Tổng duyệt thuyết trình và demo; mỗi thành viên ôn phần của mình</span></li>
-          <li><time>04/11</time><span>Nộp bản cuối (hạn dự kiến, chờ thầy chốt lịch)</span></li>
+          <li><time>✓ 25–29/10</time><span>Đồng bộ số liệu giữa README, báo cáo, slide; khắc phục sau rà soát</span></li>
+          <li><time>✓ 29/10</time><span>Phát hành v1.0.0, CI xanh trên <code>main</code>; demo chạy trên Codespace</span></li>
+          <li><time>04/11</time><span>Hạn nộp (dự kiến, chờ thầy chốt lịch)</span></li>
         </ol>
-        <h3 class="mt">Nếu còn thời gian</h3>
+        <h3 class="mt">Hướng phát triển</h3>
         <ul><li>Bật branch protection cho <code>main</code></li><li>Thêm kiểm thử tải với nhiều người dùng đồng thời</li></ul>
       </div>
       <div class="card tone-muted">
@@ -385,7 +385,7 @@
         </ul>
       </div>
     </div>
-    <aside class="notes">Đây là slide quan trọng nhất của báo cáo tiến độ sau slide tóm tắt: thầy muốn biết còn gì và có kịp không. Nói thẳng hạn chế trước khi thầy hỏi.</aside>
+    <aside class="notes">Mọi việc theo kế hoạch đã xong; slide này chỉ còn hướng phát triển và các hạn chế đã biết. Nói thẳng hạn chế trước khi thầy hỏi.</aside>
   </section>
 
   <!-- ================= 18. Demo ================= -->

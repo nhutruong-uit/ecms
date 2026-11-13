@@ -62,8 +62,8 @@ DUY_TRI = {
     ("KIEMTRA_DAUVAO", "DiemTong"): "sp_GhiKetQuaKiemTra",
 }
 
-# Việc của Sprint 4 nhóm báo cáo là còn làm, dù issue trên GitHub đã đóng
-CON_LAI = {"T29", "T30"}
+# Việc nhóm báo cáo là còn làm dù issue trên GitHub đã đóng (rỗng: cả 30 việc đã xong)
+CON_LAI: set[str] = set()
 
 ANH = [
     "ch3/lop-bao-ve.png", "ch3/xac-thuc-phien.png", "ch3/giao-dich-thu-hoc-phi.png", "ch3/sao-luu-phuc-hoi.png",
