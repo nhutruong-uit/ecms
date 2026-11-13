@@ -150,7 +150,16 @@
     }
 
     const days = Math.ceil((endOfDay(project.deadline) - now) / DAY);
-    $('#statDays').textContent = days >= 0 ? `${days} ngày` : 'Đã qua hạn';
+    if (state.synced && done === tasks.length) {
+      // Xong hết thì không nói "còn lại / đã qua hạn" nữa
+      $('#statSprintLabel').textContent = 'Sprint';
+      $('#statSprint').textContent = `${sprints.length}/${sprints.length}`;
+      $('#statSprintSub').textContent = 'Hoàn thành cả bốn sprint';
+      $('#statDaysLabel').textContent = 'Trạng thái đồ án';
+      $('#statDays').textContent = 'Hoàn thành';
+    } else {
+      $('#statDays').textContent = days >= 0 ? `${days} ngày` : 'Đã qua hạn';
+    }
     $('#statDaysSub').textContent = project.deadlineNote;
   }
 
