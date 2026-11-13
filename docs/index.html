@@ -265,8 +265,8 @@
     <section class="block" id="thiet-ke">
       <div class="section-head">
         <div>
-          <h2>Thiết kế CSDL dự kiến</h2>
-          <p>Bản nháp để cả nhóm thống nhất phạm vi: 19 bảng, gọn như một đồ án, nhưng có đủ mọi loại thuộc tính và mối quan hệ học ở Chương 2. Trâm hoàn thiện ERD chính thức (ký hiệu Chen) ở T04.</p>
+          <h2>Thiết kế CSDL</h2>
+          <p>Thiết kế chốt từ phạm vi ban đầu 19 bảng; bản cài đặt cuối (v1.0.0) có 22 bảng, thêm NGAYLE, BANGLUONG, CANHBAO_CHUYENCAN ở cuối bảng dưới. Vẫn đủ mọi loại thuộc tính và mối quan hệ học ở Chương 2. ERD chính thức (ký hiệu Chen) do Trâm hoàn thiện ở T04, xem trong báo cáo.</p>
         </div>
       </div>
 
@@ -331,7 +331,7 @@ erDiagram
 
       <div class="card table-wrap tables-list" style="margin-top:12px">
         <table>
-          <thead><tr><th>Bảng</th><th>Ý nghĩa</th><th>Cột chính (dự kiến)</th></tr></thead>
+          <thead><tr><th>Bảng</th><th>Ý nghĩa</th><th>Cột chính</th></tr></thead>
           <tbody>
             <tr><td>CHINHANH</td><td>Chi nhánh trung tâm</td><td>MaCN, TenCN, DiaChi, SoDienThoai, MaNVQuanLy</td></tr>
             <tr><td>NHANVIEN</td><td>Nhân viên (quản lý, giáo vụ, kế toán, giáo viên)</td><td>MaNV, HoNV, TenNV, NgaySinh, ChucVu, LuongCoBan, MaCN, MaNVQuanLy</td></tr>
@@ -352,6 +352,9 @@ erDiagram
             <tr><td>CT_PHIEUTHU</td><td>Chi tiết phiếu thu (detail)</td><td>MaPT, MaDK, SoTien</td></tr>
             <tr><td>TAIKHOAN</td><td>Tài khoản đăng nhập ứng dụng</td><td>TenDangNhap, MatKhauHash, Salt, VaiTro, MaNV, MaHV, TrangThai</td></tr>
             <tr><td>NHATKY</td><td>Nhật ký kiểm toán</td><td>MaNK, TenBang, ThaoTac, DuLieuCu, DuLieuMoi, NguoiThucHien, ThoiGian</td></tr>
+            <tr><td>NGAYLE</td><td>Ngày lễ, bảng phụ trợ khi sinh buổi học</td><td>Ngay, TenNgayLe</td></tr>
+            <tr><td>BANGLUONG</td><td>Bảng lương giáo viên theo tháng (chứng từ)</td><td>Thang, MaGV, SoBuoiDay, DonGiaBuoi, LuongCoBan, TongLuong (tính toán), NgayTinh</td></tr>
+            <tr><td>CANHBAO_CHUYENCAN</td><td>Cảnh báo chuyên cần, ảnh chụp tại ngày cảnh báo</td><td>MaCB, MaDK, NgayCanhBao, SoBuoiDaHoc, SoBuoiVang, TyLeVang, MucDo, DaXuLy</td></tr>
           </tbody>
         </table>
       </div>
