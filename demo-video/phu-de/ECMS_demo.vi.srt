@@ -1,0 +1,99 @@
+1
+00:00:03,630 --> 00:00:15,015
+Xin chào quý thầy cô và các bạn. Nhóm chúng em xin giới thiệu ECMS – hệ thống quản lý trung tâm tiếng Anh, đồ án môn Quản lý thông tin.
+
+2
+00:00:19,230 --> 00:00:29,384
+ECMS là ứng dụng web, dữ liệu lưu trong SQL Server 2025. Trang đăng nhập có sẵn các tài khoản dùng thử cho năm vai trò.
+
+3
+00:00:30,107 --> 00:00:40,953
+Mỗi vai trò chỉ nhìn thấy đúng những chức năng thuộc quyền của mình: quản lý trung tâm, giáo vụ, kế toán, giáo viên và học viên.
+
+4
+00:00:41,676 --> 00:00:49,446
+Ta bắt đầu từ hành trình của một học viên mới, với tài khoản giáo vụ của chi nhánh CN01.
+
+5
+00:00:52,103 --> 00:01:04,103
+Menu bên trái được nhóm theo nghiệp vụ: Đào tạo, Học viên, Học tập, Tài chính, Báo cáo và Hệ thống – chỉ hiện những mục giáo vụ được phép dùng.
+
+6
+00:01:04,827 --> 00:01:13,365
+Trang chủ tóm tắt nhanh số lớp đang học, lớp sắp khai giảng, số học viên và công nợ của chi nhánh.
+
+7
+00:01:14,994 --> 00:01:26,840
+Phần Đào tạo quản lý khoá học, lớp học và lịch học. Mỗi chương trình gồm nhiều khoá theo cấp độ, khoá cấp sau có thể yêu cầu khoá tiên quyết.
+
+8
+00:01:31,866 --> 00:01:40,943
+Bây giờ giáo vụ tiếp nhận một học viên mới. Nếu bỏ trống hoặc nhập sai, hệ thống báo lỗi ngay tại từng ô.
+
+9
+00:01:44,380 --> 00:01:51,611
+Nhập đủ thông tin đúng định dạng, hồ sơ được lưu và hệ thống cấp mã học viên mới.
+
+10
+00:02:04,263 --> 00:02:15,801
+Bước tiếp theo là kiểm tra đầu vào. Giáo vụ nhập điểm bốn kỹ năng, hệ thống lưu kết quả dạng XML và gợi ý khoá học phù hợp với điểm tổng.
+
+11
+00:02:31,414 --> 00:02:44,106
+Cuối cùng là ghi danh. Hệ thống đề xuất khoá theo kết quả kiểm tra, chỉ liệt kê lớp còn chỗ và tự kiểm tra lớp đầy, đăng ký trùng, điều kiện tiên quyết.
+
+12
+00:02:44,721 --> 00:02:54,875
+Chọn lớp, đặt mức giảm giá nếu có ưu đãi, rồi bấm ghi danh. Sĩ số lớp tự cập nhật và khoản học phí chuyển sang công nợ.
+
+13
+00:03:08,389 --> 00:03:20,081
+Chuyển sang kế toán. Trang Công nợ liệt kê các đăng ký chưa đóng đủ; hạn đóng là mười bốn ngày sau ngày đăng ký, khoản quá hạn được tô màu.
+
+14
+00:03:20,705 --> 00:03:31,090
+Học viên vừa ghi danh đã có mặt ở đây. Sang trang Lập phiếu thu: tìm học viên, hệ thống hiện các khoản còn nợ để chọn thu.
+
+15
+00:03:32,112 --> 00:03:41,420
+Bấm lập phiếu thu. Hệ thống ghi phiếu, trigger tự cập nhật trạng thái học phí, và cho in phiếu thu dạng PDF.
+
+16
+00:03:42,044 --> 00:03:48,967
+Thẻ Tra cứu phiếu thu giúp xem lại mọi phiếu đã lập, kèm chi tiết từng khoản.
+
+17
+00:04:07,815 --> 00:04:21,276
+Giáo viên chỉ thấy các lớp mình phụ trách. Ở trang Điểm danh, giáo viên chọn lớp và buổi học, đánh dấu có mặt, muộn, có phép hoặc vắng cho cả lớp rồi lưu một lần.
+
+18
+00:04:23,105 --> 00:04:33,413
+Trang Nhập điểm nhận điểm giữa kỳ và cuối kỳ. Điểm trung bình, xếp loại và kết quả đạt hay không đạt do hệ thống tự tính.
+
+19
+00:04:35,047 --> 00:04:42,201
+Cảnh báo chuyên cần liệt kê những học viên vắng quá ngưỡng để kịp thời nhắc nhở.
+
+20
+00:04:56,052 --> 00:05:05,283
+Học viên đăng nhập chỉ xem được dữ liệu của chính mình: lịch học theo tuần, bảng điểm và tình hình học phí.
+
+21
+00:05:23,670 --> 00:05:37,670
+Cuối cùng là quản lý trung tâm, với phạm vi toàn trung tâm. Dashboard tổng hợp học viên mới, doanh thu, tỷ lệ lấp đầy lớp, chuyên cần và công nợ, kèm biểu đồ theo tháng.
+
+22
+00:05:45,786 --> 00:05:54,171
+Trang Báo cáo và xuất file cho phép chọn báo cáo, xem trước và tải về dạng PDF, Excel hoặc Word.
+
+23
+00:06:00,648 --> 00:06:11,802
+Mọi thay đổi về đăng ký, phiếu thu, tài khoản, hồ sơ học viên đều được trigger ghi vào nhật ký; nhật ký chỉ thêm, không sửa hay xoá.
+
+24
+00:06:12,423 --> 00:06:23,115
+Ở đây ta thấy lại các thao tác vừa rồi của giáo vụ và kế toán, kèm tên tài khoản thực hiện và dữ liệu trước, sau khi thay đổi.
+
+25
+00:06:24,744 --> 00:06:38,205
+Tóm lại, ECMS đáp ứng trọn vòng đời của một học viên: tiếp nhận, ghi danh, thu học phí, học tập và báo cáo quản lý. Xin cảm ơn quý thầy cô và các bạn đã theo dõi.

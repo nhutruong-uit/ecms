@@ -23,8 +23,12 @@ st.caption(f"{len(df)} dòng (tối đa 500 dòng mới nhất)")
 sel = ui.table(df, {"ThoiGian": "Thời gian", "TenBang": "Bảng", "ThaoTac": "Thao tác", "KhoaChinh": "Khoá",
                     "NguoiDungUD": "Tài khoản ứng dụng", "NguoiThucHien": "Login SQL"}, key="t_nk")
 if sel:
-    cu = json.loads(sel["DuLieuCu"]) if sel["DuLieuCu"] else {}
-    moi = json.loads(sel["DuLieuMoi"]) if sel["DuLieuMoi"] else {}
+    def doc_json(v) -> dict:
+        """Cột NULL (INSERT không có dữ liệu cũ, DELETE không có dữ liệu mới) về tới đây là None hoặc NaN – NaN là số
+        thực nên `if v` vẫn đúng và json.loads báo TypeError; chỉ đọc khi là chuỗi JSON không rỗng."""
+        return json.loads(v) if isinstance(v, str) and v else {}
+
+    cu, moi = doc_json(sel["DuLieuCu"]), doc_json(sel["DuLieuMoi"])
     # giá trị NULL hiện ô trống (Streamlit vẽ None thành chữ "None"); đổi mọi giá trị sang chuỗi để cột không lẫn kiểu
     rows = [{"Trường": k, "Trước": "" if cu.get(k) is None else str(cu.get(k)), "Sau": "" if moi.get(k) is None else str(moi.get(k)),
              "Thay đổi": "●" if cu.get(k) != moi.get(k) else ""}
