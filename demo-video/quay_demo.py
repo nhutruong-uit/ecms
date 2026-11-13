@@ -4,7 +4,8 @@
 Quy trình mỗi lần chạy:
   1. Mở Microsoft Edge 1920×1080, thao tác trên ứng dụng ECMS đang chạy như người dùng thật (con trỏ chuột trượt
      mượt, gõ từng phím, hiện phụ đề giải thích và nhãn vai trò), Playwright ghi lại thành video thô.
-  2. ffmpeg chuyển thành ECMS_demo.mp4 (H.264), kèm tệp phụ đề rời ECMS_demo.vi.srt.
+  2. ffmpeg chuyển thành ECMS_demo.mp4 (H.264), kèm tệp phụ đề rời phu-de/ECMS_demo.vi.srt
+     (cố ý để ở thư mục con: phụ đề đã in sẵn vào video, để cạnh video thì trình phát tự nạp thêm lớp thứ hai, chồng lấn).
 
 Cần: Microsoft Edge, ffmpeg, Python 3.10+ và `pip install playwright` (Playwright 1.60 dùng sẵn ffmpeg trong ms-playwright nếu
 đã có trên máy; bản mới hơn tự tải thêm). Video thô và MP4 ghi vào thư mục out/.
@@ -593,7 +594,9 @@ def ghep(raw: Path, clips, ra: Path, tre_hinh: float) -> None:
                     "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart", str(ra)], check=True)
     srt = [f"{i}\n{srt_time(off + tre_hinh)} --> {srt_time(off + tre_hinh + dur)}\n{text}\n"
            for i, (off, dur, text) in enumerate(clips, 1)]
-    ra.with_suffix(".vi.srt").write_text("\n".join(srt), encoding="utf-8")
+    srt_path = ra.parent / "phu-de" / f"{ra.stem}.vi.srt"
+    srt_path.parent.mkdir(exist_ok=True)
+    srt_path.write_text("\n".join(srt), encoding="utf-8")
 
 
 def main() -> None:
@@ -648,7 +651,7 @@ def main() -> None:
     if not a.khong_ghep:
         ra = OUT / f"{a.ten}.mp4"
         ghep(raw, d.clips, ra, a.tre_hinh)
-        print(f"✓ Video hoàn chỉnh: {ra}\n✓ Phụ đề: {ra.with_suffix('.vi.srt')}")
+        print(f"✓ Video hoàn chỉnh: {ra}\n✓ Phụ đề: {ra.parent / 'phu-de' / (ra.stem + '.vi.srt')}")
     if loi:
         sys.exit(1)
 

@@ -1,6 +1,6 @@
 # Kịch bản video demo ECMS
 
-Video 1920×1080, không có tiếng, giải thích bằng phụ đề trên màn hình; thời lượng khoảng 6 phút 40 giây. Mốc thời gian dưới đây lấy từ chính video ECMS_demo.mp4 (tệp phụ đề rời ECMS_demo.vi.srt khớp từng mốc).
+Video 1920×1080, không có tiếng, giải thích bằng phụ đề trên màn hình; thời lượng khoảng 6 phút 40 giây. Mốc thời gian dưới đây lấy từ chính video ECMS_demo.mp4 (tệp phụ đề rời phu-de/ECMS_demo.vi.srt khớp từng mốc).
 
 Quay trên ứng dụng thật chạy ở GitHub Codespace, dữ liệu mẫu của dự án; các thao tác thêm học viên, ghi danh, lập phiếu thu là ghi dữ liệu thật (học viên demo: Nguyễn Minh Khang). Mạch chuyện theo “Quy trình nghiệp vụ mẫu” (Phần 6 hướng dẫn sử dụng): một học viên mới đi qua giáo vụ → kế toán → giáo viên → học viên → quản lý.
 
